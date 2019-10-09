@@ -13,7 +13,7 @@ The Rokuality Server is a Java Jetty servlet container application that requires
 or for Windows users using [scoop](https://scoop.sh/)
 ```xml
     scoop bucket add java
-	scoop install openjdk10
+    scoop install openjdk10
 ```
 
 If you have it setup correctly you should be able to run the following command and get a relevant version back:
