@@ -2,8 +2,6 @@ package com.rokuality.server.core;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,7 +17,6 @@ import com.rokuality.server.utils.LogFileUtils;
 import com.rokuality.server.utils.OSUtils;
 import com.rokuality.server.utils.SleepUtils;
 
-import org.apache.commons.io.comparator.NameFileComparator;
 import org.eclipse.jetty.util.log.Log;
 
 public class ImageCollector {
