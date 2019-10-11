@@ -143,7 +143,7 @@ public class ImageCollector {
 		}
 
 		// check if the device is hittable and the app is launched, allowing capturing
-		if (!RokuPackageHandler.isAppLaunched(deviceIP, "dev")) {
+		if (PlatformType.ROKU.equals(platform) && !RokuPackageHandler.isAppLaunched(deviceIP, "dev")) {
 			return null;
 		}
 

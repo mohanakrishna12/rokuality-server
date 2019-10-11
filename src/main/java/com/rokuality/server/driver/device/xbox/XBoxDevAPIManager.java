@@ -5,11 +5,15 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.eclipse.jetty.util.log.Log;
 
 import java.io.*;
+
+import javax.net.ssl.SSLContext;
 
 import com.rokuality.server.constants.DependencyConstants;
 
@@ -25,7 +29,23 @@ public class XBoxDevAPIManager {
 
 	public File getScreenshot() {
 		File pngFile = null;
+
+		SSLConnectionSocketFactory sslSocketFactory = null;
+		try {
+			SSLContextBuilder sslContextBuilder = SSLContextBuilder.create();
+			sslContextBuilder.loadTrustMaterial(new org.apache.http.conn.ssl.TrustSelfSignedStrategy());
+			SSLContext sslContext = sslContextBuilder.build();
+			sslSocketFactory = new SSLConnectionSocketFactory(sslContext, new org.apache.http.conn.ssl.DefaultHostnameVerifier());
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+		}
+		
+		if (sslSocketFactory == null) {
+			return null;
+		}
+
 		try (CloseableHttpClient httpclient = HttpClients.custom()
+					.setSSLSocketFactory(sslSocketFactory)
 					.setDefaultRequestConfig(getRequestConfigTimeouts())
 					.build()) {
 

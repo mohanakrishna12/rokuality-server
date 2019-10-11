@@ -16,7 +16,7 @@ import java.util.UUID;
 @SuppressWarnings("unchecked")
 public class XBoxPackageHandler {
 
-	private static final String APPX_EXTENSION = ".appx";
+	private static final String APPX_EXTENSION = ".appxbundle";
 
 	public static JSONObject installPackage(JSONObject requestObj) {
 		JSONObject results = new JSONObject();
@@ -86,6 +86,10 @@ public class XBoxPackageHandler {
 		}
 
 		Log.getRootLogger().info("Installing url/file app and launching.");
+		if (appPackage.exists() && appPackage.isFile()) {
+			appPackage.setExecutable(true);
+		}
+
 		validPackage = (appPackage.exists() && appPackage.isFile() && appPackage.length() > 0);
 
 		if (!validPackage) {
@@ -101,7 +105,7 @@ public class XBoxPackageHandler {
 
 			XBoxDevConsoleManager xboxDevConsoleManager = new XBoxDevConsoleManager(deviceip);
 			// TODO uninstall handling
-			//xboxDevConsoleManager.uninstallApp(appCap);
+			xboxDevConsoleManager.uninstallApp(appCap);
 			success = xboxDevConsoleManager.installApp(appPackage.getAbsolutePath(), appCap);
 			results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 			if (!success) {
