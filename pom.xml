@@ -171,6 +171,12 @@
 			</exclusions>
 		</dependency>
 
+		<dependency>
+    		<groupId>io.github.bonigarcia</groupId>
+    		<artifactId>webdrivermanager</artifactId>
+    		<version>3.7.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

@@ -100,7 +100,8 @@ public class XBoxPackageHandler {
 			String deviceip = (String) requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value());
 
 			XBoxDevConsoleManager xboxDevConsoleManager = new XBoxDevConsoleManager(deviceip);
-			xboxDevConsoleManager.uninstallApp(appCap);
+			// TODO uninstall handling
+			//xboxDevConsoleManager.uninstallApp(appCap);
 			success = xboxDevConsoleManager.installApp(appPackage.getAbsolutePath(), appCap);
 			results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 			if (!success) {

@@ -6,21 +6,21 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriverService;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.*;
 import java.util.concurrent.TimeUnit;
 
 import com.rokuality.server.constants.DependencyConstants;
-import com.rokuality.server.utils.OSUtils;
+import com.rokuality.server.utils.FileUtils;
 import com.rokuality.server.utils.SleepUtils;
 import com.rokuality.server.utils.WebDriverUtils;
 
 public class XBoxDevConsoleManager {
 
-	private static final int DEFAULT_TIMEOUT = 60;
+	private static final int DEFAULT_TIMEOUT = 30;
 	// TODO - clean up the spaghetti exception code below with concurrent exception
 	// handling
 
@@ -70,13 +70,15 @@ public class XBoxDevConsoleManager {
 			try {
 				String pageSource = webDriver.getPageSource();
 				pageSource = pageSource.replace(System.lineSeparator(), "");
+				Log.getRootLogger().warn(pageSource);
 			} catch (Exception e2) {
 				Log.getRootLogger().warn(e2);
 			}
 
 			try {
 				File screenshot = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.FILE);
-				// TODO - save failure screenshot in the temp
+				FileUtils.moveFile(screenshot, new File(DependencyConstants.TEMP_DIR.getAbsolutePath() 
+						+ File.separator + "installfail_" + deviceip.replace(".", "") + "_" + System.currentTimeMillis()));
 			} catch (Exception e2) {
 				Log.getRootLogger().warn(e2);
 			}
@@ -116,16 +118,19 @@ public class XBoxDevConsoleManager {
 				SleepUtils.sleep(250);
 			}
         } catch (Exception e) {
+			Log.getRootLogger().warn(e);
 			try {
 				String pageSource = webDriver.getPageSource();
 				pageSource = pageSource.replace(System.lineSeparator(), "");
+				Log.getRootLogger().warn(pageSource);
 			} catch (Exception e2) {
 				Log.getRootLogger().warn(e2);
 			}
 
 			try {
 				File screenshot = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.FILE);
-				// TODO - save failure screenshot in the temp
+				FileUtils.moveFile(screenshot, new File(DependencyConstants.TEMP_DIR.getAbsolutePath() 
+						+ File.separator + "installfail_" + deviceip.replace(".", "") + "_" + System.currentTimeMillis()));
 			} catch (Exception e2) {
 				Log.getRootLogger().warn(e2);
 			}
@@ -140,29 +145,14 @@ public class XBoxDevConsoleManager {
 
 	private WebDriver getWebDriver() {
 		DesiredCapabilities capabilities = new DesiredCapabilities();
-		capabilities.setJavascriptEnabled(true);                
-		capabilities.setCapability("takesScreenshot", true);  
-		capabilities.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, getPhantomJSBin());
-		return new PhantomJSDriver(capabilities);
-	}
-
-	private File getPhantomJSBin() {
-		File bin = null;
-		switch (OSUtils.getOSType()) {
-			case WINDOWS:
-			bin = DependencyConstants.PHANTOM_JS_WINDOWS;
-			break;
-			case MAC:
-			bin = DependencyConstants.PHANTOM_JS_MAC;
-			break;
-			case LINUX:
-			bin = DependencyConstants.PHANTOM_JS_LINUX;
-			break;
-			default:
-			bin = DependencyConstants.PHANTOM_JS_MAC;
-			break;
-		}
-		return bin;
+        io.github.bonigarcia.wdm.WebDriverManager.chromedriver().setup();
+    
+        ChromeOptions chromeOptions = new ChromeOptions();
+        chromeOptions.addArguments("headless");
+		chromeOptions.addArguments("window-size=1200x600");
+		chromeOptions.addArguments("--ignore-certificate-errors");
+        capabilities.setCapability(ChromeOptions.CAPABILITY, chromeOptions);
+        return new ChromeDriver(capabilities);
 	}
 
 	private String getConsoleUrl() {
