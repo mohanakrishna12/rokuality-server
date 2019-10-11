@@ -9,6 +9,7 @@ import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
 import com.rokuality.server.driver.device.roku.RokuKeyPresser;
 import com.rokuality.server.driver.device.roku.RokuPackageHandler;
+import com.rokuality.server.driver.device.xbox.XBoxPackageHandler;
 import com.rokuality.server.driver.host.GlobalDependencyInstaller;
 import com.rokuality.server.enums.OCRType;
 import com.rokuality.server.enums.PlatformType;
@@ -131,7 +132,7 @@ public class session extends HttpServlet {
 		}
 		sessionInfo.put(SessionConstants.OCR_MODULE, ocrType.value());
 
-		if (PlatformType.ROKU.equals(platformType)) {
+		if (isRoku(platformType)) {
 			deviceUsername = (String) requestObj.get(SessionCapabilities.DEVICE_USERNAME.value());
 			if (deviceUsername == null || deviceUsername.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
@@ -192,22 +193,28 @@ public class session extends HttpServlet {
 			}
 		}
 
-		JSONObject deviceOnlineResults = info.getRokuDeviceInfo(deviceIP);
-		if (deviceOnlineResults == null
-				|| !ServerConstants.SERVLET_SUCCESS.equals(deviceOnlineResults.get(ServerConstants.SERVLET_RESULTS))) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-					"The device at %s did not respond! Is the device online and reachable on your network?", deviceIP));
-			return sessionInfo;
+		// TODO - device online check for xbox
+		if (isRoku(platformType)) {
+			JSONObject deviceOnlineResults = info.getRokuDeviceInfo(deviceIP);
+			if (deviceOnlineResults == null
+					|| !ServerConstants.SERVLET_SUCCESS.equals(deviceOnlineResults.get(ServerConstants.SERVLET_RESULTS))) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"The device at %s did not respond! Is the device online and reachable on your network?", deviceIP));
+				return sessionInfo;
+			}
 		}
-
-		boolean homeScreenSuccess = returnToHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
-		if (!homeScreenSuccess) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-					"The device at %s did not return to the home screen on session start!", deviceIP));
-			return sessionInfo;
+		
+		// TODO - xbox return to home
+		if (isRoku(platformType)) {
+			boolean homeScreenSuccess = returnToHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
+			if (!homeScreenSuccess) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"The device at %s did not return to the home screen on session start!", deviceIP));
+				return sessionInfo;
+			}
 		}
-
-		JSONObject appHandleResults = RokuPackageHandler.installPackage(requestObj);
+		
+		JSONObject appHandleResults = isRoku(platformType) ? RokuPackageHandler.installPackage(requestObj) : XBoxPackageHandler.installPackage(requestObj);
 		if (appHandleResults == null || !ServerConstants.SERVLET_SUCCESS.equals(String.valueOf(appHandleResults.get(ServerConstants.SERVLET_RESULTS)))) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS, appHandleResults.get(ServerConstants.SERVLET_RESULTS));
 			sessionInfo.remove(SessionConstants.APP_PACKAGE);
@@ -215,7 +222,7 @@ public class session extends HttpServlet {
 		}
 		sessionInfo.remove(SessionConstants.APP_PACKAGE);
 
-		ImageCollector imageCollector = new ImageCollector(sessionID, deviceIP.toString(), imageCollectionDir, deviceUsername,
+		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP.toString(), imageCollectionDir, deviceUsername,
 				devicePassword);
 		boolean recordingStarted = imageCollector.startRecording();
 		boolean imageCollectionStarted = false;
@@ -346,6 +353,14 @@ public class session extends HttpServlet {
 		rokuDevAPIManager.sendDevAPICommand();
 		String output = rokuDevAPIManager.getResponseContent();
 		return (output != null && output.contains("<app>Roku</app>"));
+	}
+
+	private static boolean isRoku(PlatformType platformType) {
+		return PlatformType.ROKU.equals(platformType);
+	}
+
+	private static boolean isXBox(PlatformType platformType) {
+		return PlatformType.XBOX.equals(platformType);
 	}
 
 }

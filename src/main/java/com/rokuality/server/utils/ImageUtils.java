@@ -36,6 +36,7 @@ import com.rokuality.server.constants.TesseractConstants;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.core.ocr.ImageText;
 import com.rokuality.server.driver.device.roku.RokuDevConsoleManager;
+import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
 import com.rokuality.server.enums.OCRType;
 import com.rokuality.server.enums.PlatformType;
 
@@ -611,8 +612,15 @@ public class ImageUtils {
 		return ImageIO.read(file);
 	}
 
-	public static File getScreenImage(String username, String password, String deviceip) {
-		return new RokuDevConsoleManager(deviceip, username, password).getScreenshot();
+	public static File getScreenImage(PlatformType platform, String username, String password, String deviceip) {
+		switch (platform) {
+			case ROKU:
+			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot();
+			case XBOX:
+			return new XBoxDevAPIManager(deviceip).getScreenshot();
+			default:
+			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot();
+		}
 	}
 
 	private static Tesseract getTesseract() {

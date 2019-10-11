@@ -30,7 +30,7 @@ public class XBoxDevConsoleManager {
 		this.deviceip = deviceip;
 	}
 
-	public boolean installXBoxApp(String appPackage, String appID) {
+	public boolean installApp(String appPackage, String appID) {
         Boolean installSuccess = false;
         WebDriver webDriver = null;
         try {
