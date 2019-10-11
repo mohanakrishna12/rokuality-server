@@ -1,4 +1,4 @@
-package com.rokuality.server.driver.device;
+package com.rokuality.server.driver.device.roku;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;

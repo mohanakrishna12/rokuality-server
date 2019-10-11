@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
-import com.rokuality.server.driver.device.RokuKeyPresser;
+import com.rokuality.server.driver.device.roku.RokuKeyPresser;
 import com.rokuality.server.enums.RokuButton;
 import com.rokuality.server.enums.SpecialCharacters;
 import com.rokuality.server.utils.ServletJsonParser;

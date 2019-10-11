@@ -7,7 +7,7 @@ import javax.imageio.ImageIO;
 
 import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.constants.FFMPEGConstants;
-import com.rokuality.server.driver.device.RokuPackageHandler;
+import com.rokuality.server.driver.device.roku.RokuPackageHandler;
 import com.rokuality.server.utils.FileUtils;
 import com.rokuality.server.utils.ImageUtils;
 import com.rokuality.server.utils.LogFileUtils;

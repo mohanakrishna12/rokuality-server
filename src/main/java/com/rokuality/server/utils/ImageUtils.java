@@ -35,7 +35,7 @@ import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.constants.TesseractConstants;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.core.ocr.ImageText;
-import com.rokuality.server.driver.device.RokuDevConsoleManager;
+import com.rokuality.server.driver.device.roku.RokuDevConsoleManager;
 import com.rokuality.server.enums.OCRType;
 import com.rokuality.server.enums.PlatformType;
 

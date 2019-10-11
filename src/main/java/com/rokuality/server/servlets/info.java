@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
-import com.rokuality.server.driver.device.RokuDevAPIManager;
+import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
 import com.rokuality.server.utils.ServletJsonParser;
 
 import java.io.IOException;

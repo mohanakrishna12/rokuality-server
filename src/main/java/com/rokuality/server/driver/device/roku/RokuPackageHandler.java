@@ -1,4 +1,4 @@
-package com.rokuality.server.driver.device;
+package com.rokuality.server.driver.device.roku;
 
 import org.eclipse.jetty.util.log.Log;
 import org.json.simple.JSONObject;
