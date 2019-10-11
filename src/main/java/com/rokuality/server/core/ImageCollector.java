@@ -2,6 +2,10 @@ package com.rokuality.server.core;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -15,6 +19,7 @@ import com.rokuality.server.utils.LogFileUtils;
 import com.rokuality.server.utils.OSUtils;
 import com.rokuality.server.utils.SleepUtils;
 
+import org.apache.commons.io.comparator.NameFileComparator;
 import org.eclipse.jetty.util.log.Log;
 
 public class ImageCollector {
@@ -33,7 +38,8 @@ public class ImageCollector {
 	private String password = null;
 	private String deviceIP = null;
 
-	public ImageCollector(PlatformType platform, String sessionID, String deviceIP, File imageCaptureDir, String username, String password) {
+	public ImageCollector(PlatformType platform, String sessionID, String deviceIP, File imageCaptureDir,
+			String username, String password) {
 		this.platform = platform;
 		this.deviceIP = deviceIP;
 		this.imageCaptureDir = imageCaptureDir;
@@ -41,11 +47,12 @@ public class ImageCollector {
 		this.password = password;
 		videoComplete = false;
 
-		recordedVideo = new File(
-				imageCaptureDir.getAbsolutePath() + File.separator + platform.value() + "_videorecording_" + sessionID + ".mp4");
-		stitchVideoSh = new File(
-				imageCaptureDir.getAbsolutePath() + File.separator + platform.value() + "_videostitcher_" + sessionID + ".sh");
-		videoReady = new File(imageCaptureDir.getAbsolutePath() + File.separator + platform.value() + "_videoready_" + sessionID);
+		recordedVideo = new File(imageCaptureDir.getAbsolutePath() + File.separator + platform.value()
+				+ "_videorecording_" + sessionID + ".mp4");
+		stitchVideoSh = new File(imageCaptureDir.getAbsolutePath() + File.separator + platform.value()
+				+ "_videostitcher_" + sessionID + ".sh");
+		videoReady = new File(
+				imageCaptureDir.getAbsolutePath() + File.separator + platform.value() + "_videoready_" + sessionID);
 	}
 
 	public boolean startRecording() {
@@ -53,16 +60,15 @@ public class ImageCollector {
 		try {
 			if (imageCaptureDir != null && !imageCaptureDir.exists()) {
 				imageDirSetup = FileUtils.createDirectory(imageCaptureDir);
-			} 
+			}
 		} catch (Exception e) {
 			Log.getRootLogger().warn(e);
 		}
 
 		if (!imageDirSetup) {
 			videoComplete = true;
-			Log.getRootLogger()
-					.warn("Failed to properly setup the screen recording image collection directory. "
-							+ "Screen recording will NOT be initiated!");
+			Log.getRootLogger().warn("Failed to properly setup the screen recording image collection directory. "
+					+ "Screen recording will NOT be initiated!");
 			return false;
 		}
 
@@ -93,26 +99,24 @@ public class ImageCollector {
 				if (image != null && image.exists()) {
 					String paddedCounter = String.format("%05d", counter);
 					File baseImage = image;
-					File copiedImage = new File(
-							imageCaptureDir.getAbsolutePath() + File.separator + paddedCounter + getImageCaptureFormat());
+					File copiedImage = new File(imageCaptureDir.getAbsolutePath() + File.separator + paddedCounter
+							+ getImageCaptureFormat());
 					if (!copiedImage.exists()) {
 						baseImage.renameTo(copiedImage);
 					}
-					
-					if (copiedImage.exists()) {
+
+					if (copiedImage.exists() && copiedImage.length() > MIN_FILE_SIZE_B) {
 						currentCaptureFile = copiedImage;
 					} else {
 						counter--;
-					}
-	
-					if (copiedImage.exists() && copiedImage.length() < MIN_FILE_SIZE_B) {
-						counter--;
 						FileUtils.deleteFile(copiedImage);
 					}
-	
+
 					if (baseImage.exists()) {
 						FileUtils.deleteFile(baseImage);
 					}
+				} else {
+					counter--;
 				}
 			} catch (Exception e) {
 				Log.getRootLogger().warn("Failed to capture screen shot/convert to capture dir during recording!", e);
@@ -206,6 +210,12 @@ public class ImageCollector {
 
 	public void prepareVideo() {
 		try {
+			prepVideoFileList();
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+		}
+
+		try {
 			FileUtils.deleteFile(videoReady);
 			String ffmpegPath = FFMPEGConstants.FFMPEG.getAbsolutePath();
 
@@ -214,9 +224,9 @@ public class ImageCollector {
 			String input = "";
 			if (!OSUtils.isWindows()) {
 				input = "# !/bin/bash" + System.lineSeparator() + "cd " + imageCaptureDir.getAbsolutePath()
-						+ System.lineSeparator() + ffmpegPath
-						+ " -framerate 3 -i '%05d" + getImageCaptureFormat() + "' -c:v libx264 -pix_fmt yuv420p " + recordedVideo.getAbsolutePath()
-						+ System.lineSeparator() + "touch " + videoReady.getAbsolutePath();
+						+ System.lineSeparator() + ffmpegPath + " -framerate 3 -i '%05d" + getImageCaptureFormat()
+						+ "' -c:v libx264 -pix_fmt yuv420p " + recordedVideo.getAbsolutePath() + System.lineSeparator()
+						+ "touch " + videoReady.getAbsolutePath();
 				command = new String[] { DependencyConstants.SHELL_EXECUTOR, stitchVideoSh.getAbsolutePath() };
 			}
 
@@ -261,6 +271,49 @@ public class ImageCollector {
 
 	private String getImageCaptureFormat() {
 		return PlatformType.XBOX.equals(platform) ? ".png" : ".jpg";
+	}
+
+	private void prepVideoFileList() throws Exception {
+		File[] allFiles = imageCaptureDir.listFiles();
+		Set<File> allNumericFiles = new HashSet<File>();
+		for (File file : allFiles) {
+			try {
+				int index = file.getName().lastIndexOf(".");
+				String fileName = file.getName().substring(0, index);
+				Long.parseLong(fileName);
+				allNumericFiles.add(file);
+			} catch (NumberFormatException | NullPointerException nfe) {
+				Log.getRootLogger().warn(nfe);
+			}
+		}
+
+		for (int i = 1; i < allNumericFiles.size(); i++) {
+			String paddedCounter = String.format("%05d", i);
+			File expectedImage = new File(imageCaptureDir + File.separator + paddedCounter + getImageCaptureFormat());
+			if (!expectedImage.exists()) {
+				Log.getRootLogger().info(String.format(
+						"Video compilation file %s does not exist. " + "Copying either a parent or child in it's place",
+						expectedImage.getName()));
+
+				File parent = new File(expectedImage.getParentFile() + File.separator + String.format("%05d", i - 1)
+						+ getImageCaptureFormat());
+				File child = new File(expectedImage.getParentFile() + File.separator + String.format("%05d", i + 1)
+						+ getImageCaptureFormat());
+				if (parent.exists()) {
+					FileUtils.copyFile(parent, expectedImage);
+				}
+
+				if (!parent.exists()) {
+					FileUtils.copyFile(child, expectedImage);
+				}
+
+				// TODO - come up with a better option for this
+				if (!parent.exists() && !child.exists()) {
+					Log.getRootLogger().warn("No captured parent or child images in "
+							+ "the collector! Video compilation will likely stop at this point!");
+				}
+			}
+		}
 	}
 
 }

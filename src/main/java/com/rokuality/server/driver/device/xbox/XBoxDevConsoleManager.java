@@ -134,8 +134,8 @@ public class XBoxDevConsoleManager {
 		io.github.bonigarcia.wdm.WebDriverManager.chromedriver().setup();
 
 		ChromeOptions chromeOptions = new ChromeOptions();
-		//chromeOptions.addArguments("headless");
-		//chromeOptions.addArguments("window-size=1200x600");
+		chromeOptions.addArguments("headless");
+		chromeOptions.addArguments("window-size=1200x600");
 		chromeOptions.addArguments("--ignore-certificate-errors");
 		capabilities.setCapability(ChromeOptions.CAPABILITY, chromeOptions);
 		WebDriver webDriver = new ChromeDriver(capabilities);
