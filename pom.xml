@@ -163,6 +163,12 @@
   			<groupId>org.seleniumhq.selenium</groupId>
   			<artifactId>selenium-java</artifactId>
   			<version>3.5.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.jetty</groupId>
+					<artifactId>jetty-util</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 	</dependencies>
