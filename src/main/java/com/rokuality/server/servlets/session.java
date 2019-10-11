@@ -297,8 +297,10 @@ public class session extends HttpServlet {
 		}
 		imageCollector.stopRecording();
 
-		returnToHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
-
+		if (isRoku(PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM))))) {
+			returnToHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
+		}
+		
 		String capturePath = (String) sessionInfo.get(SessionConstants.IMAGE_COLLECTION_DIRECTORY);
 		if (capturePath == null || !new File(capturePath).exists()) {
 			resultObj.put(ServerConstants.SERVLET_RESULTS,

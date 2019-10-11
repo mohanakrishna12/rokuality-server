@@ -66,24 +66,8 @@ public class ImageUtils {
 				Log.getRootLogger().warn("Attempting " + String.valueOf(platform) + " screen capture after failed attempt.", i);
 			}
 
-			switch (platform) {
-			case ROKU:
-				image = SessionManager.getImageCollector(sessionID).getCurrentImage(false);
-				break;
-			case XBOX:
-
-				break;
-			case CHROMECAST:
-
-				break;
-			case PLAYSTATION:
-
-				break;
-			default:
-				image = SessionManager.getImageCollector(sessionID).getCurrentImage(false);
-				break;
-			}
-
+			image = SessionManager.getImageCollector(sessionID).getCurrentImage(false);
+			
 			File resizedImageFile = null;
 			if (image != null && image.exists() && image.length() >= MIN_FILE_SIZE_B) {
 				JSONObject sessionInfoObj = SessionManager.getSessionInfo(sessionID);
