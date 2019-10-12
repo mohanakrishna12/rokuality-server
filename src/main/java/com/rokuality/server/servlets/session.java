@@ -88,10 +88,11 @@ public class session extends HttpServlet {
 
 		boolean tesseractInstalled = GlobalDependencyInstaller.isTesseractInstalled();
 		if (!tesseractInstalled) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS,
-					String.format("Unable to find tesseract on your path! Is it installed and available? See the Rokuality Server"
+			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+					"Unable to find tesseract on your path! Is it installed and available? See the Rokuality Server"
 							+ " README for details but it can easily be installed via 'brew install tesseract' "
-							+ "on MAC and via 'scoop install tesseract' for windows.", SessionCapabilities.PLATFORM.value()));
+							+ "on MAC and via 'scoop install tesseract' for windows.",
+					SessionCapabilities.PLATFORM.value()));
 			return sessionInfo;
 		}
 
@@ -111,6 +112,24 @@ public class session extends HttpServlet {
 			return sessionInfo;
 		}
 		sessionInfo.put(SessionConstants.DEVICE_IP, deviceIP);
+
+		if (isXBox(platformType)) {
+			String deviceName = (String) requestObj.get(SessionCapabilities.DEVICE_NAME.value());
+			if (deviceName == null || deviceName.isEmpty()) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
+						.format("The %s capability cannot be null or empty!", SessionCapabilities.DEVICE_NAME.value()));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.DEVICE_NAME, deviceName);
+
+			String hubIP = (String) requestObj.get(SessionCapabilities.HOME_HUB_IP_ADDRESS.value());
+			if (hubIP == null || hubIP.isEmpty()) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"The %s capability cannot be null or empty!", SessionCapabilities.HOME_HUB_IP_ADDRESS.value()));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.HOME_HUB_DEVICE_IP, hubIP);
+		}
 
 		appPackage = String.valueOf(requestObj.get(SessionCapabilities.APP_PACKAGE.value()));
 		String app = String.valueOf(requestObj.get(SessionCapabilities.APP.value()));
@@ -196,34 +215,38 @@ public class session extends HttpServlet {
 		// TODO - device online check for xbox
 		if (isRoku(platformType)) {
 			JSONObject deviceOnlineResults = info.getRokuDeviceInfo(deviceIP);
-			if (deviceOnlineResults == null
-					|| !ServerConstants.SERVLET_SUCCESS.equals(deviceOnlineResults.get(ServerConstants.SERVLET_RESULTS))) {
-				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-						"The device at %s did not respond! Is the device online and reachable on your network?", deviceIP));
+			if (deviceOnlineResults == null || !ServerConstants.SERVLET_SUCCESS
+					.equals(deviceOnlineResults.get(ServerConstants.SERVLET_RESULTS))) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+						String.format(
+								"The device at %s did not respond! Is the device online and reachable on your network?",
+								deviceIP));
 				return sessionInfo;
 			}
 		}
-		
+
 		// TODO - xbox return to home
 		if (isRoku(platformType)) {
 			boolean homeScreenSuccess = returnToHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
 			if (!homeScreenSuccess) {
-				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-						"The device at %s did not return to the home screen on session start!", deviceIP));
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
+						.format("The device at %s did not return to the home screen on session start!", deviceIP));
 				return sessionInfo;
 			}
 		}
-		
-		JSONObject appHandleResults = isRoku(platformType) ? RokuPackageHandler.installPackage(requestObj) : XBoxPackageHandler.installPackage(requestObj);
-		if (appHandleResults == null || !ServerConstants.SERVLET_SUCCESS.equals(String.valueOf(appHandleResults.get(ServerConstants.SERVLET_RESULTS)))) {
+
+		JSONObject appHandleResults = isRoku(platformType) ? RokuPackageHandler.installPackage(requestObj)
+				: XBoxPackageHandler.installPackage(requestObj);
+		if (appHandleResults == null || !ServerConstants.SERVLET_SUCCESS
+				.equals(String.valueOf(appHandleResults.get(ServerConstants.SERVLET_RESULTS)))) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS, appHandleResults.get(ServerConstants.SERVLET_RESULTS));
 			sessionInfo.remove(SessionConstants.APP_PACKAGE);
 			return sessionInfo;
 		}
 		sessionInfo.remove(SessionConstants.APP_PACKAGE);
 
-		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP.toString(), imageCollectionDir, deviceUsername,
-				devicePassword);
+		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP.toString(),
+				imageCollectionDir, deviceUsername, devicePassword);
 		boolean recordingStarted = imageCollector.startRecording();
 		boolean imageCollectionStarted = false;
 		if (recordingStarted) {
@@ -259,7 +282,7 @@ public class session extends HttpServlet {
 		if (imageFile != null && imageFile.exists() && imageFile.isFile()) {
 			FileUtils.deleteFile(imageFile);
 		}
-		
+
 		sessionInfo.put(SessionConstants.ELEMENT_FIND_TIMEOUT, 0L);
 
 		sessionInfo.put(SessionConstants.SESSION_ID, sessionID);
@@ -300,7 +323,7 @@ public class session extends HttpServlet {
 		if (isRoku(PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM))))) {
 			returnToHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
 		}
-		
+
 		String capturePath = (String) sessionInfo.get(SessionConstants.IMAGE_COLLECTION_DIRECTORY);
 		if (capturePath == null || !new File(capturePath).exists()) {
 			resultObj.put(ServerConstants.SERVLET_RESULTS,
@@ -339,11 +362,12 @@ public class session extends HttpServlet {
 			}
 
 			try {
-				RokuKeyPresser.rokuKeyPresser(deviceIP,
-						RokuButton.getDeviceButton(RokuButton.HOME));
+				RokuKeyPresser.rokuKeyPresser(deviceIP, RokuButton.getDeviceButton(RokuButton.HOME));
 			} catch (Exception e) {
-				Log.getRootLogger().warn(String.format("Failed to perform return to home screen during "
-				+ "session start/stop for device %s.", String.valueOf(deviceIP)));
+				Log.getRootLogger()
+						.warn(String.format(
+								"Failed to perform return to home screen during " + "session start/stop for device %s.",
+								String.valueOf(deviceIP)));
 			}
 			SleepUtils.sleep(100);
 		}

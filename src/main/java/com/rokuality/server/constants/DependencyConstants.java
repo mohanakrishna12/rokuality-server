@@ -15,11 +15,6 @@ public class DependencyConstants {
 	public static final File TEMP_DIR = new File(OSUtils.getUserBaseDir().getAbsolutePath() + File.separator + "temp");
 	public static final String DEPENDENCY_URL = "https://rokualitypublic.s3.amazonaws.com/";
 
-	public static final File PHANTOM_JS_MAC = new File(
-			DEPENDENCY_DIR.getAbsolutePath() + File.separator + "phantomjs_v2.1.1");
-	public static final File PHANTOM_JS_WINDOWS = new File(
-			DEPENDENCY_DIR.getAbsolutePath() + File.separator + "phantomjs_v2.1.1.exe");
-	public static final File PHANTOM_JS_LINUX = new File(
-			DEPENDENCY_DIR.getAbsolutePath() + File.separator + "phantomjs_v2.1.1");
+	public static final File HARMONY_BIN = new File(DEPENDENCY_DIR.getAbsolutePath() + File.separator + "harmonyHubCli.js");
 
 }

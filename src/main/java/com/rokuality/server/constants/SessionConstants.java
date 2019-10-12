@@ -14,6 +14,7 @@ public class SessionConstants {
 	public static final String DEVICE_IP = "device_ip";
 	public static final String DEVICE_USERNAME = "device_username";
 	public static final String DEVICE_PASSWORD = "device_password";
+	public static final String HOME_HUB_DEVICE_IP = "home_hub_device_ip";
 	public static final String IMAGE_MATCH_SIMILARITY = "image_match_similarity";
 	public static final String SCREEN_SIZE_OVERRIDE = "screen_size_override";
 	

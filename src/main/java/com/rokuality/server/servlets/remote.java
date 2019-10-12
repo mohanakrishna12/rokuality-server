@@ -11,8 +11,10 @@ import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.roku.RokuKeyPresser;
+import com.rokuality.server.driver.device.xbox.XBoxKeyPresser;
 import com.rokuality.server.enums.RokuButton;
 import com.rokuality.server.enums.SpecialCharacters;
+import com.rokuality.server.enums.XBoxButton;
 import com.rokuality.server.utils.ServletJsonParser;
 
 import java.io.IOException;
@@ -26,20 +28,16 @@ public class remote extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
 		JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
-		String sessionID = requestObj.get(SessionConstants.SESSION_ID).toString();
 
 		JSONObject results = null;
 
 		String action = requestObj.get(ServerConstants.SERVLET_ACTION).toString();
 		switch (action) {
 		case "press_button":
-			RokuButton rokuButton = RokuButton
-					.getEnumByString(requestObj.get(SessionConstants.REMOTE_BUTTON).toString());
-			results = pressRemoteButton(sessionID, rokuButton);
+			results = pressButton(requestObj);
 			break;
 		case "send_keys":
-			String textToSend = (String) requestObj.get(SessionConstants.TEXT);
-			results = sendKeys(sessionID, textToSend);
+			results = sendKeys(requestObj);
 			break;
 		default:
 
@@ -56,7 +54,7 @@ public class remote extends HttpServlet {
 		response.getWriter().println(results.toJSONString());
 	}
 
-	public static JSONObject pressRemoteButton(String sessionID, RokuButton rokuButton) {
+	public static JSONObject pressRokuRemoteButton(String sessionID, RokuButton rokuButton) {
 		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
 
 		JSONObject buttonObj = new JSONObject();
@@ -86,8 +84,40 @@ public class remote extends HttpServlet {
 		return buttonObj;
 	}
 
-	public static JSONObject sendKeys(String sessionID, String text) {
+	public static JSONObject pressXBoxRemoteButton(String sessionID, XBoxButton xboxButton) {
 		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
+
+		JSONObject buttonObj = new JSONObject();
+		if (sessionInfo == null) {
+			buttonObj.put(ServerConstants.SERVLET_RESULTS,
+					"No session found during button press for session " + String.valueOf(sessionID));
+			return buttonObj;
+		}
+
+		String homeHubDeviceIP = (String) sessionInfo.get(SessionConstants.HOME_HUB_DEVICE_IP);
+		String deviceName = (String) sessionInfo.get(SessionConstants.DEVICE_NAME);
+		boolean success = false;
+		try {
+			success = new XBoxKeyPresser(homeHubDeviceIP, deviceName).pressButton(xboxButton);
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+		}
+
+		if (!success) {
+			buttonObj = new JSONObject();
+			buttonObj.put(ServerConstants.SERVLET_RESULTS,
+					"Failed to send remote command " + xboxButton.value() + " to device!");
+			return buttonObj;
+		}
+
+		buttonObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+		return buttonObj;
+	}
+
+	public static JSONObject sendKeys(JSONObject requestObj) {
+		String sessionID = requestObj.get(SessionConstants.SESSION_ID).toString();
+		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
+		String text = (String) requestObj.get(SessionConstants.TEXT);
 
 		JSONObject buttonObj = new JSONObject();
 		if (sessionInfo == null) {
@@ -124,6 +154,25 @@ public class remote extends HttpServlet {
 
 		buttonObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 		return buttonObj;
+	}
+
+	private JSONObject pressButton(JSONObject requestObj) {
+		JSONObject results = null;
+		String sessionID = requestObj.get(SessionConstants.SESSION_ID).toString();
+
+		if (SessionManager.isRoku(sessionID)) {
+			RokuButton rokuButton = RokuButton
+					.getEnumByString(requestObj.get(SessionConstants.REMOTE_BUTTON).toString());
+			results = pressRokuRemoteButton(sessionID, rokuButton);
+		}
+
+		if (SessionManager.isXBox(sessionID)) {
+			XBoxButton xboxButton = XBoxButton
+					.getEnumByString(requestObj.get(SessionConstants.REMOTE_BUTTON).toString());
+			results = pressXBoxRemoteButton(sessionID, xboxButton);
+		}
+
+		return results;
 	}
 
 }
