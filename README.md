@@ -72,8 +72,9 @@ Upon a successful server launch you should see a pop indicating that the server 
 ### Server command options:
 | Command  | Description | Notes |
 | ------------- | ------------- | ------------- |
-| port | Starts the server on a port provided by the user.  | If not provided the server defaults to listen on port 7777 |
-| commandtimeout | Specifies a session cleanup time in seconds for any orphaned sessions i.e. any sessions that were started but haven't received any commands for a specified duration.  | If not provided defaults to 60 seconds. |
+| port | Starts the server on a port provided by the user.  | OPTIONAL - Defaults to listen on port 7777 |
+| commandtimeout | Specifies a session cleanup time in seconds for any orphaned sessions i.e. any sessions that were started but haven't received any commands for a specified duration.  | OPTIONAL - Defaults to 60 seconds. |
+| threads | The maximum number of allowed threads the server can handle. | OPTIONAL - Defaults to 10
 
 ### Next Steps
 Pick a language binding to begin writing tests:

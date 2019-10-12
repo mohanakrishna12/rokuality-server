@@ -30,12 +30,11 @@ import java.util.Set;
 import org.sikuli.basics.Debug;
 import org.sikuli.basics.Settings;
 
-import net.bytebuddy.agent.builder.AgentBuilder.CircularityLock.Global;
-
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class ServerMain {
 
 	private static final int DEFAULT_SERVER_PORT = 7777;
+	private static final int DEFAULT_THREAD_SIZE = 10;
 
 	public static void main(String[] args) throws Exception {
 
@@ -51,7 +50,7 @@ public class ServerMain {
 		System.setErr(logStream);
 
 		QueuedThreadPool threadPool = new QueuedThreadPool();
-		threadPool.setMaxThreads(10); // TODO - dynamic config by user
+		threadPool.setMaxThreads(getThreadSize());
 		Server server = new Server(threadPool);
 
 		NCSARequestLog requestLog = new NCSARequestLog(
@@ -170,5 +169,18 @@ public class ServerMain {
 		}
 
 		return DEFAULT_SERVER_PORT;
+	}
+
+	private static int getThreadSize() {
+		String portStr = System.getProperty("threads");
+		if (portStr != null) {
+			try {
+				return Integer.parseInt(portStr);
+			} catch (Exception e) {
+				Log.getRootLogger().warn(e);
+			}
+		}
+
+		return DEFAULT_THREAD_SIZE;
 	}
 }
