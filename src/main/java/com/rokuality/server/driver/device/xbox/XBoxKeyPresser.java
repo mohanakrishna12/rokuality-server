@@ -28,7 +28,7 @@ public class XBoxKeyPresser {
 			return false;
 		}
 
-		String command = node.getAbsolutePath() + DependencyConstants.HARMONY_BIN.getAbsolutePath() + " -l " + homeHubDeviceIP
+		String command = node.getAbsolutePath() + " " + DependencyConstants.HARMONY_BIN.getAbsolutePath() + " -l " + homeHubDeviceIP
 				+ " -d " + "\"" + deviceName + "\"" + " -c " + button.value();
 		Log.getRootLogger().info(String.format("Sending %s command to XBox.", command));
 		

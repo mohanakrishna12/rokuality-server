@@ -103,7 +103,7 @@ public class session extends HttpServlet {
 					String.format("The %s capability cannot be null", SessionCapabilities.PLATFORM.value()));
 			return sessionInfo;
 		}
-		sessionInfo.put(SessionConstants.PLATFORM, String.valueOf(platformType));
+		sessionInfo.put(SessionConstants.PLATFORM, platformType.value());
 
 		deviceIP = (String) requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value());
 		if (deviceIP == null || deviceIP.isEmpty()) {
