@@ -30,6 +30,8 @@ import java.util.Set;
 import org.sikuli.basics.Debug;
 import org.sikuli.basics.Settings;
 
+import net.bytebuddy.agent.builder.AgentBuilder.CircularityLock.Global;
+
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class ServerMain {
 
@@ -91,8 +93,9 @@ public class ServerMain {
 		boolean ffmpegInstalled = GlobalDependencyInstaller.isFFMPEGInstalled();
 		boolean tesseractInstalled = GlobalDependencyInstaller.isTesseractInstalled();
 		boolean tesseractTrainedDataInstalled = GlobalDependencyInstaller.isTesseractTrainedDataInstalled();
+		boolean harmonyInstalled = GlobalDependencyInstaller.isHarmonyInstalled();
 
-		if (!ffmpegInstalled || !tesseractTrainedDataInstalled) {
+		if (!ffmpegInstalled || !tesseractTrainedDataInstalled || !harmonyInstalled) {
 			try {
 				OSUtils.displaySystemMessage("Preparing first time setup. This will take a minute...");
 			} catch (Exception e) {
@@ -102,6 +105,10 @@ public class ServerMain {
 
 		if (!ffmpegInstalled) {
 			GlobalDependencyInstaller.installFFMPEG();
+		}
+
+		if (!harmonyInstalled) {
+			GlobalDependencyInstaller.installHarmony();
 		}
 
 		if (!tesseractInstalled) {
