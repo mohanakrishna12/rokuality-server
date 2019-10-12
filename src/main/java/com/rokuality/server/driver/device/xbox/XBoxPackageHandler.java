@@ -19,6 +19,8 @@ public class XBoxPackageHandler {
 	private static final String APPX_EXTENSION = ".appxbundle";
 
 	public static JSONObject installPackage(JSONObject requestObj) {
+		String deviceip = (String) requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value());
+
 		JSONObject results = new JSONObject();
 		boolean success = false;
 
@@ -32,7 +34,7 @@ public class XBoxPackageHandler {
 		boolean isPreInstalledApp = appCap != null && appPackageCap == null;
 		boolean appIsUrl = false;
 
-		if (appCap == null && appPackageCap != null) {
+		if (appPackageCap != null) {
 			appIsUrl = HttpUtils.isValidUrl(appPackageCap);
 		}
 
@@ -54,30 +56,29 @@ public class XBoxPackageHandler {
 				Log.getRootLogger().warn(e);
 				results.put(ServerConstants.SERVLET_RESULTS,
 						String.format("Failed to decode app package file at %s. The %s capability must be either a "
-								+ "valid url to a sideloadable .zip package OR a valid file path to a sideloadable .zip package!",
+								+ "valid url to a .appxbundle package OR a valid file path to a .appxbundle package!",
 								String.valueOf(appPackageCap), SessionCapabilities.APP_PACKAGE.value()));
 				return results;
 			}
 		}
 
-		// TODO
 		// app is preinstalled and must be launched
-		if (!appIsUrl && isPreInstalledApp) {
-			Log.getRootLogger().info("App is preinstalled/sideloaded. Launching.");
+		if (isPreInstalledApp) {
+			Log.getRootLogger().info("App is preinstalled. Launching.");
 			boolean appPreInstalledSuccess = false;
-			boolean appPreInstalledLaunchSuccess= false;
 			try {
-				
+
+				appPreInstalledSuccess = new XBoxDevConsoleManager(deviceip).launchApp(appCap);
 			} catch (Exception e) {
 				Log.getRootLogger().warn(e);
 			}
 
-			if (!appPreInstalledSuccess || !appPreInstalledLaunchSuccess) {
+			if (!appPreInstalledSuccess) {
 				results.put(ServerConstants.SERVLET_RESULTS, String.format(
 						"Failed to launch the %s application! If you provide the %s capability then the identified app "
-								+ "id must be an app that is already sideloaded (and the cap value should almost certainly be 'dev'!"
+								+ "id must be an app that is already installed!"
 								+ " Otherwise, please use the %s capability and identify "
-								+ "the path or url to sideloadable .zip package which will be installed.",
+								+ "the path or url to a valid .appxbundle package which will be installed.",
 						appCap, SessionCapabilities.APP_PACKAGE.value(), SessionCapabilities.APP_PACKAGE.value()));
 				return results;
 			}
@@ -101,10 +102,7 @@ public class XBoxPackageHandler {
 		}
 
 		if (validPackage) {
-			String deviceip = (String) requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value());
-
 			XBoxDevConsoleManager xboxDevConsoleManager = new XBoxDevConsoleManager(deviceip);
-			// TODO uninstall handling
 			xboxDevConsoleManager.uninstallApp(appCap);
 			success = xboxDevConsoleManager.installApp(appPackage.getAbsolutePath(), appCap);
 			results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);

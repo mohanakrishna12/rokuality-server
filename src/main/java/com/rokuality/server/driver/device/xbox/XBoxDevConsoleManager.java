@@ -129,6 +129,106 @@ public class XBoxDevConsoleManager {
 		return uninstallSuccess;
 	}
 
+	public boolean launchApp(String appID) {
+		boolean launchSuccess = false;
+		WebDriver webDriver = null;
+		try {
+			webDriver = getWebDriver();
+
+			webDriver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
+			Log.getRootLogger().info(String.format("Launching XBox App %s from device at %s", appID, getConsoleUrl()));
+			webDriver.get(getConsoleUrl());
+			new WebDriverUtils(webDriver,
+					By.xpath("//div[contains(@class, 'launcherFieldName')]/a[text()='Dev Home']"));
+
+			try {
+				webDriver.manage().timeouts().implicitlyWait(1, TimeUnit.SECONDS);
+				new WebDriverUtils(webDriver,
+						By.xpath("//div[contains(@class, 'launcherFieldName')]/a[text()='" + appID
+						+ "']/../..//div[contains(@class, 'launcherFieldActions')]/select"))
+								.selectByValue("activate");
+			} catch (NoSuchElementException nse) {
+				Log.getRootLogger().warn(String.format("XBox app with id %s is not installed!", appID));
+				return false;
+			}
+			
+			long pollStart = System.currentTimeMillis();
+			long pollMax = pollStart + DEFAULT_TIMEOUT * 1000;
+
+			while (System.currentTimeMillis() < pollMax) {
+				webDriver.manage().timeouts().implicitlyWait(0, TimeUnit.SECONDS);
+				try {
+					new WebDriverUtils(webDriver, By.xpath("//div[contains(@class, 'launcherFieldName')]/a[text()='"
+							+ appID + "']/../..//div[contains(@class, 'launcherFieldState')][text()='Running']"));
+					launchSuccess = true;
+					break;
+				} catch (NoSuchElementException nse) {
+					// ignore
+				}
+				SleepUtils.sleep(250);
+			}
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+			getFailureArtifacts(webDriver);
+		} finally {
+			if (webDriver != null) {
+				webDriver.quit();
+			}
+		}
+
+		return launchSuccess;
+	}
+
+	public boolean closeApp(String appID) {
+		boolean closeSuccess = false;
+		WebDriver webDriver = null;
+		try {
+			webDriver = getWebDriver();
+
+			webDriver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT, TimeUnit.SECONDS);
+			Log.getRootLogger().info(String.format("Closing XBox App %s from device at %s", appID, getConsoleUrl()));
+			webDriver.get(getConsoleUrl());
+			new WebDriverUtils(webDriver,
+					By.xpath("//div[contains(@class, 'launcherFieldName')]/a[text()='Dev Home']"));
+
+			try {
+				webDriver.manage().timeouts().implicitlyWait(1, TimeUnit.SECONDS);
+				new WebDriverUtils(webDriver,
+						By.xpath("//div[contains(@class, 'launcherFieldName')]/a[text()='" + appID
+						+ "']/../..//div[contains(@class, 'launcherFieldActions')]/select"))
+								.selectByValue("terminate");
+			} catch (NoSuchElementException nse) {
+				Log.getRootLogger().warn(String.format("XBox app with id %s is not installed!", appID));
+				return false;
+			}
+			
+			long pollStart = System.currentTimeMillis();
+			long pollMax = pollStart + DEFAULT_TIMEOUT * 1000;
+
+			while (System.currentTimeMillis() < pollMax) {
+				webDriver.manage().timeouts().implicitlyWait(0, TimeUnit.SECONDS);
+				try {
+					new WebDriverUtils(webDriver, By.xpath("//div[contains(@class, 'launcherFieldName')]/a[text()='"
+							+ appID + "']/../..//div[contains(@class, 'launcherFieldState')][text()='Not running']"));
+					closeSuccess = true;
+					break;
+				} catch (NoSuchElementException nse) {
+					// ignore
+				}
+				SleepUtils.sleep(250);
+			}
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+			getFailureArtifacts(webDriver);
+		} finally {
+			if (webDriver != null) {
+				webDriver.quit();
+			}
+		}
+
+		return closeSuccess;
+	}
+
 	private WebDriver getWebDriver() {
 		DesiredCapabilities capabilities = new DesiredCapabilities();
 		io.github.bonigarcia.wdm.WebDriverManager.chromedriver().setup();

@@ -8,7 +8,7 @@ public class SessionConstants {
 	public static final String DEVICE_NAME = "device_name";
 	public static final String DEVICE_OS_VERSION = "device_os_version";
 	public static final String APP_PACKAGE = "app_package";
-	public static final String APP_PACKAGE_ID = "app_package_id";
+	public static final String APP = "app";
 	public static final String PLATFORM = "platform";
 	public static final String SCREEN_RECORDING_PATH = "screen_recording_path";
 	public static final String DEVICE_IP = "device_ip";
