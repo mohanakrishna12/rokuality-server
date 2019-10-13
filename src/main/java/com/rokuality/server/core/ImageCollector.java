@@ -92,26 +92,11 @@ public class ImageCollector {
 			counter++;
 			
 			try {
-				File image = ImageUtils.getScreenImage(platform, username, password, deviceIP);
-				if (image != null && image.exists()) {
-					String paddedCounter = String.format("%05d", counter);
-					File baseImage = image;
-					File copiedImage = new File(imageCaptureDir.getAbsolutePath() + File.separator + paddedCounter
-							+ getImageCaptureFormat());
-					if (!copiedImage.exists()) {
-						baseImage.renameTo(copiedImage);
-					}
-
-					if (copiedImage.exists() && copiedImage.length() > MIN_FILE_SIZE_B) {
-						currentCaptureFile = copiedImage;
-					} else {
-						counter--;
-						FileUtils.deleteFile(copiedImage);
-					}
-
-					if (baseImage.exists()) {
-						FileUtils.deleteFile(baseImage);
-					}
+				String paddedCounter = String.format("%05d", counter);
+				File captureFile = new File(imageCaptureDir.getAbsolutePath() + File.separator + paddedCounter + getImageCaptureFormat());
+				File image = ImageUtils.getScreenImage(captureFile, platform, username, password, deviceIP);
+				if (image != null && image.exists() && image.length() > MIN_FILE_SIZE_B) {
+					currentCaptureFile = image;
 				} else {
 					counter--;
 				}

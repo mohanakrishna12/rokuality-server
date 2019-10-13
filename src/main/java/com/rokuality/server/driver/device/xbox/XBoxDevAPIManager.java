@@ -15,8 +15,6 @@ import java.io.*;
 
 import javax.net.ssl.SSLContext;
 
-import com.rokuality.server.constants.DependencyConstants;
-
 public class XBoxDevAPIManager {
 
 	private static final int DEFAULT_TIMEOUT = 60;
@@ -27,7 +25,7 @@ public class XBoxDevAPIManager {
 		this.deviceip = deviceip;
 	}
 
-	public File getScreenshot() {
+	public File getScreenshot(File fileToSaveAs) {
 		File pngFile = null;
 
 		SSLConnectionSocketFactory sslSocketFactory = null;
@@ -57,9 +55,7 @@ public class XBoxDevAPIManager {
 					HttpEntity entity = response.getEntity();
 					InputStream inputStream = entity.getContent();
 
-					String pngLocation = DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator
-							+ System.currentTimeMillis() + "_" + String.valueOf(deviceip).replace(".", "") + ".png";
-					pngFile = new File(pngLocation);
+					pngFile = fileToSaveAs;
 					FileUtils.copyInputStreamToFile(inputStream, pngFile);
 
 					if (statusCode != 200) {

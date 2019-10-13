@@ -234,6 +234,8 @@ public class ImageUtils {
 				matchedImageTexts.add(imageText);
 			}
 		}
+		Log.getRootLogger().info(String.format("Found matched components for locator text %s : %s", 
+				loc, matchedImageTexts));
 
 		List<Integer> yLocElements = new ArrayList<Integer>();
 		for (ImageText imageText : matchedImageTexts) {
@@ -255,6 +257,8 @@ public class ImageUtils {
 			constructedWords += " " + imageText.getText();
 		}
 		constructedWords = constructedWords.trim();
+		Log.getRootLogger().info(String.format("Constructed word component for locator text %s : %s", 
+				loc, constructedWords));
 
 		if (matchedImageTexts.isEmpty()) {
 			return null;
@@ -596,14 +600,14 @@ public class ImageUtils {
 		return ImageIO.read(file);
 	}
 
-	public static File getScreenImage(PlatformType platform, String username, String password, String deviceip) {
+	public static File getScreenImage(File fileToSaveAs, PlatformType platform, String username, String password, String deviceip) {
 		switch (platform) {
 			case ROKU:
-			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot();
+			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot(fileToSaveAs);
 			case XBOX:
-			return new XBoxDevAPIManager(deviceip).getScreenshot();
+			return new XBoxDevAPIManager(deviceip).getScreenshot(fileToSaveAs);
 			default:
-			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot();
+			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot(fileToSaveAs);
 		}
 	}
 
