@@ -232,17 +232,13 @@ public class session extends HttpServlet {
 			}
 		}
 
-		// TODO - device online check for xbox
-		if (isRoku(platformType)) {
-			JSONObject deviceOnlineResults = info.getRokuDeviceInfo(deviceIP);
-			if (deviceOnlineResults == null || !ServerConstants.SERVLET_SUCCESS
-					.equals(deviceOnlineResults.get(ServerConstants.SERVLET_RESULTS))) {
-				sessionInfo.put(ServerConstants.SERVLET_RESULTS,
-						String.format(
-								"The device at %s did not respond! Is the device online and reachable on your network?",
-								deviceIP));
-				return sessionInfo;
-			}
+		JSONObject deviceOnlineResults = isRoku(platformType) ? info.getRokuDeviceInfo(deviceIP)
+				: info.getXBoxDeviceInfo(deviceIP);
+		if (deviceOnlineResults == null
+				|| !ServerConstants.SERVLET_SUCCESS.equals(deviceOnlineResults.get(ServerConstants.SERVLET_RESULTS))) {
+			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+					"The device at %s did not respond! Is the device online and reachable on your network?", deviceIP));
+			return sessionInfo;
 		}
 
 		if (isRoku(platformType)) {
