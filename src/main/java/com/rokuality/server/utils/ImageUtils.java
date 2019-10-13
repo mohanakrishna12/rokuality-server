@@ -467,9 +467,6 @@ public class ImageUtils {
 		List<ImageText> imageTexts = new ArrayList<>();
 		if (ocrType.equals(OCRType.GOOGLE_VISION)) {
 			imageTexts = getTextsListFromImageUsingGoogleVision(credentials, imageFile);
-			if (imageTexts != null && imageTexts.size() > 1) {
-				imageTexts.remove(0);
-			}
 		}
 
 		if (ocrType.equals(OCRType.TESSERACT)) {

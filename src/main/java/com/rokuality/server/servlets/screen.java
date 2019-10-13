@@ -14,6 +14,7 @@ import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.FileUtils;
 import com.rokuality.server.utils.ImageUtils;
 import com.rokuality.server.utils.ServletJsonParser;
+import com.rokuality.server.utils.SleepUtils;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.ImageCollector;
@@ -65,36 +66,20 @@ public class screen extends HttpServlet {
 		String sessionID = sessionObj.get(SessionConstants.SESSION_ID).toString();
 		JSONObject results = new JSONObject();
 
-		Object subScreenX = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_X, null);
-		Object subScreenY = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_Y, null);
-		Object subScreenWidth = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_WIDTH, null);
-		Object subScreenHeight = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_HEIGHT, null);
+		File imageFile = collectImage(sessionID, sessionObj);
 
-		ImageCollector imageCollector = SessionManager.getImageCollector(sessionID);
-		File imageFile = null;
-		File subImageFile = null;
-		if (imageCollector != null) {
-			imageFile = imageCollector.getCurrentImage(false);
-			if (imageFile != null && imageFile.exists() && subScreenX != null && subScreenY != null && subScreenWidth != null && subScreenHeight != null) {
-				subImageFile = ImageUtils.getSubImageFromImage(imageFile, Integer.parseInt(String.valueOf(subScreenX)), Integer.parseInt(String.valueOf(subScreenY)),
-						Integer.parseInt(String.valueOf(subScreenWidth)), Integer.parseInt(String.valueOf(subScreenHeight)));
-				FileUtils.deleteFile(imageFile);
-				imageFile = subImageFile;
-			}
-		}
-
-		String jpgContent = null;
+		String imageContent = null;
 		if (imageFile != null && imageFile.exists()) {
-			jpgContent = new FileToStringUtils().convertToString(imageFile);
+			imageContent = new FileToStringUtils().convertToString(imageFile);
 		}
 
-		if (jpgContent != null) {
+		if (imageContent != null) {
 			results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
-			results.put("screen_image", jpgContent);
+			results.put("screen_image", imageContent);
 			results.put("screen_image_extension", ImageUtils.getImageFormat(imageFile));
 		}
 
-		if (jpgContent == null) {
+		if (imageContent == null) {
 			results.put(ServerConstants.SERVLET_RESULTS, "Failed to get screen image/subimage!");
 		}
 
@@ -107,28 +92,17 @@ public class screen extends HttpServlet {
 		JSONObject results = new JSONObject();
 		String sessionID = sessionObj.get(SessionConstants.SESSION_ID).toString();
 
-		Object subScreenX = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_X, null);
-		Object subScreenY = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_Y, null);
-		Object subScreenWidth = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_WIDTH, null);
-		Object subScreenHeight = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_HEIGHT, null);
-
-		ImageCollector imageCollector = SessionManager.getImageCollector(sessionID);
-		File image = null;
-		File subImageFile = null;
-		if (imageCollector != null) {
-			image = imageCollector.getCurrentImage(false);
-			if (image != null && image.exists() && subScreenX != null && subScreenY != null && subScreenWidth != null && subScreenHeight != null) {
-				subImageFile = ImageUtils.getSubImageFromImage(image, Integer.parseInt(String.valueOf(subScreenX)), Integer.parseInt(String.valueOf(subScreenY)),
-						Integer.parseInt(String.valueOf(subScreenWidth)), Integer.parseInt(String.valueOf(subScreenHeight)));
-				FileUtils.deleteFile(image);
-				image = subImageFile;
-			}
-		}
+		File image = collectImage(sessionID, sessionObj);
 
 		List<ImageText> imageTexts = null;
 		if (image != null && image.exists()) {
 			imageTexts = ImageUtils.getTextsListFromImage(SessionManager.getOCRType(sessionID), image,
 					SessionManager.getGoogleCredentials(sessionID));
+		}
+
+		if (image == null || !image.exists()) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Failed to capture image during screen evaluation!");
+			return results;
 		}
 
 		String preparedScreenJSON = null;
@@ -213,6 +187,42 @@ public class screen extends HttpServlet {
 			results.put("screen_video_extension", ".mp4");
 		}
 		return results;
+	}
+
+	private static File collectImage(String sessionID, JSONObject sessionObj) {
+		Object subScreenX = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_X, null);
+		Object subScreenY = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_Y, null);
+		Object subScreenWidth = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_WIDTH, null);
+		Object subScreenHeight = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_HEIGHT, null);
+
+		ImageCollector imageCollector = SessionManager.getImageCollector(sessionID);
+		File image = null;
+		File subImageFile = null;
+		if (imageCollector != null) {
+			long pollStart = System.currentTimeMillis();
+			long pollMax = pollStart + (5 * 1000);
+
+			while (System.currentTimeMillis() <= pollMax) {
+				image = imageCollector.getCurrentImage(false);
+				if (image != null && image.exists() && subScreenX != null && subScreenY != null
+						&& subScreenWidth != null && subScreenHeight != null) {
+					subImageFile = ImageUtils.getSubImageFromImage(image, Integer.parseInt(String.valueOf(subScreenX)),
+							Integer.parseInt(String.valueOf(subScreenY)),
+							Integer.parseInt(String.valueOf(subScreenWidth)),
+							Integer.parseInt(String.valueOf(subScreenHeight)));
+					FileUtils.deleteFile(image);
+					image = subImageFile;
+				}
+
+				if (image != null && image.exists()) {
+					break;
+				}
+				Log.getRootLogger().warn("Image capture during screen capture failed. Retrying...");
+				SleepUtils.sleep(250);
+			}
+		}
+
+		return image;
 	}
 
 }
