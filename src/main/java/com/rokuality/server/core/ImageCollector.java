@@ -90,7 +90,7 @@ public class ImageCollector {
 		Integer counter = 0;
 		while (!videoComplete) {
 			counter++;
-
+			
 			try {
 				File image = ImageUtils.getScreenImage(platform, username, password, deviceIP);
 				if (image != null && image.exists()) {
@@ -178,7 +178,11 @@ public class ImageCollector {
 			}
 
 			if (PlatformType.XBOX.equals(platform) && currentCaptureFile.exists() && currentCaptureFile.isFile()) {
-				return pngFile;
+				File copiedImage = new File(imageCaptureDir.getAbsolutePath() + File.separator + "copied_" + pngFile.getName());
+				FileUtils.copyFile(pngFile, copiedImage);
+				if (copiedImage.exists()) {
+					return copiedImage;
+				}
 			}
 		} catch (Exception e) {
 			Log.getRootLogger().warn("Failed to prepare current image for evaluation!", e);

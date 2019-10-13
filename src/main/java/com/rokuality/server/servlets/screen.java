@@ -204,8 +204,11 @@ public class screen extends HttpServlet {
 
 			while (System.currentTimeMillis() <= pollMax) {
 				image = imageCollector.getCurrentImage(false);
+				Log.getRootLogger().info("Collecting screen image from entire screen.");
 				if (image != null && image.exists() && subScreenX != null && subScreenY != null
 						&& subScreenWidth != null && subScreenHeight != null) {
+					Log.getRootLogger().info(String.format("Collecting screen image from sub screen: %s, %s, %s, %s",
+							subScreenX, subScreenY, subScreenWidth, subScreenHeight));
 					subImageFile = ImageUtils.getSubImageFromImage(image, Integer.parseInt(String.valueOf(subScreenX)),
 							Integer.parseInt(String.valueOf(subScreenY)),
 							Integer.parseInt(String.valueOf(subScreenWidth)),
