@@ -8,6 +8,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("rawtypes")
 public class ZipUtils {
 
    public static boolean createZipFile(File zipFile, List<File> filesToZip) {

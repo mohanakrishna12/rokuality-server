@@ -6,7 +6,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.rokuality.server.constants.SessionConstants;
-import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.SessionManager;
 
 import org.eclipse.jetty.util.log.Log;

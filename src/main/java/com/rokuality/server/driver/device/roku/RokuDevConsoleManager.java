@@ -29,7 +29,6 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.enums.SessionCapabilities;
 
 public class RokuDevConsoleManager {

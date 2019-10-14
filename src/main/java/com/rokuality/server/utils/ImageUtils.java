@@ -49,6 +49,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+@SuppressWarnings("unchecked")
 public class ImageUtils {
 
 	private static final Integer MIN_FILE_SIZE_B = 100;
