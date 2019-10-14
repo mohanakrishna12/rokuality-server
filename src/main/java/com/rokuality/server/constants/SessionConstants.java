@@ -8,12 +8,13 @@ public class SessionConstants {
 	public static final String DEVICE_NAME = "device_name";
 	public static final String DEVICE_OS_VERSION = "device_os_version";
 	public static final String APP_PACKAGE = "app_package";
-	public static final String APP_PACKAGE_ID = "app_package_id";
+	public static final String APP = "app";
 	public static final String PLATFORM = "platform";
 	public static final String SCREEN_RECORDING_PATH = "screen_recording_path";
 	public static final String DEVICE_IP = "device_ip";
 	public static final String DEVICE_USERNAME = "device_username";
 	public static final String DEVICE_PASSWORD = "device_password";
+	public static final String HOME_HUB_DEVICE_IP = "home_hub_device_ip";
 	public static final String IMAGE_MATCH_SIMILARITY = "image_match_similarity";
 	public static final String SCREEN_SIZE_OVERRIDE = "screen_size_override";
 	

@@ -34,6 +34,7 @@ import org.sikuli.basics.Settings;
 public class ServerMain {
 
 	private static final int DEFAULT_SERVER_PORT = 7777;
+	private static final int DEFAULT_THREAD_SIZE = 10;
 
 	public static void main(String[] args) throws Exception {
 
@@ -49,7 +50,7 @@ public class ServerMain {
 		System.setErr(logStream);
 
 		QueuedThreadPool threadPool = new QueuedThreadPool();
-		threadPool.setMaxThreads(10); // TODO - dynamic config by user
+		threadPool.setMaxThreads(getThreadSize());
 		Server server = new Server(threadPool);
 
 		NCSARequestLog requestLog = new NCSARequestLog(
@@ -91,8 +92,9 @@ public class ServerMain {
 		boolean ffmpegInstalled = GlobalDependencyInstaller.isFFMPEGInstalled();
 		boolean tesseractInstalled = GlobalDependencyInstaller.isTesseractInstalled();
 		boolean tesseractTrainedDataInstalled = GlobalDependencyInstaller.isTesseractTrainedDataInstalled();
+		boolean harmonyInstalled = GlobalDependencyInstaller.isHarmonyInstalled();
 
-		if (!ffmpegInstalled || !tesseractTrainedDataInstalled) {
+		if (!ffmpegInstalled || !tesseractTrainedDataInstalled || !harmonyInstalled) {
 			try {
 				OSUtils.displaySystemMessage("Preparing first time setup. This will take a minute...");
 			} catch (Exception e) {
@@ -102,6 +104,10 @@ public class ServerMain {
 
 		if (!ffmpegInstalled) {
 			GlobalDependencyInstaller.installFFMPEG();
+		}
+
+		if (!harmonyInstalled) {
+			GlobalDependencyInstaller.installHarmony();
 		}
 
 		if (!tesseractInstalled) {
@@ -163,5 +169,18 @@ public class ServerMain {
 		}
 
 		return DEFAULT_SERVER_PORT;
+	}
+
+	private static int getThreadSize() {
+		String portStr = System.getProperty("threads");
+		if (portStr != null) {
+			try {
+				return Integer.parseInt(portStr);
+			} catch (Exception e) {
+				Log.getRootLogger().warn(e);
+			}
+		}
+
+		return DEFAULT_THREAD_SIZE;
 	}
 }

@@ -6,9 +6,11 @@ import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.SessionManager;
-import com.rokuality.server.driver.device.RokuDevAPIManager;
-import com.rokuality.server.driver.device.RokuKeyPresser;
-import com.rokuality.server.driver.device.RokuPackageHandler;
+import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
+import com.rokuality.server.driver.device.roku.RokuKeyPresser;
+import com.rokuality.server.driver.device.roku.RokuPackageHandler;
+import com.rokuality.server.driver.device.xbox.XBoxDevConsoleManager;
+import com.rokuality.server.driver.device.xbox.XBoxPackageHandler;
 import com.rokuality.server.driver.host.GlobalDependencyInstaller;
 import com.rokuality.server.enums.OCRType;
 import com.rokuality.server.enums.PlatformType;
@@ -85,15 +87,6 @@ public class session extends HttpServlet {
 		String deviceUsername = null;
 		String devicePassword = null;
 
-		boolean tesseractInstalled = GlobalDependencyInstaller.isTesseractInstalled();
-		if (!tesseractInstalled) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS,
-					String.format("Unable to find tesseract on your path! Is it installed and available? See the Rokuality Server"
-							+ " README for details but it can easily be installed via 'brew install tesseract' "
-							+ "on MAC and via 'scoop install tesseract' for windows.", SessionCapabilities.PLATFORM.value()));
-			return sessionInfo;
-		}
-
 		platformType = PlatformType
 				.getEnumByString(String.valueOf(requestObj.get(SessionCapabilities.PLATFORM.value())));
 		if (platformType == null) {
@@ -101,8 +94,30 @@ public class session extends HttpServlet {
 					String.format("The %s capability cannot be null", SessionCapabilities.PLATFORM.value()));
 			return sessionInfo;
 		}
-		sessionInfo.put(SessionConstants.PLATFORM, String.valueOf(platformType));
+		sessionInfo.put(SessionConstants.PLATFORM, platformType.value());
 
+		boolean tesseractInstalled = GlobalDependencyInstaller.isTesseractInstalled();
+		if (!tesseractInstalled) {
+			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+					"Unable to find tesseract on your path! Is it installed and available? See the Rokuality Server"
+							+ " README for details but it can easily be installed via 'brew install tesseract' "
+							+ "on MAC and via 'scoop install tesseract' for windows.",
+					SessionCapabilities.PLATFORM.value()));
+			return sessionInfo;
+		}
+
+		if (isXBox(platformType)) {
+			boolean nodeInstalled = GlobalDependencyInstaller.isNodeInstalled();
+			if (!nodeInstalled) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"Unable to find node on your path! Is it installed and available? See the Rokuality Server"
+								+ " README for details but it can easily be installed via 'brew install node' "
+								+ "on MAC and via 'scoop install nodejs' for windows.",
+						SessionCapabilities.PLATFORM.value()));
+				return sessionInfo;
+			}
+		}
+		
 		deviceIP = (String) requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value());
 		if (deviceIP == null || deviceIP.isEmpty()) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format("The %s capability cannot be null or empty!",
@@ -111,9 +126,28 @@ public class session extends HttpServlet {
 		}
 		sessionInfo.put(SessionConstants.DEVICE_IP, deviceIP);
 
+		if (isXBox(platformType)) {
+			String deviceName = (String) requestObj.get(SessionCapabilities.DEVICE_NAME.value());
+			if (deviceName == null || deviceName.isEmpty()) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
+						.format("The %s capability cannot be null or empty!", SessionCapabilities.DEVICE_NAME.value()));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.DEVICE_NAME, deviceName);
+
+			String hubIP = (String) requestObj.get(SessionCapabilities.HOME_HUB_IP_ADDRESS.value());
+			if (hubIP == null || hubIP.isEmpty()) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"The %s capability cannot be null or empty!", SessionCapabilities.HOME_HUB_IP_ADDRESS.value()));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.HOME_HUB_DEVICE_IP, hubIP);
+		}
+
 		appPackage = String.valueOf(requestObj.get(SessionCapabilities.APP_PACKAGE.value()));
 		String app = String.valueOf(requestObj.get(SessionCapabilities.APP.value()));
-		if ((appPackage.equals("null") && app.equals("null")) || (appPackage.isEmpty() && app.isEmpty())) {
+		if (isRoku(platformType)
+				&& ((appPackage.equals("null") && app.equals("null")) || (appPackage.isEmpty() && app.isEmpty()))) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
 					"You must provide either the %1$s or %2$s capabilities! If the %1$s is provided then it must be "
 							+ "either the path to a local sideloadable .zip package OR the url to a sideloadable .zip package. "
@@ -121,6 +155,24 @@ public class session extends HttpServlet {
 					SessionCapabilities.APP_PACKAGE.value(), SessionCapabilities.APP.value()));
 			return sessionInfo;
 		}
+
+		if (isXBox(platformType) && (app == "null" || app.isEmpty())) {
+			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+					"You must provide the %s capability that matches the id of the app you are trying to launch, or "
+							+ "you are trying to install!",
+					SessionCapabilities.APP.value()));
+			return sessionInfo;
+		}
+
+		if (isXBox(platformType) && !appPackage.equals("null") && appPackage.isEmpty()) {
+			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+					"The %s capability is not valid! It must be either the path to a local .appxbundle OR a url "
+							+ "to a .appxbundle that you are tryig to install.",
+					SessionCapabilities.APP_PACKAGE.value()));
+			return sessionInfo;
+		}
+
+		sessionInfo.put(SessionConstants.APP, app);
 		sessionInfo.put(SessionConstants.APP_PACKAGE, appPackage);
 
 		ocrType = OCRType.getEnumByString(String.valueOf(requestObj.get(SessionCapabilities.OCR_TYPE.value())));
@@ -131,7 +183,7 @@ public class session extends HttpServlet {
 		}
 		sessionInfo.put(SessionConstants.OCR_MODULE, ocrType.value());
 
-		if (PlatformType.ROKU.equals(platformType)) {
+		if (isRoku(platformType)) {
 			deviceUsername = (String) requestObj.get(SessionCapabilities.DEVICE_USERNAME.value());
 			if (deviceUsername == null || deviceUsername.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
@@ -192,7 +244,8 @@ public class session extends HttpServlet {
 			}
 		}
 
-		JSONObject deviceOnlineResults = info.getRokuDeviceInfo(deviceIP);
+		JSONObject deviceOnlineResults = isRoku(platformType) ? info.getRokuDeviceInfo(deviceIP)
+				: info.getXBoxDeviceInfo(deviceIP);
 		if (deviceOnlineResults == null
 				|| !ServerConstants.SERVLET_SUCCESS.equals(deviceOnlineResults.get(ServerConstants.SERVLET_RESULTS))) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
@@ -200,23 +253,28 @@ public class session extends HttpServlet {
 			return sessionInfo;
 		}
 
-		boolean homeScreenSuccess = returnToHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
-		if (!homeScreenSuccess) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-					"The device at %s did not return to the home screen on session start!", deviceIP));
-			return sessionInfo;
+		if (isRoku(platformType)) {
+			boolean homeScreenSuccess = returnToRokuHomeScreen(
+					String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
+			if (!homeScreenSuccess) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
+						.format("The device at %s did not return to the home screen on session start!", deviceIP));
+				return sessionInfo;
+			}
 		}
 
-		JSONObject appHandleResults = RokuPackageHandler.installPackage(requestObj);
-		if (appHandleResults == null || !ServerConstants.SERVLET_SUCCESS.equals(String.valueOf(appHandleResults.get(ServerConstants.SERVLET_RESULTS)))) {
+		JSONObject appHandleResults = isRoku(platformType) ? RokuPackageHandler.installPackage(requestObj)
+				: XBoxPackageHandler.installPackage(requestObj);
+		if (appHandleResults == null || !ServerConstants.SERVLET_SUCCESS
+				.equals(String.valueOf(appHandleResults.get(ServerConstants.SERVLET_RESULTS)))) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS, appHandleResults.get(ServerConstants.SERVLET_RESULTS));
 			sessionInfo.remove(SessionConstants.APP_PACKAGE);
 			return sessionInfo;
 		}
 		sessionInfo.remove(SessionConstants.APP_PACKAGE);
 
-		ImageCollector imageCollector = new ImageCollector(sessionID, deviceIP.toString(), imageCollectionDir, deviceUsername,
-				devicePassword);
+		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP.toString(),
+				imageCollectionDir, deviceUsername, devicePassword);
 		boolean recordingStarted = imageCollector.startRecording();
 		boolean imageCollectionStarted = false;
 		if (recordingStarted) {
@@ -252,7 +310,7 @@ public class session extends HttpServlet {
 		if (imageFile != null && imageFile.exists() && imageFile.isFile()) {
 			FileUtils.deleteFile(imageFile);
 		}
-		
+
 		sessionInfo.put(SessionConstants.ELEMENT_FIND_TIMEOUT, 0L);
 
 		sessionInfo.put(SessionConstants.SESSION_ID, sessionID);
@@ -290,7 +348,14 @@ public class session extends HttpServlet {
 		}
 		imageCollector.stopRecording();
 
-		returnToHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
+		if (isRoku(PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM))))) {
+			returnToRokuHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
+		}
+
+		if (isXBox(PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM))))) {
+			String appID = String.valueOf(sessionInfo.get(SessionConstants.APP));
+			returnToXBoxHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)), appID);
+		}
 
 		String capturePath = (String) sessionInfo.get(SessionConstants.IMAGE_COLLECTION_DIRECTORY);
 		if (capturePath == null || !new File(capturePath).exists()) {
@@ -320,32 +385,45 @@ public class session extends HttpServlet {
 		return credential;
 	}
 
-	private static boolean returnToHomeScreen(String deviceIP) {
+	private static boolean returnToXBoxHomeScreen(String deviceIP, String appID) {
+		return new XBoxDevConsoleManager(deviceIP).closeApp(appID);
+	}
+
+	private static boolean returnToRokuHomeScreen(String deviceIP) {
 		long pollStart = System.currentTimeMillis();
 		long pollMax = pollStart + 15 * 1000; // 10 seconds from now - TODO - config/constant
 		while (System.currentTimeMillis() < pollMax) {
-			boolean onHomeScreen = isHomeScreenLoaded(deviceIP);
+			boolean onHomeScreen = isRokuHomeScreenLoaded(deviceIP);
 			if (onHomeScreen) {
 				return true;
 			}
 
 			try {
-				RokuKeyPresser.rokuKeyPresser(deviceIP,
-						RokuButton.getDeviceButton(RokuButton.HOME));
+				RokuKeyPresser.rokuKeyPresser(deviceIP, RokuButton.getDeviceButton(RokuButton.HOME));
 			} catch (Exception e) {
-				Log.getRootLogger().warn(String.format("Failed to perform return to home screen during "
-				+ "session start/stop for device %s.", String.valueOf(deviceIP)));
+				Log.getRootLogger()
+						.warn(String.format(
+								"Failed to perform return to home screen during " + "session start/stop for device %s.",
+								String.valueOf(deviceIP)));
 			}
 			SleepUtils.sleep(100);
 		}
 		return false;
 	}
 
-	private static boolean isHomeScreenLoaded(String deviceIP) {
+	private static boolean isRokuHomeScreenLoaded(String deviceIP) {
 		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(deviceIP, "/query/active-app", "GET");
 		rokuDevAPIManager.sendDevAPICommand();
 		String output = rokuDevAPIManager.getResponseContent();
 		return (output != null && output.contains("<app>Roku</app>"));
+	}
+
+	private static boolean isRoku(PlatformType platformType) {
+		return PlatformType.ROKU.equals(platformType);
+	}
+
+	private static boolean isXBox(PlatformType platformType) {
+		return PlatformType.XBOX.equals(platformType);
 	}
 
 }

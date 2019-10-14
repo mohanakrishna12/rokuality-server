@@ -90,6 +90,11 @@ public class SessionManager {
 				.equals(PlatformType.ROKU.value());
 	}
 
+	public static boolean isXBox(String sessionID) {
+		return String.valueOf(getSessionInfo(sessionID).get(SessionConstants.PLATFORM))
+				.equals(PlatformType.XBOX.value());
+	}
+
 	public static OCRType getOCRType(String sessionID) {
 		String ocrModule = (String) getSessionInfo(sessionID).get(SessionConstants.OCR_MODULE);
 		if (ocrModule == null) {

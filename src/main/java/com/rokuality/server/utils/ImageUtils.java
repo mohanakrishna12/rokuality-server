@@ -35,7 +35,8 @@ import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.constants.TesseractConstants;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.core.ocr.ImageText;
-import com.rokuality.server.driver.device.RokuDevConsoleManager;
+import com.rokuality.server.driver.device.roku.RokuDevConsoleManager;
+import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
 import com.rokuality.server.enums.OCRType;
 import com.rokuality.server.enums.PlatformType;
 
@@ -65,24 +66,8 @@ public class ImageUtils {
 				Log.getRootLogger().warn("Attempting " + String.valueOf(platform) + " screen capture after failed attempt.", i);
 			}
 
-			switch (platform) {
-			case ROKU:
-				image = SessionManager.getImageCollector(sessionID).getCurrentImage(false);
-				break;
-			case XBOX:
-
-				break;
-			case CHROMECAST:
-
-				break;
-			case PLAYSTATION:
-
-				break;
-			default:
-				image = SessionManager.getImageCollector(sessionID).getCurrentImage(false);
-				break;
-			}
-
+			image = SessionManager.getImageCollector(sessionID).getCurrentImage(false);
+			
 			File resizedImageFile = null;
 			if (image != null && image.exists() && image.length() >= MIN_FILE_SIZE_B) {
 				JSONObject sessionInfoObj = SessionManager.getSessionInfo(sessionID);
@@ -232,6 +217,9 @@ public class ImageUtils {
 			imageTexts.remove(0);
 		}
 
+		Log.getRootLogger().info(String.format("Screen image texts for locator text %s : %s", 
+				locator, imageTexts));
+
 		// find all components of the locator test
 		List<String> loc = new ArrayList<String>(); // TODO - case sensitive based on user capability
 		loc.add(locator.trim().toLowerCase());
@@ -239,45 +227,33 @@ public class ImageUtils {
 			loc = Arrays.asList(locator.trim().toLowerCase().split(" "));
 		}
 
-		// get all the matching ImageText objects for our locator
+		// get all the image texts text
+		List<String> imageTextTexts = new ArrayList<>();
+		for (ImageText imgt : imageTexts) {
+			imageTextTexts.add(imgt.getText().toLowerCase());
+		}
+		
+		// check if our locator sublist is contained within
 		List<ImageText> matchedImageTexts = new ArrayList<>();
-		for (ImageText imageText : imageTexts) {
-			String imageTxt = imageText.getText().trim().toLowerCase(); // TODO - case sensitive based on user
-																		// capability
-			if (loc.contains(imageTxt) && matchedImageTexts.size() < loc.size()) { // SHOULD PREVENT MULTIPLE WORD
-																					// MATCHES FROM BEING APPENDED
-				matchedImageTexts.add(imageText);
-			}
+		int matchedIndex = Collections.indexOfSubList(imageTextTexts , loc);
+		Log.getRootLogger().info(String.format("Matched index evaluator for %s is %s", loc, matchedIndex));
+		if (matchedIndex != -1) {
+			Log.getRootLogger().info(String.format("Match found for locator %s", loc));
+			matchedImageTexts = imageTexts.subList(matchedIndex, (matchedIndex + loc.size()));
 		}
 
-		List<Integer> yLocElements = new ArrayList<Integer>();
-		for (ImageText imageText : matchedImageTexts) {
-			yLocElements.add(imageText.getLocation().y);
-		}
-
-		// TODO - implement logic for something like below to remove words tha that are
-		// multiple hits
-		// but exist on different lines, i.e a locator of "are you sure" for a page with
-		// text "are you sure you"
-		// doesnt return multiple hits if one of the matched words is on a different
-		// line.
-		if (yLocElements.size() > 2) {
-			yLocElements = OutlierUtils.eliminateOutliers(yLocElements, 1.5f);
-		}
+		Log.getRootLogger().info(String.format("Matched components for locator text %s : %s", 
+				loc, matchedImageTexts));
 
 		String constructedWords = "";
 		for (ImageText imageText : matchedImageTexts) {
 			constructedWords += " " + imageText.getText();
 		}
 		constructedWords = constructedWords.trim();
+		Log.getRootLogger().info(String.format("Constructed word component for locator text %s : %s", 
+				loc, constructedWords));
 
 		if (matchedImageTexts.isEmpty()) {
-			return null;
-		}
-
-		// if locator is multi world string "Hello World!", ensure the count of
-		// matched words equals the count of the locator word string
-		if (loc.size() > 1 && loc.size() != matchedImageTexts.size()) {
 			return null;
 		}
 
@@ -287,12 +263,6 @@ public class ImageUtils {
 
 		ImageText constructedImageText = new ImageText();
 		constructedImageText.setText(constructedWords);
-
-		// check if the fully constructed locator matches the constructed image image texts
-		// so if locator is "World! Hello", a match won't be found for "Hello World!";
-		if (!locator.trim().toLowerCase().equals(constructedWords.trim().toLowerCase())) {
-			return null;
-		}
 
 		int startX = matchedImageTexts.get(0).getLocation().x;
 		int startY = matchedImageTexts.get(0).getLocation().y;
@@ -611,8 +581,15 @@ public class ImageUtils {
 		return ImageIO.read(file);
 	}
 
-	public static File getScreenImage(String username, String password, String deviceip) {
-		return new RokuDevConsoleManager(deviceip, username, password).getScreenshot();
+	public static File getScreenImage(File fileToSaveAs, PlatformType platform, String username, String password, String deviceip) {
+		switch (platform) {
+			case ROKU:
+			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot(fileToSaveAs);
+			case XBOX:
+			return new XBoxDevAPIManager(deviceip).getScreenshot(fileToSaveAs);
+			default:
+			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot(fileToSaveAs);
+		}
 	}
 
 	private static Tesseract getTesseract() {

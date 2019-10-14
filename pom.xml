@@ -5,7 +5,7 @@
 
 	<groupId>com.rokuality</groupId>
 	<artifactId>rokuality-server</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 
 	<repositories>
 		<repository>
@@ -20,7 +20,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jettyVersion>9.3.9.v20160517</jettyVersion>
+		<jettyVersion>9.4.21.v20190926</jettyVersion>
 	</properties>
 
 	<dependencies>
@@ -158,6 +158,24 @@
         	<artifactId>gson</artifactId>
         	<version>2.2.2</version>
     	</dependency>
+
+		<dependency>
+  			<groupId>org.seleniumhq.selenium</groupId>
+  			<artifactId>selenium-java</artifactId>
+  			<version>3.141.59</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.jetty</groupId>
+					<artifactId>jetty-util</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+    		<groupId>io.github.bonigarcia</groupId>
+    		<artifactId>webdrivermanager</artifactId>
+    		<version>3.7.0</version>
+		</dependency>
 
 	</dependencies>
 

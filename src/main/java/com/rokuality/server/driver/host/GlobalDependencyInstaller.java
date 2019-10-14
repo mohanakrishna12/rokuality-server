@@ -20,6 +20,14 @@ public class GlobalDependencyInstaller {
 		return installed;
 	}
 
+	public static boolean isNodeInstalled() {
+		File node = new File(OSUtils.getBinaryPath("node"));
+
+        boolean installed = (node != null && node.exists() && node.isFile());
+		Log.getRootLogger().info("Node installed " + installed, new Object[] {});
+		return installed;
+	}
+
 	public static boolean isFFMPEGInstalled() {
 		File ffmpeg = FFMPEGConstants.FFMPEG;
 		boolean installed = (ffmpeg.exists() && ffmpeg.isFile());
@@ -62,6 +70,24 @@ public class GlobalDependencyInstaller {
         Boolean dependencyDownloaded = dependencyManager.downloadDependency(tesseractZipFile);
         if (dependencyDownloaded) {
             dependencyManager.unzipDependency(tesseractZipFile);
+        }
+	}
+
+	public static boolean isHarmonyInstalled() {
+		File harmony = DependencyConstants.HARMONY_BIN;
+		boolean installed = (harmony.exists() && harmony.isFile());
+		Log.getRootLogger().info("Harmony CLI installed " + installed, new Object[] {});
+		return installed;
+	}
+
+	public static void installHarmony() {
+		Log.getRootLogger().info("Installing Harmony CLI", new Object[] {});
+		DependencyManager dependencyManager = new DependencyManager();
+        String zipName = DependencyConstants.HARMONY_ZIP_NAME;
+        File harmonyZipFile = new File(DependencyConstants.DEPENDENCY_DIR.getAbsolutePath() + File.separator + zipName);
+        Boolean dependencyDownloaded = dependencyManager.downloadDependency(harmonyZipFile);
+        if (dependencyDownloaded) {
+            dependencyManager.unzipDependency(harmonyZipFile);
         }
 	}
 

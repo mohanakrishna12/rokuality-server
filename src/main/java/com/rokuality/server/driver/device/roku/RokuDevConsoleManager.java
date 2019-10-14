@@ -1,4 +1,4 @@
-package com.rokuality.server.driver.device;
+package com.rokuality.server.driver.device.roku;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
@@ -168,7 +168,7 @@ public class RokuDevConsoleManager {
 		return uninstallSuccess;
 	}
 
-	public File getScreenshot() {
+	public File getScreenshot(File fileToSaveAs) {
 		String uri = getEndpointUri(deviceip, "plugin_inspect");
 
 		Log.getRootLogger().info("Getting screenshot from Roku.", new Object[] {});
@@ -241,9 +241,7 @@ public class RokuDevConsoleManager {
 							HttpEntity entity = response.getEntity();
 							InputStream inputStream = entity.getContent();
 
-							String jpegLocation = DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator
-									+ System.currentTimeMillis() + "_" + String.valueOf(deviceip).replace(".", "") + ".jpg";
-							jpgFile = new File(jpegLocation);
+							jpgFile = fileToSaveAs;
 							FileUtils.copyInputStreamToFile(inputStream, jpgFile);
 
 							if (statusCode != 200) {
