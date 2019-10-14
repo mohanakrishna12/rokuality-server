@@ -87,6 +87,15 @@ public class session extends HttpServlet {
 		String deviceUsername = null;
 		String devicePassword = null;
 
+		platformType = PlatformType
+				.getEnumByString(String.valueOf(requestObj.get(SessionCapabilities.PLATFORM.value())));
+		if (platformType == null) {
+			sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+					String.format("The %s capability cannot be null", SessionCapabilities.PLATFORM.value()));
+			return sessionInfo;
+		}
+		sessionInfo.put(SessionConstants.PLATFORM, platformType.value());
+
 		boolean tesseractInstalled = GlobalDependencyInstaller.isTesseractInstalled();
 		if (!tesseractInstalled) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
@@ -97,15 +106,18 @@ public class session extends HttpServlet {
 			return sessionInfo;
 		}
 
-		platformType = PlatformType
-				.getEnumByString(String.valueOf(requestObj.get(SessionCapabilities.PLATFORM.value())));
-		if (platformType == null) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS,
-					String.format("The %s capability cannot be null", SessionCapabilities.PLATFORM.value()));
-			return sessionInfo;
+		if (isXBox(platformType)) {
+			boolean nodeInstalled = GlobalDependencyInstaller.isNodeInstalled();
+			if (!nodeInstalled) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"Unable to find node on your path! Is it installed and available? See the Rokuality Server"
+								+ " README for details but it can easily be installed via 'brew install node' "
+								+ "on MAC and via 'scoop install nodejs' for windows.",
+						SessionCapabilities.PLATFORM.value()));
+				return sessionInfo;
+			}
 		}
-		sessionInfo.put(SessionConstants.PLATFORM, platformType.value());
-
+		
 		deviceIP = (String) requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value());
 		if (deviceIP == null || deviceIP.isEmpty()) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format("The %s capability cannot be null or empty!",

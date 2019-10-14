@@ -20,6 +20,14 @@ public class GlobalDependencyInstaller {
 		return installed;
 	}
 
+	public static boolean isNodeInstalled() {
+		File node = new File(OSUtils.getBinaryPath("node"));
+
+        boolean installed = (node != null && node.exists() && node.isFile());
+		Log.getRootLogger().info("Node installed " + installed, new Object[] {});
+		return installed;
+	}
+
 	public static boolean isFFMPEGInstalled() {
 		File ffmpeg = FFMPEGConstants.FFMPEG;
 		boolean installed = (ffmpeg.exists() && ffmpeg.isFile());
