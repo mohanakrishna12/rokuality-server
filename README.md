@@ -3,11 +3,7 @@
 The Rokuality Server allows you to distribute Roku and XBox end to end tests across multiple devices on your network. (Playstation, SetTop, and others coming soon!) The server acts a lightweight web proxy, capturing your device test traffic and distributing the tests to the devices provided in your capabilities. The project goal is to provide a no cost/low cost open source solution for various video streaming platforms that otherwise don't offer an easily automatable solution! Once you have the server setup with all requirements, [pick a language](#next-steps-choose-a-test-language) to write tests in.
 
 ### Getting started: Server Requirements
-The Rokuality Server is a Java Jetty servlet container application that requires at least Java 8 to run, and that you have Java available on your PATH. Typically the easiest way to do that is to use the relevant package manager for the Operating System you are running. For example, for MAC users it's easy using [brew](https://brew.sh/):
-```xml
-    brew cask install java
-```
-or for Windows users using [scoop](https://scoop.sh/)
+The Rokuality Server is a Java Jetty servlet container application that requires at least Java 8 to run, and that you have Java available on your PATH. Typically the easiest way to do that is to use the relevant package manager for the Operating System you are running. For example, for MAC users it's easy using [brew](https://brew.sh/) via `brew cask install java` or for Windows users using [scoop](https://scoop.sh/) via 
 ```xml
     scoop bucket add java
     scoop install openjdk10
@@ -26,27 +22,14 @@ should return something like:
 ```
 
 ### Getting started: Server OCR Requirements
-The server uses Tesseract as the default OCR module, so tesseract must be installed and available on your system's PATH. Tesseract is most easily installed on MAC via:
-```xml
-    brew install tesseract
-```
-or on Windows via:
-```xml
-    scoop install tesseract
-```
+The server uses Tesseract as the default OCR module, so tesseract must be installed and available on your system's PATH. Tesseract is most easily installed on MAC via `brew install tesseract` or on Windows via `scoop install tesseract`
 
 ### Getting started: OS Requirements
 The Rokuality Server should work on MacOS X 10.11 or higher, Windows 10 or Windows Server (2012 or higher). It has not been tested yet for linux but 'should' work.
 
 ### Getting started: Running the Server via Maven
-An easy way to start the server is to clone the repository, cd into the main directory, and then compile on the fly. Note that with this approach you will always be running the latest master build, but if you prefer to run a static release version, see [the jar](#getting-started-running-the-server-jar) instructions below. If you don't have maven it can be installed via your relevant Operating System package manager. i.e for MAC:
-```xml
-    brew install maven
-```
-Or for Windows if you're using scoop:
-```xml
-    scoop install maven
-```
+An easy way to start the server is to clone the repository, cd into the main directory, and then compile on the fly. Note that with this approach you will always be running the latest master build, but if you prefer to run a static release version, see [the jar](#getting-started-running-the-server-jar) instructions below. If you don't have maven it can be installed via your relevant Operating System package manager. i.e for MAC via `brew install maven` Or for Windows if you're using scoop `scoop install maven`
+
 And once you have Maven installed, start the server by:
 
 ```xml
