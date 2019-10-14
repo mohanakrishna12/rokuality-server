@@ -1,6 +1,6 @@
 # Rokuality Server - End to End Automation for Roku and XBox!
 
-The Rokuality Server allows you to distribute Roku and XBox end to end tests across multiple devices on your network. (Playstation, SetTop, and others coming soon!) The server acts a lightweight web proxy, capturing your device test traffic and distributing the tests to the devices provided in your capabilities. The project goal is to provide a no cost/low cost open source solution for various video streaming platforms that otherwise don't offer an easily automatable solution! Once you have the server setup with all requirements, [pick a language](###next-steps-choose-a-test-language) to write tests in.
+The Rokuality Server allows you to distribute Roku and XBox end to end tests across multiple devices on your network. (Playstation, SetTop, and others coming soon!) The server acts a lightweight web proxy, capturing your device test traffic and distributing the tests to the devices provided in your capabilities. The project goal is to provide a no cost/low cost open source solution for various video streaming platforms that otherwise don't offer an easily automatable solution! Once you have the server setup with all requirements, [pick a language](#next-steps-choose-a-test-language) to write tests in.
 
 ### Getting started: Server Requirements
 The Rokuality Server is a Java Jetty servlet container application that requires at least Java 8 to run, and that you have Java available on your PATH. Typically the easiest way to do that is to use the relevant package manager for the Operating System you are running. For example, for MAC users it's easy using [brew](https://brew.sh/):
@@ -75,7 +75,7 @@ Automated testing on XBox requires the following:
 2. Your XBox must be in dev kit mode. [Enabling developer mode](https://docs.microsoft.com/en-us/windows/uwp/xbox-apps/devkit-activation) on your XBox is straight forward but it does require a 19$ Microsoft developer account which will allow you to automate 3 boxes from a single dev account.
 3. You must have the [XBox dev console](https://docs.microsoft.com/en-us/windows/uwp/xbox-apps/device-portal-xbox) available for remote access with NO username/password set. If properly setup you should be able to access your dev console remotely at `https://yourxboxip:11443`
 4. You must have nodejs installed on the machine running the server. Easily done on MAC via `brew install node` or on Windows via `scoop install nodejs`.
-5. You must have a [Logitech Harmony Hub](https://www.logitech.com/en-us/product/harmony-hub?crid=60) with your XBox setup as a device and XMPP enabled on the hub. See the sections [why harmony](###why-harmony) and [configuring your harmony](###configuring-your-harmony) for details.
+5. You must have a [Logitech Harmony Hub](https://www.logitech.com/en-us/product/harmony-hub?crid=60) with your XBox setup as a device and XMPP enabled on the hub. See the sections [why harmony](#why-harmony) and [configuring your harmony](#configuring-your-harmony) for details.
 
 ### Server command options:
 | Command  | Description | Notes |
