@@ -1,0 +1,7 @@
+1.0.1 - Changes from 1.0.0
+1. Improves image capture performance from the collectors and reduces image copy redundancy.
+2. Fixes an issue where complicated multi-word finds were evaluating as false during evaluation.
+3. Adds harmony cli support.
+4. Adds XBox support.
+
+1.0.0 - Initial Release
