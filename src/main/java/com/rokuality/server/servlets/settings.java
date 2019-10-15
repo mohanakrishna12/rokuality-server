@@ -1,5 +1,6 @@
 package com.rokuality.server.servlets;
 
+import org.eclipse.jetty.util.log.Log;
 import org.json.simple.JSONObject;
 
 import javax.servlet.http.HttpServlet;
@@ -82,6 +83,8 @@ public class settings extends HttpServlet {
 				+ String.valueOf(sessionID));
 			return resultObj;
 		}
+
+		Log.getRootLogger().info(String.format("Setting image match similarity to %s for session %s", Double.parseDouble(imageMatchSimilarity), sessionID));
 
 		SessionManager.updateSessionInfoItem(sessionID, SessionConstants.IMAGE_MATCH_SIMILARITY, Double.parseDouble(imageMatchSimilarity));
 		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
