@@ -72,11 +72,13 @@ Pick a language binding to begin writing tests:
 
 [Java](https://github.com/rokuality/rokuality-java)
 
+[Python](https://github.com/rokuality/rokuality-python)
+
 JS (coming soon - contact us to get involved)
 
 C# (coming soon - contact us to get involved)
 
-Python (coming soon - contact us to get involved)
+
 
 ### Why Harmony
 Some of our device automation setups require a [logitech harmony](https://www.logitech.com/en-us/product/harmony-hub?crid=60) to drive the user input. The hub is a low cost (60$) device that gives us both IR and Bluetooth capability in an easily available, wireless solution. So we don't need to use an IR blaster or a cabled base solution. And we can scale across additional devices easily. Thanks to the awesome [harmony cli](https://github.com/sushilks/harmonyHubCLI) project, we are able to incorporate a simple cli solution inside of the Rokuality server to remotely drive the harmony and control the devices. Other similar solutions on the market ship you a "magic box" device that requires you to plug in your device under test - which is proprietary and limits the ability to scale with more devices and across multiple developers. Using the harmony approach is cheap, effective, and scalable.

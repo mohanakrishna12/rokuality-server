@@ -11,6 +11,7 @@ import com.rokuality.server.enums.PlatformType;
 import org.eclipse.jetty.util.log.Log;
 import org.json.simple.JSONObject;
 
+@SuppressWarnings("unchecked")
 public class SessionManager {
 
 	private static Map<String, ImageCollector> imageCollectorMap = Collections

@@ -117,7 +117,7 @@ public class session extends HttpServlet {
 				return sessionInfo;
 			}
 		}
-		
+
 		deviceIP = (String) requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value());
 		if (deviceIP == null || deviceIP.isEmpty()) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format("The %s capability cannot be null or empty!",
@@ -175,10 +175,19 @@ public class session extends HttpServlet {
 		sessionInfo.put(SessionConstants.APP, app);
 		sessionInfo.put(SessionConstants.APP_PACKAGE, appPackage);
 
-		ocrType = OCRType.getEnumByString(String.valueOf(requestObj.get(SessionCapabilities.OCR_TYPE.value())));
+		String ocrTypeStr = String.valueOf(requestObj.get(SessionCapabilities.OCR_TYPE.value()));
+		if (ocrTypeStr.equals("null")) {
+			Log.getRootLogger()
+					.info(String.format("No OCR type specified. Defaulting to %s", OCRType.TESSERACT.value()));
+			ocrTypeStr = OCRType.TESSERACT.value();
+		}
+
+		ocrType = OCRType.getEnumByString(ocrTypeStr);
 		if (ocrType == null) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS,
-					String.format("The %s capability cannot be null!", SessionCapabilities.OCR_TYPE.value()));
+					String.format("Invalid %s capability value of %s! Valid values are %s and %s.",
+							SessionCapabilities.OCR_TYPE.value(), ocrTypeStr, OCRType.TESSERACT.value(),
+							OCRType.GOOGLE_VISION.value()));
 			return sessionInfo;
 		}
 		sessionInfo.put(SessionConstants.OCR_MODULE, ocrType.value());

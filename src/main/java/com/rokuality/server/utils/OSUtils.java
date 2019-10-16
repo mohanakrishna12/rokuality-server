@@ -163,6 +163,8 @@ public class OSUtils {
 		constraints.fill = GridBagConstraints.NONE;
 		constraints.anchor = GridBagConstraints.NORTH;
 		JButton closeButton = new JButton(new AbstractAction("x") {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void actionPerformed(final ActionEvent e) {
 				frame.dispose();
