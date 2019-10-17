@@ -88,8 +88,8 @@ public class session extends HttpServlet {
 		String deviceUsername = null;
 		String devicePassword = null;
 
-		String videoCaptureIndex = null;
-		String audioCaptureIndex = null;
+		String videoCaptureInput = null;
+		String audioCaptureInput = null;
 		File videoCapture = null;
 
 		platformType = PlatformType
@@ -261,34 +261,34 @@ public class session extends HttpServlet {
 		}
 
 		if (isHDMI(platformType)) {
-			videoCaptureIndex = (String) requestObj.get(SessionCapabilities.VIDEO_CAPTURE_INDEX.value());
-			if (videoCaptureIndex == null || videoCaptureIndex.isEmpty()) {
+			videoCaptureInput = (String) requestObj.get(SessionCapabilities.VIDEO_CAPTURE_INPUT.value());
+			if (videoCaptureInput == null || videoCaptureInput.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-						"The %s capability cannot be null or empty!", SessionCapabilities.VIDEO_CAPTURE_INDEX.value()));
+						"The %s capability cannot be null or empty!", SessionCapabilities.VIDEO_CAPTURE_INPUT.value()));
 				return sessionInfo;
 			}
-			sessionInfo.put(SessionConstants.VIDEO_CAPTURE_INDEX, videoCaptureIndex);
+			sessionInfo.put(SessionConstants.VIDEO_CAPTURE_INPUT, videoCaptureInput);
 
-			audioCaptureIndex = (String) requestObj.get(SessionCapabilities.AUDIO_CAPTURE_INDEX.value());
-			if (audioCaptureIndex == null || audioCaptureIndex.isEmpty()) {
+			audioCaptureInput = (String) requestObj.get(SessionCapabilities.AUDIO_CAPTURE_INPUT.value());
+			if (audioCaptureInput == null || audioCaptureInput.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-						"The %s capability cannot be null or empty!", SessionCapabilities.AUDIO_CAPTURE_INDEX.value()));
+						"The %s capability cannot be null or empty!", SessionCapabilities.AUDIO_CAPTURE_INPUT.value()));
 				return sessionInfo;
 			}
-			sessionInfo.put(SessionConstants.AUDIO_CAPTURE_INDEX, audioCaptureIndex);
+			sessionInfo.put(SessionConstants.AUDIO_CAPTURE_INPUT, audioCaptureInput);
 
 			videoCapture = new File(
 					DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + "videocapture_" + sessionID);
 
-			boolean captureStarted = HDMIScreenManager.startVideoCapture(sessionID, videoCapture, videoCaptureIndex,
-					audioCaptureIndex);
+			boolean captureStarted = HDMIScreenManager.startVideoCapture(sessionID, videoCapture, videoCaptureInput,
+					audioCaptureInput);
 			if (!captureStarted) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
 						"Failed to initiate hdmi driver! Is the device connected via an hdmi capture card and are the %s and %s "
 								+ "capabilities correct? See the server README for details of how "
 								+ "to obtain those cap values.",
-						SessionCapabilities.VIDEO_CAPTURE_INDEX.value(),
-						SessionCapabilities.AUDIO_CAPTURE_INDEX.value()));
+						SessionCapabilities.VIDEO_CAPTURE_INPUT.value(),
+						SessionCapabilities.AUDIO_CAPTURE_INPUT.value()));
 				return sessionInfo;
 			}
 			sessionInfo.put(SessionConstants.VIDEO_CAPTURE_FILE, videoCapture.getAbsolutePath());
@@ -326,7 +326,7 @@ public class session extends HttpServlet {
 		}
 
 		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP.toString(),
-				imageCollectionDir, deviceUsername, devicePassword, videoCapture, videoCaptureIndex, audioCaptureIndex);
+				imageCollectionDir, deviceUsername, devicePassword, videoCapture, videoCaptureInput, audioCaptureInput);
 		boolean recordingStarted = imageCollector.startRecording();
 		boolean imageCollectionStarted = false;
 		if (recordingStarted) {

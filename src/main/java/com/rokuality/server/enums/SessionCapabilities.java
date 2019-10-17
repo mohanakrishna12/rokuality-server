@@ -6,7 +6,7 @@ public enum SessionCapabilities {
 	DEVICE_USERNAME("DeviceUsername"), DEVICE_PASSWORD("DevicePassword"),
 	IMAGE_MATCH_SIMILARITY("ImageMatchSimilarity"), SCREEN_SIZE_OVERRIDE("ScreenSizeOverride"), OCR_TYPE("OCRType"),
 	GOOGLE_CREDENTIALS("GoogleCredentials"), DEVICE_NAME("DeviceName"), HOME_HUB_IP_ADDRESS("HomeHubIPAddress"),
-	VIDEO_CAPTURE_INDEX("VideoCaptureIndex"), AUDIO_CAPTURE_INDEX("AudioCaptureIndex");
+	VIDEO_CAPTURE_INPUT("VideoCaptureInput"), AUDIO_CAPTURE_INPUT("AudioCaptureInput");
 
 	private final String value;
 
