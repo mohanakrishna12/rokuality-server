@@ -400,6 +400,12 @@ public class session extends HttpServlet {
 		}
 		imageCollector.stopRecording();
 
+		if (PlatformType.HDMI.equals(sessionInfo.get(SessionConstants.PLATFORM))) {
+			File videoCapture = new File(String.valueOf(sessionInfo.get(SessionConstants.VIDEO_CAPTURE_FILE)));
+			HDMIScreenManager.stopVideoCapture(videoCapture);
+			FileUtils.deleteFile(videoCapture);
+		}
+
 		if (isRoku(PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM))))) {
 			returnToRokuHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
 		}

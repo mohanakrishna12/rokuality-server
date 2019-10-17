@@ -6,6 +6,8 @@ import java.util.Map;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
+import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
+import com.rokuality.server.enums.PlatformType;
 import com.rokuality.server.utils.FileUtils;
 import com.rokuality.server.utils.SleepUtils;
 
@@ -40,19 +42,26 @@ public class ExpiredSessionHandler {
 			if ((currentTime - lastActivity) / 1000 > getExpiredSessionTimeout()) {
 				Log.getRootLogger().warn(String.format("Orphaned session %s found. Terminating!", entry.getKey()));
 
+				ImageCollector collector = SessionManager.getImageCollector(entry.getKey());
+				if (collector != null) {
+					collector.stopRecording();
+				}
+
 				Object sessionInfoObj = SessionManager.getSessionInfo(entry.getKey());
 				if (sessionInfoObj != null) {
 					JSONObject sessionInfo = (JSONObject) sessionInfoObj;
+
+					if (PlatformType.HDMI.equals(sessionInfo.get(SessionConstants.PLATFORM))) {
+						File videoCapture = new File(String.valueOf(sessionInfo.get(SessionConstants.VIDEO_CAPTURE_FILE)));
+						HDMIScreenManager.stopVideoCapture(videoCapture);
+						FileUtils.deleteFile(videoCapture);
+					}
+
 					String capturePath = String.valueOf(sessionInfo.get(SessionConstants.IMAGE_COLLECTION_DIRECTORY));
 					File captureDir = new File(capturePath);
 					if (captureDir.exists()) {
 						FileUtils.deleteDirectory(captureDir);
 					}
-				}
-				
-				ImageCollector collector = SessionManager.getImageCollector(entry.getKey());
-				if (collector != null) {
-					collector.stopRecording();
 				}
 				
 				SessionManager.removeGoogleCredentials(entry.getKey());
