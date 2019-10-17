@@ -179,7 +179,11 @@ public class HDMIScreenManager {
 		}
 
 		try {
-			lastFrame = Integer.parseInt(output.split("frame=\\s+")[1].split(" ")[0]);
+			if (output.contains("frame= ")) {
+				lastFrame = Integer.parseInt(output.split("frame=\\s+")[1].split(" ")[0]);
+			} else {
+				lastFrame = Integer.parseInt(output.split("frame=")[1].split(" ")[0]);
+			}
 		} catch (Exception e) {
 			Log.getRootLogger().warn(String.format("Unable to parse frame count from video %s with output %s",
 					String.valueOf(video), String.valueOf(output)), e);

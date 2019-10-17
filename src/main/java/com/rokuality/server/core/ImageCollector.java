@@ -271,11 +271,13 @@ public class ImageCollector {
 		for (File file : allFiles) {
 			try {
 				int index = file.getName().lastIndexOf(".");
-				String fileName = file.getName().substring(0, index);
-				Long.parseLong(fileName);
-				allNumericFiles.add(file);
+				if (index != -1) {
+					String fileName = file.getName().substring(0, index);
+					Long.parseLong(fileName);
+					allNumericFiles.add(file);
+				}
 			} catch (NumberFormatException | NullPointerException nfe) {
-				Log.getRootLogger().warn(nfe);
+				//ignore as it's not an alpha numeric file of the capture
 			}
 		}
 

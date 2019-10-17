@@ -1,6 +1,8 @@
 package com.rokuality.server.core.drivers;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.rokuality.server.constants.SessionConstants;
@@ -94,6 +96,11 @@ public class SessionManager {
 	public static boolean isXBox(String sessionID) {
 		return String.valueOf(getSessionInfo(sessionID).get(SessionConstants.PLATFORM))
 				.equals(PlatformType.XBOX.value());
+	}
+
+	public static boolean isHDMI(String sessionID) {
+		return String.valueOf(getSessionInfo(sessionID).get(SessionConstants.PLATFORM))
+				.equals(PlatformType.HDMI.value());
 	}
 
 	public static OCRType getOCRType(String sessionID) {

@@ -200,7 +200,7 @@ public class remote extends HttpServlet {
 			results = pressRokuRemoteButton(sessionID, rokuButton);
 		}
 
-		if (SessionManager.isXBox(sessionID)) {
+		if (SessionManager.isXBox(sessionID) || SessionManager.isHDMI(sessionID)) {
 			String button = requestObj.get(SessionConstants.REMOTE_BUTTON).toString();
 			results = pressHarmonyRemoteButton(sessionID, button);
 		}
