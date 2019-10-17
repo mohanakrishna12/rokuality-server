@@ -34,14 +34,20 @@ public class ImageCollector {
 	private String username = null;
 	private String password = null;
 	private String deviceIP = null;
+	private File videoCapture = null;
+	private String videoCaptureInput = null;
+	private String audioCaptureInput = null;
 
 	public ImageCollector(PlatformType platform, String sessionID, String deviceIP, File imageCaptureDir,
-			String username, String password) {
+			String username, String password, File videoCapture, String videoCaptureInput, String audioCaptureInput) {
 		this.platform = platform;
 		this.deviceIP = deviceIP;
 		this.imageCaptureDir = imageCaptureDir;
 		this.username = username;
 		this.password = password;
+		this.videoCapture = videoCapture;
+		this.videoCaptureInput = videoCaptureInput;
+		this.audioCaptureInput = audioCaptureInput;
 		videoComplete = false;
 
 		recordedVideo = new File(imageCaptureDir.getAbsolutePath() + File.separator + platform.value()
@@ -94,7 +100,7 @@ public class ImageCollector {
 			try {
 				String paddedCounter = String.format("%05d", counter);
 				File captureFile = new File(imageCaptureDir.getAbsolutePath() + File.separator + paddedCounter + getImageCaptureFormat());
-				File image = ImageUtils.getScreenImage(captureFile, platform, username, password, deviceIP);
+				File image = ImageUtils.getScreenImage(captureFile, platform, username, password, deviceIP, videoCapture);
 				if (image != null && image.exists() && image.length() > MIN_FILE_SIZE_B) {
 					currentCaptureFile = image;
 				} else {
@@ -162,7 +168,7 @@ public class ImageCollector {
 				}
 			}
 
-			if (PlatformType.XBOX.equals(platform) && currentCaptureFile.exists() && currentCaptureFile.isFile()) {
+			if (!PlatformType.ROKU.equals(platform) && currentCaptureFile.exists() && currentCaptureFile.isFile()) {
 				File copiedImage = new File(imageCaptureDir.getAbsolutePath() + File.separator + "copied_" + pngFile.getName());
 				FileUtils.copyFile(pngFile, copiedImage);
 				if (copiedImage.exists()) {
@@ -256,7 +262,7 @@ public class ImageCollector {
 	}
 
 	private String getImageCaptureFormat() {
-		return PlatformType.XBOX.equals(platform) ? ".png" : ".jpg";
+		return PlatformType.ROKU.equals(platform) ? ".jpg" : ".png";
 	}
 
 	private void prepVideoFileList() throws Exception {

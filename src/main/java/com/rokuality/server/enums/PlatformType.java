@@ -2,10 +2,10 @@ package com.rokuality.server.enums;
 
 public enum PlatformType {
 
-	ROKU("roku"), CHROMECAST("chromecast"), // coming soon
-	XBOX("xbox"), // coming soon
-	PLAYSTATION("playstation"), // coming soon
-	HDMI("hdmi"); // coming soon
+	ROKU("roku"), 
+	CHROMECAST("chromecast"), // coming soon
+	XBOX("xbox"),
+	HDMI("hdmi"); // includes set top, playstation, etc
 
 	private final String value;
 

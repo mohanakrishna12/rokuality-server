@@ -1,11 +1,22 @@
 package com.rokuality.server.servlets;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.UUID;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.SessionManager;
+import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
 import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
 import com.rokuality.server.driver.device.roku.RokuKeyPresser;
 import com.rokuality.server.driver.device.roku.RokuPackageHandler;
@@ -24,16 +35,6 @@ import com.rokuality.server.utils.SleepUtils;
 
 import org.eclipse.jetty.util.log.Log;
 import org.json.simple.JSONObject;
-
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.UUID;
 
 @SuppressWarnings({ "serial", "unchecked" })
 public class session extends HttpServlet {
@@ -87,6 +88,10 @@ public class session extends HttpServlet {
 		String deviceUsername = null;
 		String devicePassword = null;
 
+		String videoCaptureIndex = null;
+		String audioCaptureIndex = null;
+		File videoCapture = null;
+
 		platformType = PlatformType
 				.getEnumByString(String.valueOf(requestObj.get(SessionCapabilities.PLATFORM.value())));
 		if (platformType == null) {
@@ -126,7 +131,7 @@ public class session extends HttpServlet {
 		}
 		sessionInfo.put(SessionConstants.DEVICE_IP, deviceIP);
 
-		if (isXBox(platformType)) {
+		if (isXBox(platformType) || isHDMI(platformType)) {
 			String deviceName = (String) requestObj.get(SessionCapabilities.DEVICE_NAME.value());
 			if (deviceName == null || deviceName.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
@@ -144,36 +149,38 @@ public class session extends HttpServlet {
 			sessionInfo.put(SessionConstants.HOME_HUB_DEVICE_IP, hubIP);
 		}
 
-		appPackage = String.valueOf(requestObj.get(SessionCapabilities.APP_PACKAGE.value()));
-		String app = String.valueOf(requestObj.get(SessionCapabilities.APP.value()));
-		if (isRoku(platformType)
-				&& ((appPackage.equals("null") && app.equals("null")) || (appPackage.isEmpty() && app.isEmpty()))) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-					"You must provide either the %1$s or %2$s capabilities! If the %1$s is provided then it must be "
-							+ "either the path to a local sideloadable .zip package OR the url to a sideloadable .zip package. "
-							+ "If the %2$s is provided then it must be the id of an already sideloaded .zip that exists on the device!",
-					SessionCapabilities.APP_PACKAGE.value(), SessionCapabilities.APP.value()));
-			return sessionInfo;
-		}
+		if (!isHDMI(platformType)) {
+			appPackage = String.valueOf(requestObj.get(SessionCapabilities.APP_PACKAGE.value()));
+			String app = String.valueOf(requestObj.get(SessionCapabilities.APP.value()));
+			if (isRoku(platformType)
+					&& ((appPackage.equals("null") && app.equals("null")) || (appPackage.isEmpty() && app.isEmpty()))) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"You must provide either the %1$s or %2$s capabilities! If the %1$s is provided then it must be "
+								+ "either the path to a local sideloadable .zip package OR the url to a sideloadable .zip package. "
+								+ "If the %2$s is provided then it must be the id of an already sideloaded .zip that exists on the device!",
+						SessionCapabilities.APP_PACKAGE.value(), SessionCapabilities.APP.value()));
+				return sessionInfo;
+			}
 
-		if (isXBox(platformType) && (app == "null" || app.isEmpty())) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-					"You must provide the %s capability that matches the id of the app you are trying to launch, or "
-							+ "you are trying to install!",
-					SessionCapabilities.APP.value()));
-			return sessionInfo;
-		}
+			if (isXBox(platformType) && (app == "null" || app.isEmpty())) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"You must provide the %s capability that matches the id of the app you are trying to launch, or "
+								+ "you are trying to install!",
+						SessionCapabilities.APP.value()));
+				return sessionInfo;
+			}
 
-		if (isXBox(platformType) && !appPackage.equals("null") && appPackage.isEmpty()) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-					"The %s capability is not valid! It must be either the path to a local .appxbundle OR a url "
-							+ "to a .appxbundle that you are tryig to install.",
-					SessionCapabilities.APP_PACKAGE.value()));
-			return sessionInfo;
-		}
+			if (isXBox(platformType) && !appPackage.equals("null") && appPackage.isEmpty()) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"The %s capability is not valid! It must be either the path to a local .appxbundle OR a url "
+								+ "to a .appxbundle that you are tryig to install.",
+						SessionCapabilities.APP_PACKAGE.value()));
+				return sessionInfo;
+			}
 
-		sessionInfo.put(SessionConstants.APP, app);
-		sessionInfo.put(SessionConstants.APP_PACKAGE, appPackage);
+			sessionInfo.put(SessionConstants.APP, app);
+			sessionInfo.put(SessionConstants.APP_PACKAGE, appPackage);
+		}
 
 		String ocrTypeStr = String.valueOf(requestObj.get(SessionCapabilities.OCR_TYPE.value()));
 		if (ocrTypeStr.equals("null")) {
@@ -253,6 +260,40 @@ public class session extends HttpServlet {
 			}
 		}
 
+		if (isHDMI(platformType)) {
+			videoCaptureIndex = (String) requestObj.get(SessionCapabilities.VIDEO_CAPTURE_INDEX.value());
+			if (videoCaptureIndex == null || videoCaptureIndex.isEmpty()) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"The %s capability cannot be null or empty!", SessionCapabilities.VIDEO_CAPTURE_INDEX.value()));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.VIDEO_CAPTURE_INDEX, videoCaptureIndex);
+
+			audioCaptureIndex = (String) requestObj.get(SessionCapabilities.AUDIO_CAPTURE_INDEX.value());
+			if (audioCaptureIndex == null || audioCaptureIndex.isEmpty()) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"The %s capability cannot be null or empty!", SessionCapabilities.AUDIO_CAPTURE_INDEX.value()));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.AUDIO_CAPTURE_INDEX, audioCaptureIndex);
+
+			videoCapture = new File(
+					DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + "videocapture_" + sessionID);
+
+			boolean captureStarted = HDMIScreenManager.startVideoCapture(sessionID, videoCapture, videoCaptureIndex,
+					audioCaptureIndex);
+			if (!captureStarted) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"Failed to initiate hdmi driver! Is the device connected via an hdmi capture card and are the %s and %s "
+								+ "capabilities correct? See the server README for details of how "
+								+ "to obtain those cap values.",
+						SessionCapabilities.VIDEO_CAPTURE_INDEX.value(),
+						SessionCapabilities.AUDIO_CAPTURE_INDEX.value()));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.VIDEO_CAPTURE_FILE, videoCapture.getAbsolutePath());
+		}
+
 		JSONObject deviceOnlineResults = isRoku(platformType) ? info.getRokuDeviceInfo(deviceIP)
 				: info.getXBoxDeviceInfo(deviceIP);
 		if (deviceOnlineResults == null
@@ -272,18 +313,20 @@ public class session extends HttpServlet {
 			}
 		}
 
-		JSONObject appHandleResults = isRoku(platformType) ? RokuPackageHandler.installPackage(requestObj)
-				: XBoxPackageHandler.installPackage(requestObj);
-		if (appHandleResults == null || !ServerConstants.SERVLET_SUCCESS
-				.equals(String.valueOf(appHandleResults.get(ServerConstants.SERVLET_RESULTS)))) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS, appHandleResults.get(ServerConstants.SERVLET_RESULTS));
+		if (!isHDMI(platformType)) {
+			JSONObject appHandleResults = isRoku(platformType) ? RokuPackageHandler.installPackage(requestObj)
+					: XBoxPackageHandler.installPackage(requestObj);
+			if (appHandleResults == null || !ServerConstants.SERVLET_SUCCESS
+					.equals(String.valueOf(appHandleResults.get(ServerConstants.SERVLET_RESULTS)))) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, appHandleResults.get(ServerConstants.SERVLET_RESULTS));
+				sessionInfo.remove(SessionConstants.APP_PACKAGE);
+				return sessionInfo;
+			}
 			sessionInfo.remove(SessionConstants.APP_PACKAGE);
-			return sessionInfo;
 		}
-		sessionInfo.remove(SessionConstants.APP_PACKAGE);
 
 		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP.toString(),
-				imageCollectionDir, deviceUsername, devicePassword);
+				imageCollectionDir, deviceUsername, devicePassword, videoCapture, videoCaptureIndex, audioCaptureIndex);
 		boolean recordingStarted = imageCollector.startRecording();
 		boolean imageCollectionStarted = false;
 		if (recordingStarted) {
@@ -433,6 +476,10 @@ public class session extends HttpServlet {
 
 	private static boolean isXBox(PlatformType platformType) {
 		return PlatformType.XBOX.equals(platformType);
+	}
+
+	private static boolean isHDMI(PlatformType platformType) {
+		return PlatformType.HDMI.equals(platformType);
 	}
 
 }
