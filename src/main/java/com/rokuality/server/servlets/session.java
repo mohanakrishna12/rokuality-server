@@ -277,8 +277,8 @@ public class session extends HttpServlet {
 			}
 			sessionInfo.put(SessionConstants.AUDIO_CAPTURE_INPUT, audioCaptureInput);
 
-			videoCapture = new File(
-					DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + "videocapture_" + sessionID);
+			videoCapture = new File(DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + "videocapture_"
+					+ sessionID + ".mkv");
 
 			boolean captureStarted = HDMIScreenManager.startVideoCapture(sessionID, videoCapture, videoCaptureInput,
 					audioCaptureInput);
@@ -289,18 +289,24 @@ public class session extends HttpServlet {
 								+ "to obtain those cap values.",
 						SessionCapabilities.VIDEO_CAPTURE_INPUT.value(),
 						SessionCapabilities.AUDIO_CAPTURE_INPUT.value()));
+				HDMIScreenManager.stopVideoCapture(videoCapture);
+				FileUtils.deleteFile(videoCapture);
 				return sessionInfo;
 			}
 			sessionInfo.put(SessionConstants.VIDEO_CAPTURE_FILE, videoCapture.getAbsolutePath());
 		}
 
-		JSONObject deviceOnlineResults = isRoku(platformType) ? info.getRokuDeviceInfo(deviceIP)
-				: info.getXBoxDeviceInfo(deviceIP);
-		if (deviceOnlineResults == null
-				|| !ServerConstants.SERVLET_SUCCESS.equals(deviceOnlineResults.get(ServerConstants.SERVLET_RESULTS))) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
-					"The device at %s did not respond! Is the device online and reachable on your network?", deviceIP));
-			return sessionInfo;
+		if (!isHDMI(platformType)) {
+			JSONObject deviceOnlineResults = isRoku(platformType) ? info.getRokuDeviceInfo(deviceIP)
+					: info.getXBoxDeviceInfo(deviceIP);
+			if (deviceOnlineResults == null || !ServerConstants.SERVLET_SUCCESS
+					.equals(deviceOnlineResults.get(ServerConstants.SERVLET_RESULTS))) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+						String.format(
+								"The device at %s did not respond! Is the device online and reachable on your network?",
+								deviceIP));
+				return sessionInfo;
+			}
 		}
 
 		if (isRoku(platformType)) {
@@ -400,17 +406,18 @@ public class session extends HttpServlet {
 		}
 		imageCollector.stopRecording();
 
-		if (PlatformType.HDMI.equals(sessionInfo.get(SessionConstants.PLATFORM))) {
+		PlatformType platformType = PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM)));
+		if (PlatformType.HDMI.equals(platformType)) {
 			File videoCapture = new File(String.valueOf(sessionInfo.get(SessionConstants.VIDEO_CAPTURE_FILE)));
 			HDMIScreenManager.stopVideoCapture(videoCapture);
 			FileUtils.deleteFile(videoCapture);
 		}
 
-		if (isRoku(PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM))))) {
+		if (isRoku(platformType)) {
 			returnToRokuHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
 		}
 
-		if (isXBox(PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM))))) {
+		if (isXBox(platformType)) {
 			String appID = String.valueOf(sessionInfo.get(SessionConstants.APP));
 			returnToXBoxHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)), appID);
 		}

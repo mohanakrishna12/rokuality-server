@@ -51,7 +51,8 @@ public class ExpiredSessionHandler {
 				if (sessionInfoObj != null) {
 					JSONObject sessionInfo = (JSONObject) sessionInfoObj;
 
-					if (PlatformType.HDMI.equals(sessionInfo.get(SessionConstants.PLATFORM))) {
+					PlatformType platformType = PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM)));
+					if (PlatformType.HDMI.equals(platformType)) {
 						File videoCapture = new File(String.valueOf(sessionInfo.get(SessionConstants.VIDEO_CAPTURE_FILE)));
 						HDMIScreenManager.stopVideoCapture(videoCapture);
 						FileUtils.deleteFile(videoCapture);

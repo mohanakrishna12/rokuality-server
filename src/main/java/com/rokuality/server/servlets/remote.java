@@ -1,7 +1,8 @@
 package com.rokuality.server.servlets;
 
-import org.eclipse.jetty.util.log.Log;
-import org.json.simple.JSONObject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -10,16 +11,14 @@ import javax.servlet.http.HttpServletResponse;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
+import com.rokuality.server.driver.device.hdmi.HDMIKeyPresser;
 import com.rokuality.server.driver.device.roku.RokuKeyPresser;
-import com.rokuality.server.driver.device.xbox.XBoxKeyPresser;
 import com.rokuality.server.enums.RokuButton;
 import com.rokuality.server.enums.SpecialCharacters;
-import com.rokuality.server.enums.XBoxButton;
 import com.rokuality.server.utils.ServletJsonParser;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import org.eclipse.jetty.util.log.Log;
+import org.json.simple.JSONObject;
 
 @SuppressWarnings({ "serial", "unchecked" })
 public class remote extends HttpServlet {
@@ -35,6 +34,9 @@ public class remote extends HttpServlet {
 		switch (action) {
 		case "press_button":
 			results = pressButton(requestObj);
+			break;
+		case "get_buttons":
+			results = getHarmonyButtonOptions(requestObj);
 			break;
 		case "send_keys":
 			results = sendKeys(requestObj);
@@ -84,7 +86,7 @@ public class remote extends HttpServlet {
 		return buttonObj;
 	}
 
-	public static JSONObject pressXBoxRemoteButton(String sessionID, XBoxButton xboxButton) {
+	public static JSONObject pressHarmonyRemoteButton(String sessionID, String button) {
 		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
 
 		JSONObject buttonObj = new JSONObject();
@@ -98,7 +100,7 @@ public class remote extends HttpServlet {
 		String deviceName = (String) sessionInfo.get(SessionConstants.DEVICE_NAME);
 		boolean success = false;
 		try {
-			success = new XBoxKeyPresser(homeHubDeviceIP, deviceName).pressButton(xboxButton);
+			success = new HDMIKeyPresser(homeHubDeviceIP, deviceName).pressButton(button);
 		} catch (Exception e) {
 			Log.getRootLogger().warn(e);
 		}
@@ -106,11 +108,43 @@ public class remote extends HttpServlet {
 		if (!success) {
 			buttonObj = new JSONObject();
 			buttonObj.put(ServerConstants.SERVLET_RESULTS,
-					"Failed to send remote command " + xboxButton.value() + " to device!");
+					"Failed to send remote command " + button + " to device!");
 			return buttonObj;
 		}
 
 		buttonObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+		return buttonObj;
+	}
+
+	public static JSONObject getHarmonyButtonOptions(JSONObject requestObj) {
+		String sessionID = requestObj.get(SessionConstants.SESSION_ID).toString();
+		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
+
+		JSONObject buttonObj = new JSONObject();
+		if (sessionInfo == null) {
+			buttonObj.put(ServerConstants.SERVLET_RESULTS,
+					"No session found during button press for session " + String.valueOf(sessionID));
+			return buttonObj;
+		}
+
+		String homeHubDeviceIP = (String) sessionInfo.get(SessionConstants.HOME_HUB_DEVICE_IP);
+		String deviceName = (String) sessionInfo.get(SessionConstants.DEVICE_NAME);
+		String options = null;
+		try {
+			options = new HDMIKeyPresser(homeHubDeviceIP, deviceName).getButtons();
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+		}
+
+		if (options == null || options.isEmpty()) {
+			buttonObj = new JSONObject();
+			buttonObj.put(ServerConstants.SERVLET_RESULTS,
+					"Failed to get remote button options from device!");
+			return buttonObj;
+		}
+
+		buttonObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+		buttonObj.put("button_options", options);
 		return buttonObj;
 	}
 
@@ -167,9 +201,8 @@ public class remote extends HttpServlet {
 		}
 
 		if (SessionManager.isXBox(sessionID)) {
-			XBoxButton xboxButton = XBoxButton
-					.getEnumByString(requestObj.get(SessionConstants.REMOTE_BUTTON).toString());
-			results = pressXBoxRemoteButton(sessionID, xboxButton);
+			String button = requestObj.get(SessionConstants.REMOTE_BUTTON).toString();
+			results = pressHarmonyRemoteButton(sessionID, button);
 		}
 
 		return results;
