@@ -51,9 +51,10 @@ public class HDMIScreenManager {
 			command = content;
 		}
 
+		Log.getRootLogger()
+				.info(String.format("Starting video capture for session %s with command: %s", sessionID, command));
 		CommandExecutor commandExecutor = new CommandExecutor();
 		String output = commandExecutor.execCommand(command, null);
-		Log.getRootLogger().info("DEBUG - OUTPUT OF SCREEN CAPTURE VIDEO START: " + output);
 
 		long pollStart = System.currentTimeMillis();
 		long pollMax = pollStart + (MAX_VIDEO_READY_WAIT_S * 1000);
@@ -72,6 +73,9 @@ public class HDMIScreenManager {
 
 			SleepUtils.sleep(VIDEO_READY_POLL_MS);
 		}
+
+		Log.getRootLogger()
+				.info(String.format("Failed video capture start for session %s with output: %s", sessionID, output));
 
 		return false;
 	}
