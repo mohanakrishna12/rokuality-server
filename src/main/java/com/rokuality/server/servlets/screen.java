@@ -176,32 +176,28 @@ public class screen extends HttpServlet {
 		} else {
 			results = getImageCompiledScreenRecording(sessionID);
 		}
+
+		if (!results.containsValue(ServerConstants.SERVLET_SUCCESS)) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Failed to generate/retrieve video recording! See logs for details.");
+		}
 		return results;
 	}
 
 	private static JSONObject getHDMIScreenRecording(String sessionID) {
 		JSONObject results = new JSONObject();
-		File video = null;
 		String videoContent = null;
-		File capturedVideo = new File(SessionManager.getSessionInfo(sessionID).get(SessionConstants.VIDEO_CAPTURE_FILE));
+		File capturedVideo = new File(String.valueOf(SessionManager.getSessionInfo(sessionID).get(SessionConstants.VIDEO_CAPTURE_FILE)));
 
-		video = new File(DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + sessionID + "_videorecording.mp4");
-		if (capturedVideo.exists()) {
-			String command = FFMPEGConstants.FFMPEG.getAbsolutePath() + " -codec copy " + video.getAbsolutePath();
-			String output = new CommandExecutor().execCommand(command, null);
-			Log.getRootLogger().info("DEBUG - OUTPUT: " + output);
+		if (capturedVideo.exists() && capturedVideo.isFile()) {
+			videoContent = new FileToStringUtils().convertToString(capturedVideo);
 		}
-
-		if (video.exists() && video.isFile()) {
-			videoContent = new FileToStringUtils().convertToString(video);
-		}
-		//FileUtils.deleteFile(video);
-
+		
 		if (videoContent != null) {
 			results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 			results.put("screen_video", videoContent);
-			results.put("screen_video_extension", ".mp4");
+			results.put("screen_video_extension", ".mkv");
 		}
+		
 		return results;
 	}
 

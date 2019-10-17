@@ -273,10 +273,10 @@ public class ImageUtils {
 		ImageText constructedImageText = new ImageText();
 		constructedImageText.setText(constructedWords);
 
-		int startX = matchedImageTexts.get(0).getLocation().x;
+		int startX = matchedImageTexts.get(0).getLocation().x; // 770
 		int startY = matchedImageTexts.get(0).getLocation().y;
-		int endX = (int) matchedImageTexts.get(matchedImageTexts.size() - 1).getLength();
-		int width = startX + endX; // x-axis 'width'
+		// TODO - calculate the space between all entries and add it to total width
+		int width = (int) matchedImageTexts.get(0).getLength() + (int) matchedImageTexts.get(matchedImageTexts.size() - 1).getLength(); // x-axis 'width'
 		int height = (int) matchedImageTexts.get(0).getWidth(); // y-axis 'height'
 
 		constructedImageText.setLength(Double.valueOf((width)));
