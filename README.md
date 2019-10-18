@@ -1,4 +1,4 @@
-# Rokuality Server - End to End Automation for Roku, XBox, Playstation, Cable SetTop Boxes, and more!
+# Rokuality Server - End to End Automation for Roku, XBox, Playstation, Cable SetTop Boxes, and More!
 
 The Rokuality Server allows you to distribute Roku, XBox, PS4, and Cable SetTop Box end to end tests across multiple devices on your network. The server acts a lightweight web proxy, capturing your device test traffic and distributing the tests to the devices provided in your capabilities. The project goal is to provide a no cost/low cost open source solution for various video streaming platforms that otherwise don't offer an easily automatable solution! Once you have the server setup with all requirements, [pick a language](#next-steps-choose-a-test-language) to write tests in.
 
