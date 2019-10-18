@@ -49,6 +49,12 @@ public class HDMIScreenManager {
 		if (!OSUtils.isWindows()) {
 			String videoCaptureIndex = getUSBCaptureIndex(videoCaptureInput);
 			String audioCaptureIndex = getUSBCaptureIndex(audioCaptureInput);
+
+			if (videoCaptureIndex == null || audioCaptureIndex == null) {
+				Log.getRootLogger().warn("Failed to capture video/audio indexes!");
+				return false;
+			}
+
 			content = "nohup " + ffmpegPath + " -f avfoundation -framerate 30 -i \"" + videoCaptureIndex + ":"
 					+ audioCaptureIndex + "\" " + videoToCaptureTo.getAbsolutePath();
 			command = content;
@@ -85,6 +91,10 @@ public class HDMIScreenManager {
 	}
 
 	public static void stopVideoCapture(File videoUnderCapture) {
+		if (videoUnderCapture == null) {
+			return;
+		}
+
 		Log.getRootLogger().info("Stopping hdmi video under capture at: " + String.valueOf(videoUnderCapture));
 		CommandExecutor commandExecutor = new CommandExecutor();
 
@@ -200,6 +210,10 @@ public class HDMIScreenManager {
             .map(line -> line.split("] ")[1] + "]")
 			.findFirst()
 			.orElse(null);
+
+		if (formattedIndex == null) {
+			return null;
+		}
         return formattedIndex.replace("[", "").replace("]", "");
     }
 

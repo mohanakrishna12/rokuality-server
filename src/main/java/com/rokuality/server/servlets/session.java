@@ -16,6 +16,7 @@ import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.SessionManager;
+import com.rokuality.server.driver.device.hdmi.HDMIKeyPresser;
 import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
 import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
 import com.rokuality.server.driver.device.roku.RokuKeyPresser;
@@ -88,6 +89,9 @@ public class session extends HttpServlet {
 		String deviceUsername = null;
 		String devicePassword = null;
 
+		String deviceName = null;
+		String homeHubDeviceIP = null;
+
 		String videoCaptureInput = null;
 		String audioCaptureInput = null;
 		File videoCapture = null;
@@ -111,7 +115,7 @@ public class session extends HttpServlet {
 			return sessionInfo;
 		}
 
-		if (isXBox(platformType)) {
+		if (isXBox(platformType) || isHDMI(platformType)) {
 			boolean nodeInstalled = GlobalDependencyInstaller.isNodeInstalled();
 			if (!nodeInstalled) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
@@ -132,7 +136,7 @@ public class session extends HttpServlet {
 		sessionInfo.put(SessionConstants.DEVICE_IP, deviceIP);
 
 		if (isXBox(platformType) || isHDMI(platformType)) {
-			String deviceName = (String) requestObj.get(SessionCapabilities.DEVICE_NAME.value());
+			deviceName = (String) requestObj.get(SessionCapabilities.DEVICE_NAME.value());
 			if (deviceName == null || deviceName.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
 						.format("The %s capability cannot be null or empty!", SessionCapabilities.DEVICE_NAME.value()));
@@ -140,13 +144,13 @@ public class session extends HttpServlet {
 			}
 			sessionInfo.put(SessionConstants.DEVICE_NAME, deviceName);
 
-			String hubIP = (String) requestObj.get(SessionCapabilities.HOME_HUB_IP_ADDRESS.value());
-			if (hubIP == null || hubIP.isEmpty()) {
+			homeHubDeviceIP = (String) requestObj.get(SessionCapabilities.HOME_HUB_IP_ADDRESS.value());
+			if (homeHubDeviceIP == null || homeHubDeviceIP.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
 						"The %s capability cannot be null or empty!", SessionCapabilities.HOME_HUB_IP_ADDRESS.value()));
 				return sessionInfo;
 			}
-			sessionInfo.put(SessionConstants.HOME_HUB_DEVICE_IP, hubIP);
+			sessionInfo.put(SessionConstants.HOME_HUB_DEVICE_IP, homeHubDeviceIP);
 		}
 
 		if (!isHDMI(platformType)) {
@@ -260,6 +264,20 @@ public class session extends HttpServlet {
 			}
 		}
 
+		if (isHDMI(platformType) || isXBox(platformType)) {
+			String output = new HDMIKeyPresser(homeHubDeviceIP, deviceName).getButtons();
+			if (output == null || !output.toLowerCase().contains("commands")) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+						String.format(
+								"The logitech harmony device at %s did not respond, or your %s capability "
+								+ "does not match the device name as saved in your harmony. Is the device "
+								+ "online and reachable on your network? See the README for "
+								+ "details on configuring your harmony hub for test",
+								homeHubDeviceIP, SessionCapabilities.DEVICE_NAME.value()));
+				return sessionInfo;
+			}
+		}
+
 		if (isHDMI(platformType)) {
 			videoCaptureInput = (String) requestObj.get(SessionCapabilities.VIDEO_CAPTURE_INPUT.value());
 			if (videoCaptureInput == null || videoCaptureInput.isEmpty()) {
@@ -344,6 +362,8 @@ public class session extends HttpServlet {
 					deviceIP));
 			imageCollector.stopRecording();
 			FileUtils.deleteDirectory(imageCollectionDir);
+			HDMIScreenManager.stopVideoCapture(videoCapture);
+			FileUtils.deleteFile(videoCapture);
 			return sessionInfo;
 		}
 
