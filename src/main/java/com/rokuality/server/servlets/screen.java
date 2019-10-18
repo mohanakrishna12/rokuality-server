@@ -1,25 +1,28 @@
 package com.rokuality.server.servlets;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.awt.image.BufferedImage;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
+import com.rokuality.server.constants.DependencyConstants;
+import com.rokuality.server.constants.FFMPEGConstants;
+import com.rokuality.server.constants.ServerConstants;
+import com.rokuality.server.constants.SessionConstants;
+import com.rokuality.server.core.CommandExecutor;
+import com.rokuality.server.core.ImageCollector;
+import com.rokuality.server.core.drivers.SessionManager;
+import com.rokuality.server.core.ocr.ImageText;
 import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.FileUtils;
 import com.rokuality.server.utils.ImageUtils;
 import com.rokuality.server.utils.ServletJsonParser;
 import com.rokuality.server.utils.SleepUtils;
-import com.rokuality.server.constants.ServerConstants;
-import com.rokuality.server.constants.SessionConstants;
-import com.rokuality.server.core.ImageCollector;
-import com.rokuality.server.core.drivers.SessionManager;
-import com.rokuality.server.core.ocr.ImageText;
 
 import org.eclipse.jetty.util.log.Log;
 import org.json.simple.JSONObject;
@@ -168,6 +171,38 @@ public class screen extends HttpServlet {
 		JSONObject results = new JSONObject();
 		String sessionID = sessionObj.get(SessionConstants.SESSION_ID).toString();
 
+		if (SessionManager.isHDMI(sessionID)) {
+			results = getHDMIScreenRecording(sessionID);
+		} else {
+			results = getImageCompiledScreenRecording(sessionID);
+		}
+
+		if (!results.containsValue(ServerConstants.SERVLET_SUCCESS)) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Failed to generate/retrieve video recording! See logs for details.");
+		}
+		return results;
+	}
+
+	private static JSONObject getHDMIScreenRecording(String sessionID) {
+		JSONObject results = new JSONObject();
+		String videoContent = null;
+		File capturedVideo = new File(String.valueOf(SessionManager.getSessionInfo(sessionID).get(SessionConstants.VIDEO_CAPTURE_FILE)));
+
+		if (capturedVideo.exists() && capturedVideo.isFile()) {
+			videoContent = new FileToStringUtils().convertToString(capturedVideo);
+		}
+		
+		if (videoContent != null) {
+			results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+			results.put("screen_video", videoContent);
+			results.put("screen_video_extension", ".mkv");
+		}
+		
+		return results;
+	}
+
+	private static JSONObject getImageCompiledScreenRecording(String sessionID) {
+		JSONObject results = new JSONObject();
 		File video = null;
 		String videoContent = null;
 		ImageCollector imageCollector = SessionManager.getImageCollector(sessionID);

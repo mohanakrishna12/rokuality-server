@@ -1,5 +1,48 @@
 package com.rokuality.server.utils;
 
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.vision.v1.AnnotateImageRequest;
+import com.google.cloud.vision.v1.AnnotateImageResponse;
+import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
+import com.google.cloud.vision.v1.EntityAnnotation;
+import com.google.cloud.vision.v1.Feature;
+import com.google.cloud.vision.v1.Feature.Type;
+import com.google.cloud.vision.v1.ImageAnnotatorClient;
+import com.google.cloud.vision.v1.ImageAnnotatorSettings;
+import com.google.protobuf.ByteString;
+import com.rokuality.server.constants.DependencyConstants;
+import com.rokuality.server.constants.SessionConstants;
+import com.rokuality.server.constants.TesseractConstants;
+import com.rokuality.server.core.drivers.SessionManager;
+import com.rokuality.server.core.ocr.ImageText;
+import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
+import com.rokuality.server.driver.device.roku.RokuDevConsoleManager;
+import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
+import com.rokuality.server.enums.OCRType;
+import com.rokuality.server.enums.PlatformType;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jetty.util.log.Log;
@@ -14,40 +57,6 @@ import net.sourceforge.tess4j.ITessAPI;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import net.sourceforge.tess4j.Word;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-
-import com.google.api.gax.core.FixedCredentialsProvider;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.vision.v1.AnnotateImageRequest;
-import com.google.cloud.vision.v1.AnnotateImageResponse;
-import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
-import com.google.cloud.vision.v1.EntityAnnotation;
-import com.google.cloud.vision.v1.Feature;
-import com.google.cloud.vision.v1.ImageAnnotatorClient;
-import com.google.cloud.vision.v1.ImageAnnotatorSettings;
-import com.google.cloud.vision.v1.Feature.Type;
-import com.google.protobuf.ByteString;
-import com.rokuality.server.constants.DependencyConstants;
-import com.rokuality.server.constants.SessionConstants;
-import com.rokuality.server.constants.TesseractConstants;
-import com.rokuality.server.core.drivers.SessionManager;
-import com.rokuality.server.core.ocr.ImageText;
-import com.rokuality.server.driver.device.roku.RokuDevConsoleManager;
-import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
-import com.rokuality.server.enums.OCRType;
-import com.rokuality.server.enums.PlatformType;
-
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
 
 @SuppressWarnings("unchecked")
 public class ImageUtils {
@@ -64,11 +73,12 @@ public class ImageUtils {
 
 		for (int i = 1; i <= MAX_IMAGE_CAPTURE_ATTEMPTS; i++) {
 			if (i != 0) {
-				Log.getRootLogger().warn("Attempting " + String.valueOf(platform) + " screen capture after failed attempt.", i);
+				Log.getRootLogger()
+						.warn("Attempting " + String.valueOf(platform) + " screen capture after failed attempt.", i);
 			}
 
 			image = SessionManager.getImageCollector(sessionID).getCurrentImage(false);
-			
+
 			File resizedImageFile = null;
 			if (image != null && image.exists() && image.length() >= MIN_FILE_SIZE_B) {
 				JSONObject sessionInfoObj = SessionManager.getSessionInfo(sessionID);
@@ -79,8 +89,8 @@ public class ImageUtils {
 				Object resizeObj = sessionInfoObj.get(SessionConstants.SCREEN_SIZE_OVERRIDE);
 				String defaultResize = String.valueOf(resizeObj);
 				if (!defaultResize.equals("null")) {
-					Log.getRootLogger().info(
-							"Resizing image '" + image.getAbsolutePath() + "' to size '" + defaultResize + "'.");
+					Log.getRootLogger()
+							.info("Resizing image '" + image.getAbsolutePath() + "' to size '" + defaultResize + "'.");
 
 					String[] size = null;
 					try {
@@ -218,8 +228,7 @@ public class ImageUtils {
 			imageTexts.remove(0);
 		}
 
-		Log.getRootLogger().info(String.format("Screen image texts for locator text %s : %s", 
-				locator, imageTexts));
+		Log.getRootLogger().info(String.format("Screen image texts for locator text %s : %s", locator, imageTexts));
 
 		// find all components of the locator test
 		List<String> loc = new ArrayList<String>(); // TODO - case sensitive based on user capability
@@ -233,26 +242,25 @@ public class ImageUtils {
 		for (ImageText imgt : imageTexts) {
 			imageTextTexts.add(imgt.getText().toLowerCase());
 		}
-		
+
 		// check if our locator sublist is contained within
 		List<ImageText> matchedImageTexts = new ArrayList<>();
-		int matchedIndex = Collections.indexOfSubList(imageTextTexts , loc);
+		int matchedIndex = Collections.indexOfSubList(imageTextTexts, loc);
 		Log.getRootLogger().info(String.format("Matched index evaluator for %s is %s", loc, matchedIndex));
 		if (matchedIndex != -1) {
 			Log.getRootLogger().info(String.format("Match found for locator %s", loc));
 			matchedImageTexts = imageTexts.subList(matchedIndex, (matchedIndex + loc.size()));
 		}
 
-		Log.getRootLogger().info(String.format("Matched components for locator text %s : %s", 
-				loc, matchedImageTexts));
+		Log.getRootLogger().info(String.format("Matched components for locator text %s : %s", loc, matchedImageTexts));
 
 		String constructedWords = "";
 		for (ImageText imageText : matchedImageTexts) {
 			constructedWords += " " + imageText.getText();
 		}
 		constructedWords = constructedWords.trim();
-		Log.getRootLogger().info(String.format("Constructed word component for locator text %s : %s", 
-				loc, constructedWords));
+		Log.getRootLogger()
+				.info(String.format("Constructed word component for locator text %s : %s", loc, constructedWords));
 
 		if (matchedImageTexts.isEmpty()) {
 			return null;
@@ -265,10 +273,10 @@ public class ImageUtils {
 		ImageText constructedImageText = new ImageText();
 		constructedImageText.setText(constructedWords);
 
-		int startX = matchedImageTexts.get(0).getLocation().x;
+		int startX = matchedImageTexts.get(0).getLocation().x; // 770
 		int startY = matchedImageTexts.get(0).getLocation().y;
-		int endX = (int) matchedImageTexts.get(matchedImageTexts.size() - 1).getLength();
-		int width = startX + endX; // x-axis 'width'
+		// TODO - calculate the space between all entries and add it to total width
+		int width = (int) matchedImageTexts.get(0).getLength() + (int) matchedImageTexts.get(matchedImageTexts.size() - 1).getLength(); // x-axis 'width'
 		int height = (int) matchedImageTexts.get(0).getWidth(); // y-axis 'height'
 
 		constructedImageText.setLength(Double.valueOf((width)));
@@ -307,7 +315,8 @@ public class ImageUtils {
 				return null;
 			}
 
-			File imageFile = new File(DependencyConstants.TEMP_DIR.getAbsoluteFile() + File.separator + UUID.randomUUID().toString());
+			File imageFile = new File(
+					DependencyConstants.TEMP_DIR.getAbsoluteFile() + File.separator + UUID.randomUUID().toString());
 			boolean fileCreated = com.rokuality.server.utils.FileUtils.createFile(imageFile);
 			if (!fileCreated) {
 				Log.getRootLogger().warn("Failed to create file from base64 image handler!");
@@ -315,12 +324,12 @@ public class ImageUtils {
 			}
 
 			try (FileOutputStream fileOutputStream = new FileOutputStream(imageFile)) {
-				fileOutputStream.write(fileData);		
+				fileOutputStream.write(fileData);
 			} catch (Exception e) {
 				Log.getRootLogger().warn("Failed to decode image file for execution.", e);
 				return null;
 			}
-			
+
 			String formatName = getImageFormat(imageFile);
 			if (formatName == null) {
 				return null;
@@ -582,13 +591,16 @@ public class ImageUtils {
 		return ImageIO.read(file);
 	}
 
-	public static File getScreenImage(File fileToSaveAs, PlatformType platform, String username, String password, String deviceip) {
+	public static File getScreenImage(File fileToSaveAs, PlatformType platform, String username, String password,
+			String deviceip, File videoCapture) {
 		switch (platform) {
-			case ROKU:
+		case ROKU:
 			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot(fileToSaveAs);
-			case XBOX:
+		case XBOX:
 			return new XBoxDevAPIManager(deviceip).getScreenshot(fileToSaveAs);
-			default:
+		case HDMI:
+			return HDMIScreenManager.getScreenShotFromVideo(videoCapture, fileToSaveAs);
+		default:
 			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot(fileToSaveAs);
 		}
 	}
