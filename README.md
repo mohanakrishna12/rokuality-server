@@ -1,6 +1,6 @@
-# Rokuality Server - End to End Automation for Roku and XBox!
+# Rokuality Server - End to End Automation for Roku, XBox, Playstation, Cable SetTop Boxes, and more!
 
-The Rokuality Server allows you to distribute Roku and XBox end to end tests across multiple devices on your network. (Playstation, SetTop, and others coming soon!) The server acts a lightweight web proxy, capturing your device test traffic and distributing the tests to the devices provided in your capabilities. The project goal is to provide a no cost/low cost open source solution for various video streaming platforms that otherwise don't offer an easily automatable solution! Once you have the server setup with all requirements, [pick a language](#next-steps-choose-a-test-language) to write tests in.
+The Rokuality Server allows you to distribute Roku, XBox, PS4, and Cable SetTop Box end to end tests across multiple devices on your network. The server acts a lightweight web proxy, capturing your device test traffic and distributing the tests to the devices provided in your capabilities. The project goal is to provide a no cost/low cost open source solution for various video streaming platforms that otherwise don't offer an easily automatable solution! Once you have the server setup with all requirements, [pick a language](#next-steps-choose-a-test-language) to write tests in.
 
 ### Getting started: Server Requirements
 The Rokuality Server is a Java Jetty servlet container application that requires at least Java 8 to run, and that you have Java available on your PATH. Typically the easiest way to do that is to use the relevant package manager for the Operating System you are running. For example, for MAC users it's easy using [brew](https://brew.sh/) via `brew cask install java` or for Windows users using [scoop](https://scoop.sh/) via 
@@ -60,6 +60,14 @@ Automated testing on XBox requires the following:
 4. You must have nodejs installed on the machine running the server. Easily done on MAC via `brew install node` or on Windows via `scoop install nodejs`.
 5. You must have a [Logitech Harmony Hub](https://www.logitech.com/en-us/product/harmony-hub?crid=60) with your XBox setup as a device and XMPP enabled on the hub. See the sections [why harmony](#why-harmony) and [configuring your harmony](#configuring-your-harmony) for details.
 
+### Getting started: HDMI Connected Devices (Playstation, Cable SetTopBox, AndroidTV, AppleTV, and More)
+The Rokuality platform allows you run automated tests on just about any device that has an HDMI out and accepts either Bluetooth or IR commands. This includes Playstations, AppleTV's, AndroidTV's, Cable SetTop Box's, etc. It requires the following software/hardware:
+1. You must have nodejs installed on the machine running the server. Easily done on MAC via `brew install node` or on Windows via `scoop install nodejs`.
+2. You must have a [Logitech Harmony Hub](https://www.logitech.com/en-us/product/harmony-hub?crid=60) with your device setup as a device and XMPP enabled on the hub. See the sections [why harmony](#why-harmony) and [configuring your harmony](#configuring-your-harmony) for details.
+3. You must have an HDMI to USB capture card attached to the device and the machine running the Rokuality Server. Once connected the server can capture the device input stream and then perform evaluations against the captured frames. See [why capture cards](#why-hdmi-to-usb-capture-cards) for details. There are several capture card options available and most 'should' work but we've tested the following:
+	* [Magewell USB 3.0](https://www.magewell.com/products/usb-capture-hdmi-gen-2) A 300$ premium capture card recommended for high quality video capture and evaluations.
+	* [USB 2.0/3.0](https://www.amazon.com/Capture-Broadcast-Streaming-Grabber-Converter/dp/B0779ZJZX3/ref=sr_1_3?keywords=hdmi+usb+capture+cards&qid=1571405168&sr=8-3) A lower cost, $90 alternative to the magewell. Video quality is not as good as the Magewell but under test has worked perfectly well.
+
 ### Server command options:
 | Command  | Description | Notes |
 | ------------- | ------------- | ------------- |
@@ -89,7 +97,5 @@ To setup your Harmony hub and prepare it for automating your devices under test:
 2. During setup it will walk you through adding your device under test. Be sure to keep track of what you name your device when you pair it with your Harmony as that will be used later during your tests as your "DeviceName" capability. This will allow the Rokuality server to communicate with your device from your test code and drive it like a real user.
 3. Enable XMPP on the hub. In the harmony app go to Settings>>Harmony Setup>>Add/Edit Devices & Activities>>Hub>>Enable XMPP
 
-### Notes
-1. This a new project but the goal is to add additional features for other streaming devices (Playstation, XBox, and SetTop based devices) in the near future. There will be a roadmap soon highlighting new features and goals.
-2. Additionally if you're interested in helping and have experience in any of the above mentioned languages - please contact us to get involved!
-3. The server has been tested for Windows and MAC but should work for various flavors of linux as well. But please log [issues](https://github.com/rokuality/rokuality-server/issues) if you find them and they'll be worked on as quickly as possible.
+### Why HDMI to USB Capture Cards
+Some of our devices require you to have an HDMI to USB capture card connected to the device and machine running the Rokuality server. This is necessary for devices like the PS4 or cable set top boxes that don't offer an available means of remotely capturing the screen output. Other vendors ship you a proprietary capture card for these scenarios that operates in the same fashion - and their hardware can be expensive! We allow you to bring your own capture card and provide the same functionality as a lower cost alternative.
