@@ -127,13 +127,15 @@ public class session extends HttpServlet {
 			}
 		}
 
-		deviceIP = (String) requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value());
-		if (deviceIP == null || deviceIP.isEmpty()) {
-			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format("The %s capability cannot be null or empty!",
-					SessionCapabilities.DEVICE_IP_ADDRESS.value()));
-			return sessionInfo;
+		if (!isHDMI(platformType)) {
+			deviceIP = (String) requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value());
+			if (deviceIP == null || deviceIP.isEmpty()) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+						"The %s capability cannot be null or empty!", SessionCapabilities.DEVICE_IP_ADDRESS.value()));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.DEVICE_IP, deviceIP);
 		}
-		sessionInfo.put(SessionConstants.DEVICE_IP, deviceIP);
 
 		if (isXBox(platformType) || isHDMI(platformType)) {
 			deviceName = (String) requestObj.get(SessionCapabilities.DEVICE_NAME.value());
@@ -270,9 +272,9 @@ public class session extends HttpServlet {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS,
 						String.format(
 								"The logitech harmony device at %s did not respond, or your %s capability "
-								+ "does not match the device name as saved in your harmony. Is the device "
-								+ "online and reachable on your network? See the README for "
-								+ "details on configuring your harmony hub for test",
+										+ "does not match the device name as saved in your harmony. Is the device "
+										+ "online and reachable on your network? See the README for "
+										+ "details on configuring your harmony hub for test",
 								homeHubDeviceIP, SessionCapabilities.DEVICE_NAME.value()));
 				return sessionInfo;
 			}
@@ -348,7 +350,7 @@ public class session extends HttpServlet {
 			sessionInfo.remove(SessionConstants.APP_PACKAGE);
 		}
 
-		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP.toString(),
+		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP,
 				imageCollectionDir, deviceUsername, devicePassword, videoCapture);
 		boolean recordingStarted = imageCollector.startRecording();
 		boolean imageCollectionStarted = false;
@@ -424,7 +426,8 @@ public class session extends HttpServlet {
 		}
 		imageCollector.stopRecording();
 
-		PlatformType platformType = PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM)));
+		PlatformType platformType = PlatformType
+				.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM)));
 		if (PlatformType.HDMI.equals(platformType)) {
 			File videoCapture = new File(String.valueOf(sessionInfo.get(SessionConstants.VIDEO_CAPTURE_FILE)));
 			stopHDMICapture(videoCapture);
