@@ -307,8 +307,7 @@ public class session extends HttpServlet {
 								+ "to obtain those cap values.",
 						SessionCapabilities.VIDEO_CAPTURE_INPUT.value(),
 						SessionCapabilities.AUDIO_CAPTURE_INPUT.value()));
-				HDMIScreenManager.stopVideoCapture(videoCapture);
-				FileUtils.deleteFile(videoCapture);
+				stopHDMICapture(videoCapture);
 				return sessionInfo;
 			}
 			sessionInfo.put(SessionConstants.VIDEO_CAPTURE_FILE, videoCapture.getAbsolutePath());
@@ -350,7 +349,7 @@ public class session extends HttpServlet {
 		}
 
 		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP.toString(),
-				imageCollectionDir, deviceUsername, devicePassword, videoCapture, videoCaptureInput, audioCaptureInput);
+				imageCollectionDir, deviceUsername, devicePassword, videoCapture);
 		boolean recordingStarted = imageCollector.startRecording();
 		boolean imageCollectionStarted = false;
 		if (recordingStarted) {
@@ -362,8 +361,7 @@ public class session extends HttpServlet {
 					deviceIP));
 			imageCollector.stopRecording();
 			FileUtils.deleteDirectory(imageCollectionDir);
-			HDMIScreenManager.stopVideoCapture(videoCapture);
-			FileUtils.deleteFile(videoCapture);
+			stopHDMICapture(videoCapture);
 			return sessionInfo;
 		}
 
@@ -429,8 +427,7 @@ public class session extends HttpServlet {
 		PlatformType platformType = PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM)));
 		if (PlatformType.HDMI.equals(platformType)) {
 			File videoCapture = new File(String.valueOf(sessionInfo.get(SessionConstants.VIDEO_CAPTURE_FILE)));
-			HDMIScreenManager.stopVideoCapture(videoCapture);
-			FileUtils.deleteFile(videoCapture);
+			stopHDMICapture(videoCapture);
 		}
 
 		if (isRoku(platformType)) {
@@ -513,6 +510,22 @@ public class session extends HttpServlet {
 
 	private static boolean isHDMI(PlatformType platformType) {
 		return PlatformType.HDMI.equals(platformType);
+	}
+
+	private static void stopHDMICapture(File videoCapture) {
+		HDMIScreenManager.stopVideoCapture(videoCapture);
+		if (videoCapture != null && videoCapture.exists()) {
+			long pollStart = System.currentTimeMillis();
+			long pollMax = pollStart + (5 * 1000);
+
+			while (System.currentTimeMillis() <= pollMax) {
+				boolean deleted = FileUtils.deleteFile(videoCapture);
+				if (deleted) {
+					break;
+				}
+				SleepUtils.sleep(250);
+			}
+		}
 	}
 
 }

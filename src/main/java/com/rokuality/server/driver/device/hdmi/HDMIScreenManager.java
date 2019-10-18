@@ -7,7 +7,6 @@ import java.io.StringReader;
 import com.rokuality.server.constants.FFMPEGConstants;
 import com.rokuality.server.core.CommandExecutor;
 import com.rokuality.server.utils.FileUtils;
-import com.rokuality.server.utils.LogFileUtils;
 import com.rokuality.server.utils.OSUtils;
 import com.rokuality.server.utils.SleepUtils;
 
@@ -35,15 +34,12 @@ public class HDMIScreenManager {
 
 		FileUtils.deleteFile(videoToCaptureTo);
 
-		File logFile = LogFileUtils.getLogFile("videocapture.log");
-		logFile = LogFileUtils.cleanLogFile(logFile);
-
 		String content = "";
 		String command = null;
 		if (OSUtils.isWindows()) {
-			content = ffmpegPath + " -f dshow -i video=\"" + videoCaptureInput + "\":audio=\"" + audioCaptureInput
-					+ "\" " + videoToCaptureTo.getAbsolutePath();
-			command = "cmd /c start /b \"\" > " + logFile.getAbsolutePath() + " " + content;
+			content = ffmpegPath + " -f dshow -framerate 30 -i video=\"" + videoCaptureInput + "\":audio=\""
+					+ audioCaptureInput + "\" -max_muxing_queue_size 9999 " + videoToCaptureTo.getAbsolutePath();
+			command = content;
 		}
 
 		if (!OSUtils.isWindows()) {
@@ -65,7 +61,7 @@ public class HDMIScreenManager {
 		CommandExecutor commandExecutor = new CommandExecutor();
 		commandExecutor.setWaitToComplete(false);
 		String output = commandExecutor.execCommand(command, null);
-		
+
 		long pollStart = System.currentTimeMillis();
 		long pollMax = pollStart + (MAX_VIDEO_READY_WAIT_S * 1000);
 
@@ -86,6 +82,8 @@ public class HDMIScreenManager {
 
 		Log.getRootLogger()
 				.info(String.format("Failed video capture start for session %s with output: %s", sessionID, output));
+		Log.getRootLogger()
+				.warn("Failed video count output: " + String.valueOf(getFrameCountOutput(videoToCaptureTo)));
 
 		return false;
 	}
@@ -133,6 +131,11 @@ public class HDMIScreenManager {
 				Log.getRootLogger().info(String.format("Output of video %s stop: %s", videoUnderCapture, output));
 			}
 		}
+
+		if (OSUtils.isWindows()) {
+			// unfortunate delay while windows releases the file lock on the captured asset
+			SleepUtils.sleep(250);
+		}
 	}
 
 	public static File getScreenShotFromVideo(File videoUnderCapture, File screenshotToSaveAs) {
@@ -179,11 +182,8 @@ public class HDMIScreenManager {
 	}
 
 	public static int getFrameCountFromVideo(File video) {
-		String ffmpegPath = FFMPEGConstants.FFMPEG.getAbsolutePath();
 		Integer lastFrame = null;
-		String[] getFrameCountCommand = { ffmpegPath, "-i", video.getAbsolutePath(), "-map", "0:v:0", "-c", "copy",
-				"-f", "null", "-" };
-		String output = new CommandExecutor().execCommand(String.join(" ", getFrameCountCommand), null);
+		String output = getFrameCountOutput(video);
 		if (output == null || !output.contains("frame=")) {
 			return 0;
 		}
@@ -204,24 +204,28 @@ public class HDMIScreenManager {
 	}
 
 	public static String getUSBCaptureIndex(String inputName) {
-		String formattedIndex = new BufferedReader(new StringReader(executeAVFoundationListDevicesCommand()))
-            .lines()
-            .filter(line -> line.contains(inputName))
-            .map(line -> line.split("] ")[1] + "]")
-			.findFirst()
-			.orElse(null);
+		String formattedIndex = new BufferedReader(new StringReader(executeAVFoundationListDevicesCommand())).lines()
+				.filter(line -> line.contains(inputName)).map(line -> line.split("] ")[1] + "]").findFirst()
+				.orElse(null);
 
 		if (formattedIndex == null) {
 			return null;
 		}
-        return formattedIndex.replace("[", "").replace("]", "");
-    }
+		return formattedIndex.replace("[", "").replace("]", "");
+	}
 
-    private static String executeAVFoundationListDevicesCommand() {
-        String ffmpegPath = FFMPEGConstants.FFMPEG.getAbsolutePath();
-        CommandExecutor commandExecutor = new CommandExecutor();
-        String[] command = { ffmpegPath, "-f", "avfoundation", "-list_devices", "true", "-i", "\"\"" };
-        return commandExecutor.execCommand(String.join(" ", command), null);
-    }
+	private static String executeAVFoundationListDevicesCommand() {
+		String ffmpegPath = FFMPEGConstants.FFMPEG.getAbsolutePath();
+		CommandExecutor commandExecutor = new CommandExecutor();
+		String[] command = { ffmpegPath, "-f", "avfoundation", "-list_devices", "true", "-i", "\"\"" };
+		return commandExecutor.execCommand(String.join(" ", command), null);
+	}
+
+	private static String getFrameCountOutput(File video) {
+		String[] getFrameCountCommand = { FFMPEGConstants.FFMPEG.getAbsolutePath(), "-i", video.getAbsolutePath(),
+				"-map", "0:v:0", "-c", "copy", "-f", "null", "-" };
+		String output = new CommandExecutor().execCommand(String.join(" ", getFrameCountCommand), null);
+		return output;
+	}
 
 }

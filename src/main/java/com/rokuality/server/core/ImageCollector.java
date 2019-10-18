@@ -35,19 +35,15 @@ public class ImageCollector {
 	private String password = null;
 	private String deviceIP = null;
 	private File videoCapture = null;
-	private String videoCaptureInput = null;
-	private String audioCaptureInput = null;
 
 	public ImageCollector(PlatformType platform, String sessionID, String deviceIP, File imageCaptureDir,
-			String username, String password, File videoCapture, String videoCaptureInput, String audioCaptureInput) {
+			String username, String password, File videoCapture) {
 		this.platform = platform;
 		this.deviceIP = deviceIP;
 		this.imageCaptureDir = imageCaptureDir;
 		this.username = username;
 		this.password = password;
 		this.videoCapture = videoCapture;
-		this.videoCaptureInput = videoCaptureInput;
-		this.audioCaptureInput = audioCaptureInput;
 		videoComplete = false;
 
 		recordedVideo = new File(imageCaptureDir.getAbsolutePath() + File.separator + platform.value()
