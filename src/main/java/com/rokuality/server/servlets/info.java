@@ -1,5 +1,7 @@
 package com.rokuality.server.servlets;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -10,8 +12,6 @@ import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
 import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
 import com.rokuality.server.utils.ServletJsonParser;
-
-import java.io.IOException;
 
 import org.eclipse.jetty.util.log.Log;
 import org.json.XML;
@@ -24,7 +24,11 @@ public class info extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
+		JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
+		if (response.getStatus() != HttpServletResponse.SC_OK) {
+			return;
+		}
+		
         String sessionID = requestObj.get(SessionConstants.SESSION_ID).toString();
 		
 		JSONObject results = null;

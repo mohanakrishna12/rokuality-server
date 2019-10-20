@@ -44,6 +44,9 @@ public class session extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
 		JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
+		if (response.getStatus() != HttpServletResponse.SC_OK) {
+			return;
+		}
 
 		JSONObject results = null;
 

@@ -27,6 +27,9 @@ public class remote extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
 		JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
+		if (response.getStatus() != HttpServletResponse.SC_OK) {
+			return;
+		}
 
 		JSONObject results = null;
 
@@ -60,11 +63,6 @@ public class remote extends HttpServlet {
 		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
 
 		JSONObject buttonObj = new JSONObject();
-		if (sessionInfo == null) {
-			buttonObj.put(ServerConstants.SERVLET_RESULTS,
-					"No session found during button press for session " + String.valueOf(sessionID));
-			return buttonObj;
-		}
 
 		String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
 		boolean success = false;
@@ -90,11 +88,6 @@ public class remote extends HttpServlet {
 		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
 
 		JSONObject buttonObj = new JSONObject();
-		if (sessionInfo == null) {
-			buttonObj.put(ServerConstants.SERVLET_RESULTS,
-					"No session found during button press for session " + String.valueOf(sessionID));
-			return buttonObj;
-		}
 
 		String homeHubDeviceIP = (String) sessionInfo.get(SessionConstants.HOME_HUB_DEVICE_IP);
 		String deviceName = (String) sessionInfo.get(SessionConstants.DEVICE_NAME);
