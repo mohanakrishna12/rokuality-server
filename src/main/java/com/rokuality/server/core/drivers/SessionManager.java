@@ -1,5 +1,7 @@
 package com.rokuality.server.core.drivers;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.auth.oauth2.GoogleCredentials;
@@ -14,10 +16,10 @@ import org.json.simple.JSONObject;
 @SuppressWarnings("unchecked")
 public class SessionManager {
 
-	private static Map<String, ImageCollector> imageCollectorMap = Collections.synchronizedMap<new HashMap<String, ImageCollector>();
-	private static Map<String, Long> sessionActivityMap = Collections.synchronizedMap<new HashMap<String, Long>();
-	private static Map<String, JSONObject> sessionInfoMap = Collections.synchronizedMap<new HashMap<String, JSONObject>();
-	private static Map<String, GoogleCredentials> googleCredentialMap = Collections.synchronizedMap<new HashMap<String, GoogleCredentials>();
+	private static Map<String, ImageCollector> imageCollectorMap = Collections.synchronizedMap(new HashMap<String, ImageCollector>());
+	private static Map<String, Long> sessionActivityMap = Collections.synchronizedMap(new HashMap<String, Long>());
+	private static Map<String, JSONObject> sessionInfoMap = Collections.synchronizedMap(new HashMap<String, JSONObject>());
+	private static Map<String, GoogleCredentials> googleCredentialMap = Collections.synchronizedMap(new HashMap<String, GoogleCredentials>());
 
 	public static void addSessionInfo(String sessionID, JSONObject sessionInfo) {
 		sessionInfoMap.put(sessionID, sessionInfo);
