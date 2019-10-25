@@ -1,9 +1,9 @@
 package com.rokuality.server.core.drivers;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.rokuality.server.constants.SessionConstants;
 
@@ -11,7 +11,7 @@ import org.json.simple.JSONObject;
 
 public class ElementManager {
 
-	private static Queue<Map<String, JSONObject>> elementMap = new ConcurrentLinkedQueue<>();
+	private static List<Map<String, JSONObject>> elementMap = Collections.synchronizedList(new ArrayList<>());
 
 	public static void addElement(String sessionID, JSONObject element) {
 		Map<String, JSONObject> map = new HashMap<>();
