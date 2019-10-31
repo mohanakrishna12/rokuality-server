@@ -30,7 +30,6 @@ import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.enums.RokuButton;
 import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.FileUtils;
-import com.rokuality.server.utils.ServletJsonParser;
 import com.rokuality.server.utils.SleepUtils;
 
 import org.json.simple.JSONObject;
@@ -45,38 +44,25 @@ public class manual extends HttpServlet {
 	private static String serverURL = "";
 	private static String deviceIP = "";
 	private static String appPackage = "";
+	private static String username = "";
+	private static String password = "";
+	private static String harmonyIP = "";
+	private static String deviceName = "";
+	private static String errorTxt = "";
 	private static boolean sessionStarted = false;
 
 	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-
-		JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
-		if (response.getStatus() != HttpServletResponse.SC_OK) {
-			return;
-		}
-
-		String action = requestObj.get(ServerConstants.SERVLET_ACTION).toString();
-		switch (action) {
-		case "start":
-			initManualSession(requestObj);
-			break;
-		default:
-
-			break;
-		}
-
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		initManualSession();
 		response.setStatus(HttpServletResponse.SC_OK);
 	}
 
-	public static void initManualSession(JSONObject sessionObj) {
-		serverURL = "";
-		deviceIP = "";
-		appPackage = "";
+	public static void initManualSession() {
 		sessionStarted = false;
 		sessionObj = new JSONObject();
 
 		JFrame frame = new JFrame();
-		frame.setBounds(100, 100, 500, 300);
+		frame.setBounds(100, 100, 500, 400);
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		frame.setAlwaysOnTop(true);
 		frame.getContentPane().setLayout(null);
@@ -89,13 +75,82 @@ public class manual extends HttpServlet {
 		platformLabel.setBounds(20, 48, 120, 20);
 		frame.getContentPane().add(platformLabel);
 
+		JLabel usernameLabel = new JLabel("Username:");
+		usernameLabel.setBounds(20, 208, 120, 20);
+		frame.getContentPane().add(usernameLabel);
+		usernameLabel.setVisible(false);
+
+		JTextField usernameField = new JTextField();
+		usernameField.setBounds(130, 208, 300, 20);
+		frame.getContentPane().add(usernameField);
+		usernameField.setColumns(10);
+		usernameField.setText(username);
+		usernameField.setVisible(false);
+
+		JLabel passwordLabel = new JLabel("Password:");
+		passwordLabel.setBounds(20, 248, 120, 20);
+		frame.getContentPane().add(passwordLabel);
+		passwordLabel.setVisible(false);
+
+		JTextField passwordField = new JTextField();
+		passwordField.setBounds(130, 248, 300, 20);
+		frame.getContentPane().add(passwordField);
+		passwordField.setColumns(10);
+		passwordField.setText(password);
+		passwordField.setVisible(false);
+
+		JLabel harmonyLabel = new JLabel("Harmony IP:");
+		harmonyLabel.setBounds(20, 208, 120, 20);
+		frame.getContentPane().add(harmonyLabel);
+		harmonyLabel.setVisible(false);
+
+		JTextField harmonyField = new JTextField();
+		harmonyField.setBounds(130, 208, 300, 20);
+		frame.getContentPane().add(harmonyField);
+		harmonyField.setColumns(10);
+		harmonyField.setText(harmonyIP);
+		harmonyField.setVisible(false);
+
+		JLabel deviceLabel = new JLabel("Device Name:");
+		deviceLabel.setBounds(20, 248, 120, 20);
+		frame.getContentPane().add(deviceLabel);
+		deviceLabel.setVisible(false);
+
+		JTextField deviceField = new JTextField();
+		deviceField.setBounds(130, 248, 300, 20);
+		frame.getContentPane().add(deviceField);
+		deviceField.setColumns(10);
+		deviceField.setText(deviceName);
+		deviceField.setVisible(false);
+
 		JComboBox<String> comboBox = new JComboBox<String>();
 		comboBox.addItem("--Select--");
 		comboBox.addItem("Roku");
 		comboBox.addItem("XBox");
 		comboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
+				usernameLabel.setVisible(false);
+				usernameField.setVisible(false);
+				passwordLabel.setVisible(false);
+				passwordField.setVisible(false);
+				harmonyLabel.setVisible(false);
+				harmonyField.setVisible(false);
+				deviceLabel.setVisible(false);
+				deviceField.setVisible(false);
+
+				if (comboBox.getSelectedItem().toString().equals("Roku")) {
+					usernameLabel.setVisible(true);
+					usernameField.setVisible(true);
+					passwordLabel.setVisible(true);
+					passwordField.setVisible(true);
+				}
+
+				if (comboBox.getSelectedItem().toString().equals("XBox")) {
+					harmonyLabel.setVisible(true);
+					harmonyField.setVisible(true);
+					deviceLabel.setVisible(true);
+					deviceField.setVisible(true);
+				}
 			}
 		});
 		comboBox.setBounds(130, 48, 150, 20);
@@ -109,6 +164,7 @@ public class manual extends HttpServlet {
 		serverURLField.setBounds(130, 88, 300, 20);
 		frame.getContentPane().add(serverURLField);
 		serverURLField.setColumns(10);
+		serverURLField.setText(serverURL);
 
 		JLabel deviceIPLabel = new JLabel("Device IP:");
 		deviceIPLabel.setBounds(20, 128, 120, 20);
@@ -118,6 +174,7 @@ public class manual extends HttpServlet {
 		deviceIPField.setBounds(130, 128, 300, 20);
 		frame.getContentPane().add(deviceIPField);
 		deviceIPField.setColumns(10);
+		deviceIPField.setText(deviceIP);
 
 		JLabel appPackageLabel = new JLabel("App Package:");
 		appPackageLabel.setBounds(20, 168, 120, 20);
@@ -149,70 +206,66 @@ public class manual extends HttpServlet {
 		JButton btnSubmit = new JButton("Connect");
 		btnSubmit.setBackground(Color.BLACK);
 		btnSubmit.setForeground(Color.BLACK);
-		btnSubmit.setBounds(20, 208, 100, 20);
+		btnSubmit.setBounds(20, 288, 100, 20);
 		frame.getContentPane().add(btnSubmit);
+
+		JLabel preparingDeviceLabel = new JLabel("Preparing device connection...");
+		preparingDeviceLabel.setBounds(130, 288, 200, 20);
+		frame.getContentPane().add(preparingDeviceLabel);
+		preparingDeviceLabel.setVisible(false);
+
+		JLabel errorLabel = new JLabel(errorTxt);
+		errorLabel.setBounds(20, 308, 499, 20);
+		errorLabel.setBackground(Color.RED);
+		errorLabel.setForeground(Color.RED);
+		frame.getContentPane().add(errorLabel);
+		errorLabel.setVisible(false);
 
 		btnSubmit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				errorLabel.setVisible(false);
+				
 				if (serverURLField.getText().isEmpty() || appPackageField.getText().isEmpty()) {
-					JLabel requiredLabel = new JLabel("The Server URL and App Package fields are required!");
-					requiredLabel.setBounds(130, 208, 340, 20);
-					requiredLabel.setForeground(Color.RED);
-					requiredLabel.setBackground(Color.RED);
-					frame.getContentPane().add(requiredLabel);
-					frame.repaint();
+					errorTxt = "The Server URL and App Package fields are required!";
+					errorLabel.setText(errorTxt);
+					errorLabel.setVisible(true);
 				} else {
 					serverURL = serverURLField.getText();
 					deviceIP = deviceIPField.getText();
 					platform = comboBox.getSelectedItem().toString();
+					username = usernameField.getText();
+					password = passwordField.getText();
+					harmonyIP = harmonyField.getText();
+					deviceName = deviceField.getText();
 
 					File appPackageFile = new File(appPackage);
 					if (appPackageFile.exists() && appPackageFile.isFile()) {
 						appPackage = new FileToStringUtils().convertToString(appPackageFile);
 					}
 
-					frame.dispose();
-					loadingFrame();
+					preparingDeviceLabel.setVisible(true);
+
+					new Thread() {
+						@Override
+						public void run() {
+							sessionStarted = startSession();
+							if (!sessionStarted) {
+								errorTxt = sessionObj == null ? "An unknown error occurred!"
+										: (String) sessionObj.get(ServerConstants.SERVLET_RESULTS);
+								errorLabel.setText(errorTxt);
+								errorLabel.setVisible(true);
+								preparingDeviceLabel.setVisible(false);
+							}
+			
+							if (sessionStarted) {
+								frame.dispose();
+								startSessionFrame();
+							}
+						};
+					}.start();
 				}
 			}
 		});
-
-		frame.setVisible(true);
-	}
-
-	public static void loadingFrame() {
-		JFrame frame;
-
-		frame = new JFrame();
-		frame.setBounds(100, 100, 500, 200);
-		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		frame.setAlwaysOnTop(true);
-		frame.getContentPane().setLayout(null);
-
-		JLabel mainLabel = new JLabel("PREPARING SESSION...");
-		mainLabel.setBounds(20, 10, 150, 20);
-		frame.getContentPane().add(mainLabel);
-
-		new Thread() {
-			@Override
-			public void run() {
-				sessionStarted = startSession();
-				if (!sessionStarted) {
-					String errorTxt = sessionObj == null ? "An unknown error occurred!"
-							: (String) sessionObj.get(ServerConstants.SERVLET_RESULTS);
-					mainLabel.setBounds(1, 1, 499, 199);
-					mainLabel.setBackground(Color.RED);
-					mainLabel.setForeground(Color.RED);
-					mainLabel.setText(errorTxt);
-					frame.repaint();
-				}
-
-				if (sessionStarted) {
-					frame.dispose();
-					startSessionFrame();
-				}
-			};
-		}.start();
 
 		frame.setVisible(true);
 	}
@@ -369,6 +422,21 @@ public class manual extends HttpServlet {
 			}
 		});
 
+		JButton newSessionBtn = new JButton("New Session");
+		newSessionBtn.setBackground(Color.BLACK);
+		newSessionBtn.setForeground(Color.BLACK);
+		newSessionBtn.setBounds(20, 240, 100, 20);
+		frame.getContentPane().add(newSessionBtn);
+
+		newSessionBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				sessionStarted = false;
+				stopSession();
+				frame.dispose();
+				initManualSession();
+			}
+		});
+
 		frame.setVisible(true);
 
 		new Thread() {
@@ -390,8 +458,8 @@ public class manual extends HttpServlet {
 		sessionObj.put("action", "start");
 		sessionObj.put("Platform", platform);
 		sessionObj.put("DeviceIPAddress", deviceIP);
-		sessionObj.put("DeviceUsername", "rokudev"); // TODO
-		sessionObj.put("DevicePassword", "1234"); // TODO
+		sessionObj.put("DeviceUsername", username);
+		sessionObj.put("DevicePassword", password);
 		sessionObj.put("AppPackage", appPackage);
 
 		sessionObj = postToServer("session", sessionObj);
