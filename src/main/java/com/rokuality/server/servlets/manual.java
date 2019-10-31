@@ -20,6 +20,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
@@ -27,7 +28,9 @@ import java.awt.*;
 
 import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.constants.ServerConstants;
+import com.rokuality.server.enums.PlatformType;
 import com.rokuality.server.enums.RokuButton;
+import com.rokuality.server.enums.XBoxButton;
 import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.FileUtils;
 import com.rokuality.server.utils.SleepUtils;
@@ -44,6 +47,7 @@ public class manual extends HttpServlet {
 	private static String serverURL = "";
 	private static String deviceIP = "";
 	private static String appPackage = "";
+	private static String app = "";
 	private static String username = "";
 	private static String password = "";
 	private static String harmonyIP = "";
@@ -99,25 +103,37 @@ public class manual extends HttpServlet {
 		passwordField.setText(password);
 		passwordField.setVisible(false);
 
+		JLabel appLabel = new JLabel("App:");
+		appLabel.setBounds(20, 208, 120, 20);
+		frame.getContentPane().add(appLabel);
+		appLabel.setVisible(false);
+
+		JTextField appField = new JTextField();
+		appField.setBounds(130, 208, 300, 20);
+		frame.getContentPane().add(appField);
+		appField.setColumns(10);
+		appField.setText(app);
+		appField.setVisible(false);
+
 		JLabel harmonyLabel = new JLabel("Harmony IP:");
-		harmonyLabel.setBounds(20, 208, 120, 20);
+		harmonyLabel.setBounds(20, 248, 120, 20);
 		frame.getContentPane().add(harmonyLabel);
 		harmonyLabel.setVisible(false);
 
 		JTextField harmonyField = new JTextField();
-		harmonyField.setBounds(130, 208, 300, 20);
+		harmonyField.setBounds(130, 248, 300, 20);
 		frame.getContentPane().add(harmonyField);
 		harmonyField.setColumns(10);
 		harmonyField.setText(harmonyIP);
 		harmonyField.setVisible(false);
 
 		JLabel deviceLabel = new JLabel("Device Name:");
-		deviceLabel.setBounds(20, 248, 120, 20);
+		deviceLabel.setBounds(20, 288, 120, 20);
 		frame.getContentPane().add(deviceLabel);
 		deviceLabel.setVisible(false);
 
 		JTextField deviceField = new JTextField();
-		deviceField.setBounds(130, 248, 300, 20);
+		deviceField.setBounds(130, 288, 300, 20);
 		frame.getContentPane().add(deviceField);
 		deviceField.setColumns(10);
 		deviceField.setText(deviceName);
@@ -126,7 +142,7 @@ public class manual extends HttpServlet {
 		JButton btnSubmit = new JButton("Connect");
 		btnSubmit.setBackground(Color.BLACK);
 		btnSubmit.setForeground(Color.BLACK);
-		btnSubmit.setBounds(20, 288, 100, 20);
+		btnSubmit.setBounds(20, 328, 100, 20);
 		frame.getContentPane().add(btnSubmit);
 		btnSubmit.setVisible(false);
 
@@ -146,6 +162,8 @@ public class manual extends HttpServlet {
 				harmonyField.setVisible(false);
 				deviceLabel.setVisible(false);
 				deviceField.setVisible(false);
+				appLabel.setVisible(false);
+				appField.setVisible(false);
 
 				if (comboBox.getSelectedItem().toString().equals("Roku")) {
 					usernameLabel.setVisible(true);
@@ -155,6 +173,8 @@ public class manual extends HttpServlet {
 				}
 
 				if (comboBox.getSelectedItem().toString().equals("XBox")) {
+					appLabel.setVisible(true);
+					appField.setVisible(true);
 					harmonyLabel.setVisible(true);
 					harmonyField.setVisible(true);
 					deviceLabel.setVisible(true);
@@ -213,12 +233,12 @@ public class manual extends HttpServlet {
 		});
 
 		JLabel preparingDeviceLabel = new JLabel("Preparing device connection...");
-		preparingDeviceLabel.setBounds(130, 288, 200, 20);
+		preparingDeviceLabel.setBounds(130, 328, 200, 20);
 		frame.getContentPane().add(preparingDeviceLabel);
 		preparingDeviceLabel.setVisible(false);
 
 		JLabel errorLabel = new JLabel(errorTxt);
-		errorLabel.setBounds(20, 308, 499, 20);
+		errorLabel.setBounds(20, 348, 499, 20);
 		errorLabel.setBackground(Color.RED);
 		errorLabel.setForeground(Color.RED);
 		frame.getContentPane().add(errorLabel);
@@ -239,6 +259,7 @@ public class manual extends HttpServlet {
 					password = passwordField.getText();
 					harmonyIP = harmonyField.getText();
 					deviceName = deviceField.getText();
+					app = appField.getText();
 
 					File appPackageFile = new File(appPackage);
 					if (appPackageFile.exists() && appPackageFile.isFile()) {
@@ -306,143 +327,13 @@ public class manual extends HttpServlet {
 		mainLabel.setBounds(20, 10, 150, 20);
 		frame.getContentPane().add(mainLabel);
 
-		JButton backBtn = new JButton("Back");
-		backBtn.setBackground(Color.BLACK);
-		backBtn.setForeground(Color.BLACK);
-		backBtn.setBounds(20, 40, 50, 20);
-		frame.getContentPane().add(backBtn);
+		if (PlatformType.ROKU.value().equalsIgnoreCase(platform)) {
+			addRokuControlPanel(frame);
+		}
 
-		backBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.BACK);
-			}
-		});
-
-		JButton rightArrowBtn = new JButton("Right");
-		rightArrowBtn.setBackground(Color.BLACK);
-		rightArrowBtn.setForeground(Color.BLACK);
-		rightArrowBtn.setBounds(20, 80, 50, 20);
-		frame.getContentPane().add(rightArrowBtn);
-
-		rightArrowBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.RIGHT_ARROW);
-			}
-		});
-
-		JButton leftArrowBtn = new JButton("Left");
-		leftArrowBtn.setBackground(Color.BLACK);
-		leftArrowBtn.setForeground(Color.BLACK);
-		leftArrowBtn.setBounds(80, 80, 50, 20);
-		frame.getContentPane().add(leftArrowBtn);
-
-		leftArrowBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.LEFT_ARROW);
-			}
-		});
-
-		JButton upArrowBtn = new JButton("Up");
-		upArrowBtn.setBackground(Color.BLACK);
-		upArrowBtn.setForeground(Color.BLACK);
-		upArrowBtn.setBounds(140, 80, 50, 20);
-		frame.getContentPane().add(upArrowBtn);
-
-		upArrowBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.UP_ARROW);
-			}
-		});
-
-		JButton downArrowBtn = new JButton("Down");
-		downArrowBtn.setBackground(Color.BLACK);
-		downArrowBtn.setForeground(Color.BLACK);
-		downArrowBtn.setBounds(200, 80, 50, 20);
-		frame.getContentPane().add(downArrowBtn);
-
-		downArrowBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.DOWN_ARROW);
-			}
-		});
-
-		JButton selectBtn = new JButton("Select");
-		selectBtn.setBackground(Color.BLACK);
-		selectBtn.setForeground(Color.BLACK);
-		selectBtn.setBounds(20, 120, 60, 20);
-		frame.getContentPane().add(selectBtn);
-
-		selectBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.SELECT);
-			}
-		});
-
-		JButton optionsBtn = new JButton("Options");
-		optionsBtn.setBackground(Color.BLACK);
-		optionsBtn.setForeground(Color.BLACK);
-		optionsBtn.setBounds(90, 120, 60, 20);
-		frame.getContentPane().add(optionsBtn);
-
-		optionsBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.OPTION);
-			}
-		});
-
-		JButton rewindBtn = new JButton("Rewind");
-		rewindBtn.setBackground(Color.BLACK);
-		rewindBtn.setForeground(Color.BLACK);
-		rewindBtn.setBounds(20, 160, 80, 20);
-		frame.getContentPane().add(rewindBtn);
-
-		rewindBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.REWIND);
-			}
-		});
-
-		JButton playPauseBtn = new JButton("Play/Pause");
-		playPauseBtn.setBackground(Color.BLACK);
-		playPauseBtn.setForeground(Color.BLACK);
-		playPauseBtn.setBounds(110, 160, 80, 20);
-		frame.getContentPane().add(playPauseBtn);
-
-		playPauseBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.PLAY);
-			}
-		});
-
-		JButton fastForwardBtn = new JButton("Forward");
-		fastForwardBtn.setBackground(Color.BLACK);
-		fastForwardBtn.setForeground(Color.BLACK);
-		fastForwardBtn.setBounds(200, 160, 80, 20);
-		frame.getContentPane().add(fastForwardBtn);
-
-		fastForwardBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.FAST_FORWARD);
-			}
-		});
-
-		JTextField sendKeysField = new JTextField();
-		sendKeysField.setBounds(20, 200, 165, 20);
-		frame.getContentPane().add(sendKeysField);
-		sendKeysField.setColumns(10);
-
-		JButton sendKeysBtn = new JButton("Send Keys");
-		sendKeysBtn.setBackground(Color.BLACK);
-		sendKeysBtn.setForeground(Color.BLACK);
-		sendKeysBtn.setBounds(200, 200, 80, 20);
-		frame.getContentPane().add(sendKeysBtn);
-
-		sendKeysBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				sendKeys(sendKeysField.getText());
-				sendKeysField.setText("");
-			}
-		});
+		if (PlatformType.XBOX.value().equalsIgnoreCase(platform)) {
+			addXBoxControlPanel(frame);
+		}
 		
 		JButton newSessionBtn = new JButton("New Session");
 		newSessionBtn.setBackground(Color.BLACK);
@@ -480,10 +371,19 @@ public class manual extends HttpServlet {
 		sessionObj.put("action", "start");
 		sessionObj.put("Platform", platform);
 		sessionObj.put("DeviceIPAddress", deviceIP);
-		sessionObj.put("DeviceUsername", username);
-		sessionObj.put("DevicePassword", password);
 		sessionObj.put("AppPackage", appPackage);
 
+		if (PlatformType.ROKU.value().equalsIgnoreCase(platform)) {
+			sessionObj.put("DeviceUsername", username);
+			sessionObj.put("DevicePassword", password);
+		}
+
+		if (PlatformType.XBOX.value().equalsIgnoreCase(platform)) {
+			sessionObj.put("HomeHubIPAddress", harmonyIP);
+			sessionObj.put("DeviceName", deviceName);
+			sessionObj.put("App", app);
+		}
+		
 		sessionObj = postToServer("session", sessionObj);
 
 		return sessionObj != null && sessionObj.containsValue(ServerConstants.SERVLET_SUCCESS);
@@ -598,9 +498,9 @@ public class manual extends HttpServlet {
 		return imageFile;
 	}
 
-	private static void pressButton(RokuButton rokuButton) {
+	private static void pressButton(String button) {
 		sessionObj.put("action", "press_button");
-		sessionObj.put("remote_button", rokuButton.value());
+		sessionObj.put("remote_button", button);
 		postToServer("remote", sessionObj);
 	}
 
@@ -608,6 +508,244 @@ public class manual extends HttpServlet {
 		sessionObj.put("action", "send_keys");
 		sessionObj.put("text", keys);
 		postToServer("remote", sessionObj);
+	}
+
+	private static void addRokuControlPanel(JFrame frame) {
+		JButton backBtn = new JButton("Back");
+		backBtn.setBackground(Color.BLACK);
+		backBtn.setForeground(Color.BLACK);
+		backBtn.setBounds(20, 40, 50, 20);
+		frame.getContentPane().add(backBtn);
+
+		backBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.BACK.value());
+			}
+		});
+
+		JButton rightArrowBtn = new JButton("Right");
+		rightArrowBtn.setBackground(Color.BLACK);
+		rightArrowBtn.setForeground(Color.BLACK);
+		rightArrowBtn.setBounds(20, 80, 50, 20);
+		frame.getContentPane().add(rightArrowBtn);
+
+		rightArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.RIGHT_ARROW.value());
+			}
+		});
+
+		JButton leftArrowBtn = new JButton("Left");
+		leftArrowBtn.setBackground(Color.BLACK);
+		leftArrowBtn.setForeground(Color.BLACK);
+		leftArrowBtn.setBounds(80, 80, 50, 20);
+		frame.getContentPane().add(leftArrowBtn);
+
+		leftArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.LEFT_ARROW.value());
+			}
+		});
+
+		JButton upArrowBtn = new JButton("Up");
+		upArrowBtn.setBackground(Color.BLACK);
+		upArrowBtn.setForeground(Color.BLACK);
+		upArrowBtn.setBounds(140, 80, 50, 20);
+		frame.getContentPane().add(upArrowBtn);
+
+		upArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.UP_ARROW.value());
+			}
+		});
+
+		JButton downArrowBtn = new JButton("Down");
+		downArrowBtn.setBackground(Color.BLACK);
+		downArrowBtn.setForeground(Color.BLACK);
+		downArrowBtn.setBounds(200, 80, 50, 20);
+		frame.getContentPane().add(downArrowBtn);
+
+		downArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.DOWN_ARROW.value());
+			}
+		});
+
+		JButton selectBtn = new JButton("Select");
+		selectBtn.setBackground(Color.BLACK);
+		selectBtn.setForeground(Color.BLACK);
+		selectBtn.setBounds(20, 120, 60, 20);
+		frame.getContentPane().add(selectBtn);
+
+		selectBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.SELECT.value());
+			}
+		});
+
+		JButton optionsBtn = new JButton("Options");
+		optionsBtn.setBackground(Color.BLACK);
+		optionsBtn.setForeground(Color.BLACK);
+		optionsBtn.setBounds(90, 120, 60, 20);
+		frame.getContentPane().add(optionsBtn);
+
+		optionsBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.OPTION.value());
+			}
+		});
+
+		JButton rewindBtn = new JButton("Rewind");
+		rewindBtn.setBackground(Color.BLACK);
+		rewindBtn.setForeground(Color.BLACK);
+		rewindBtn.setBounds(20, 160, 80, 20);
+		frame.getContentPane().add(rewindBtn);
+
+		rewindBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.REWIND.value());
+			}
+		});
+
+		JButton playPauseBtn = new JButton("Play/Pause");
+		playPauseBtn.setBackground(Color.BLACK);
+		playPauseBtn.setForeground(Color.BLACK);
+		playPauseBtn.setBounds(110, 160, 80, 20);
+		frame.getContentPane().add(playPauseBtn);
+
+		playPauseBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.PLAY.value());
+			}
+		});
+
+		JButton fastForwardBtn = new JButton("Forward");
+		fastForwardBtn.setBackground(Color.BLACK);
+		fastForwardBtn.setForeground(Color.BLACK);
+		fastForwardBtn.setBounds(200, 160, 80, 20);
+		frame.getContentPane().add(fastForwardBtn);
+
+		fastForwardBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.FAST_FORWARD.value());
+			}
+		});
+
+		JTextField sendKeysField = new JTextField();
+		sendKeysField.setBounds(20, 200, 165, 20);
+		frame.getContentPane().add(sendKeysField);
+		sendKeysField.setColumns(10);
+
+		JButton sendKeysBtn = new JButton("Send Keys");
+		sendKeysBtn.setBackground(Color.BLACK);
+		sendKeysBtn.setForeground(Color.BLACK);
+		sendKeysBtn.setBounds(200, 200, 80, 20);
+		frame.getContentPane().add(sendKeysBtn);
+
+		sendKeysBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				sendKeys(sendKeysField.getText());
+				sendKeysField.setText("");
+			}
+		});
+	}
+
+	private static void addXBoxControlPanel(JFrame frame) {
+		JButton rightArrowBtn = new JButton("Right");
+		rightArrowBtn.setBackground(Color.BLACK);
+		rightArrowBtn.setForeground(Color.BLACK);
+		rightArrowBtn.setBounds(20, 40, 50, 20);
+		frame.getContentPane().add(rightArrowBtn);
+
+		rightArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.RIGHT_ARROW.value());
+			}
+		});
+
+		JButton leftArrowBtn = new JButton("Left");
+		leftArrowBtn.setBackground(Color.BLACK);
+		leftArrowBtn.setForeground(Color.BLACK);
+		leftArrowBtn.setBounds(80, 40, 50, 20);
+		frame.getContentPane().add(leftArrowBtn);
+
+		leftArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.LEFT_ARROW.value());
+			}
+		});
+
+		JButton upArrowBtn = new JButton("Up");
+		upArrowBtn.setBackground(Color.BLACK);
+		upArrowBtn.setForeground(Color.BLACK);
+		upArrowBtn.setBounds(140, 40, 50, 20);
+		frame.getContentPane().add(upArrowBtn);
+
+		upArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.UP_ARROW.value());
+			}
+		});
+
+		JButton downArrowBtn = new JButton("Down");
+		downArrowBtn.setBackground(Color.BLACK);
+		downArrowBtn.setForeground(Color.BLACK);
+		downArrowBtn.setBounds(200, 40, 50, 20);
+		frame.getContentPane().add(downArrowBtn);
+
+		downArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.DOWN_ARROW.value());
+			}
+		});
+
+		JButton xBtn = new JButton("X");
+		xBtn.setBackground(Color.BLACK);
+		xBtn.setForeground(Color.BLACK);
+		xBtn.setBounds(20, 80, 50, 20);
+		frame.getContentPane().add(xBtn);
+
+		rightArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.X.value());
+			}
+		});
+
+		JButton yBtn = new JButton("Y");
+		yBtn.setBackground(Color.BLACK);
+		yBtn.setForeground(Color.BLACK);
+		yBtn.setBounds(80, 80, 50, 20);
+		frame.getContentPane().add(yBtn);
+
+		yBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.Y.value());
+			}
+		});
+
+		JButton bBtn = new JButton("B");
+		bBtn.setBackground(Color.BLACK);
+		bBtn.setForeground(Color.BLACK);
+		bBtn.setBounds(140, 80, 50, 20);
+		frame.getContentPane().add(bBtn);
+
+		bBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.B.value());
+			}
+		});
+
+		JButton aBtn = new JButton("A");
+		aBtn.setBackground(Color.BLACK);
+		aBtn.setForeground(Color.BLACK);
+		aBtn.setBounds(200, 80, 50, 20);
+		frame.getContentPane().add(aBtn);
+
+		aBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.A.value());
+			}
+		});
 	}
 
 }
