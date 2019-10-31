@@ -123,12 +123,21 @@ public class manual extends HttpServlet {
 		deviceField.setText(deviceName);
 		deviceField.setVisible(false);
 
+		JButton btnSubmit = new JButton("Connect");
+		btnSubmit.setBackground(Color.BLACK);
+		btnSubmit.setForeground(Color.BLACK);
+		btnSubmit.setBounds(20, 288, 100, 20);
+		frame.getContentPane().add(btnSubmit);
+		btnSubmit.setVisible(false);
+
 		JComboBox<String> comboBox = new JComboBox<String>();
 		comboBox.addItem("--Select--");
 		comboBox.addItem("Roku");
 		comboBox.addItem("XBox");
 		comboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				btnSubmit.setVisible(true);
+
 				usernameLabel.setVisible(false);
 				usernameField.setVisible(false);
 				passwordLabel.setVisible(false);
@@ -203,12 +212,6 @@ public class manual extends HttpServlet {
 			}
 		});
 
-		JButton btnSubmit = new JButton("Connect");
-		btnSubmit.setBackground(Color.BLACK);
-		btnSubmit.setForeground(Color.BLACK);
-		btnSubmit.setBounds(20, 288, 100, 20);
-		frame.getContentPane().add(btnSubmit);
-
 		JLabel preparingDeviceLabel = new JLabel("Preparing device connection...");
 		preparingDeviceLabel.setBounds(130, 288, 200, 20);
 		frame.getContentPane().add(preparingDeviceLabel);
@@ -224,7 +227,6 @@ public class manual extends HttpServlet {
 		btnSubmit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				errorLabel.setVisible(false);
-				
 				if (serverURLField.getText().isEmpty() || appPackageField.getText().isEmpty()) {
 					errorTxt = "The Server URL and App Package fields are required!";
 					errorLabel.setText(errorTxt);
@@ -250,13 +252,13 @@ public class manual extends HttpServlet {
 						public void run() {
 							sessionStarted = startSession();
 							if (!sessionStarted) {
-								errorTxt = sessionObj == null ? "An unknown error occurred!"
+								errorTxt = sessionObj == null ? "An error occurred! Verify your server url location"
 										: (String) sessionObj.get(ServerConstants.SERVLET_RESULTS);
 								errorLabel.setText(errorTxt);
 								errorLabel.setVisible(true);
 								preparingDeviceLabel.setVisible(false);
 							}
-			
+
 							if (sessionStarted) {
 								frame.dispose();
 								startSessionFrame();
@@ -290,10 +292,12 @@ public class manual extends HttpServlet {
 			public void run() {
 				while (sessionStarted) {
 					File capturedImage = getImage();
-					ImageIcon icn = new ImageIcon(new ImageIcon(capturedImage.getAbsolutePath()).getImage()
-							.getScaledInstance(screenWidth - 300, screenHeight - 20, Image.SCALE_DEFAULT));
-					imageLabel.setIcon(icn);
-					FileUtils.deleteFile(capturedImage);
+					if (capturedImage != null && capturedImage.exists()) {
+						ImageIcon icn = new ImageIcon(new ImageIcon(capturedImage.getAbsolutePath()).getImage()
+								.getScaledInstance(screenWidth - 300, screenHeight - 20, Image.SCALE_DEFAULT));
+						imageLabel.setIcon(icn);
+						FileUtils.deleteFile(capturedImage);
+					}
 				}
 			};
 		}.start();
@@ -422,10 +426,28 @@ public class manual extends HttpServlet {
 			}
 		});
 
+		JTextField sendKeysField = new JTextField();
+		sendKeysField.setBounds(20, 200, 165, 20);
+		frame.getContentPane().add(sendKeysField);
+		sendKeysField.setColumns(10);
+
+		JButton sendKeysBtn = new JButton("Send Keys");
+		sendKeysBtn.setBackground(Color.BLACK);
+		sendKeysBtn.setForeground(Color.BLACK);
+		sendKeysBtn.setBounds(200, 200, 80, 20);
+		frame.getContentPane().add(sendKeysBtn);
+
+		sendKeysBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				sendKeys(sendKeysField.getText());
+				sendKeysField.setText("");
+			}
+		});
+		
 		JButton newSessionBtn = new JButton("New Session");
 		newSessionBtn.setBackground(Color.BLACK);
 		newSessionBtn.setForeground(Color.BLACK);
-		newSessionBtn.setBounds(20, 240, 100, 20);
+		newSessionBtn.setBounds(20, 280, 100, 20);
 		frame.getContentPane().add(newSessionBtn);
 
 		newSessionBtn.addActionListener(new ActionListener() {
@@ -499,7 +521,7 @@ public class manual extends HttpServlet {
 			}
 
 			responseCode = con.getResponseCode();
-
+			
 			InputStreamReader inputStreamReader = null;
 			if (responseCode >= 200 && responseCode < 400) {
 				inputStreamReader = new InputStreamReader(con.getInputStream(), "utf-8");
@@ -565,6 +587,10 @@ public class manual extends HttpServlet {
 		String imageExt = (String) screenImageObj.get("screen_image_extension");
 		File capturedImage = new File(DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator
 				+ UUID.randomUUID().toString() + imageExt);
+		if (imageContent == null) {
+			return null;
+		}
+
 		File imageFile = new FileToStringUtils().convertToFile(imageContent, capturedImage);
 		if (!imageFile.exists()) {
 			return null;
@@ -575,6 +601,12 @@ public class manual extends HttpServlet {
 	private static void pressButton(RokuButton rokuButton) {
 		sessionObj.put("action", "press_button");
 		sessionObj.put("remote_button", rokuButton.value());
+		postToServer("remote", sessionObj);
+	}
+
+	private static void sendKeys(String keys) {
+		sessionObj.put("action", "send_keys");
+		sessionObj.put("text", keys);
 		postToServer("remote", sessionObj);
 	}
 
