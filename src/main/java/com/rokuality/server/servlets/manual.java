@@ -139,7 +139,6 @@ public class manual extends HttpServlet {
 		deviceField.setVisible(false);
 
 		JButton btnSubmit = new JButton("Connect");
-		//btnSubmit.setBackground(Color.BLACK);
 		btnSubmit.setForeground(Color.BLACK);
 		btnSubmit.setBounds(20, 328, 100, 20);
 		frame.getContentPane().add(btnSubmit);
@@ -209,7 +208,6 @@ public class manual extends HttpServlet {
 		frame.getContentPane().add(appPackageLabel);
 
 		JButton btnAppPackage = new JButton("Choose");
-		btnAppPackage.setBackground(Color.BLACK);
 		btnAppPackage.setForeground(Color.BLACK);
 		btnAppPackage.setBounds(130, 168, 100, 20);
 		frame.getContentPane().add(btnAppPackage);
@@ -335,7 +333,6 @@ public class manual extends HttpServlet {
 		}
 		
 		JButton newSessionBtn = new JButton("New Session");
-		newSessionBtn.setBackground(Color.BLACK);
 		newSessionBtn.setForeground(Color.BLACK);
 		newSessionBtn.setBounds(20, 280, 100, 20);
 		frame.getContentPane().add(newSessionBtn);
@@ -511,7 +508,6 @@ public class manual extends HttpServlet {
 
 	private static void addRokuControlPanel(JFrame frame) {
 		JButton backBtn = new JButton("Back");
-		backBtn.setBackground(Color.BLACK);
 		backBtn.setForeground(Color.BLACK);
 		backBtn.setBounds(20, 40, 50, 20);
 		frame.getContentPane().add(backBtn);
@@ -523,7 +519,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton rightArrowBtn = new JButton("Right");
-		rightArrowBtn.setBackground(Color.BLACK);
 		rightArrowBtn.setForeground(Color.BLACK);
 		rightArrowBtn.setBounds(20, 80, 50, 20);
 		frame.getContentPane().add(rightArrowBtn);
@@ -535,7 +530,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton leftArrowBtn = new JButton("Left");
-		leftArrowBtn.setBackground(Color.BLACK);
 		leftArrowBtn.setForeground(Color.BLACK);
 		leftArrowBtn.setBounds(80, 80, 50, 20);
 		frame.getContentPane().add(leftArrowBtn);
@@ -547,7 +541,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton upArrowBtn = new JButton("Up");
-		upArrowBtn.setBackground(Color.BLACK);
 		upArrowBtn.setForeground(Color.BLACK);
 		upArrowBtn.setBounds(140, 80, 50, 20);
 		frame.getContentPane().add(upArrowBtn);
@@ -559,7 +552,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton downArrowBtn = new JButton("Down");
-		downArrowBtn.setBackground(Color.BLACK);
 		downArrowBtn.setForeground(Color.BLACK);
 		downArrowBtn.setBounds(200, 80, 50, 20);
 		frame.getContentPane().add(downArrowBtn);
@@ -571,7 +563,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton selectBtn = new JButton("Select");
-		selectBtn.setBackground(Color.BLACK);
 		selectBtn.setForeground(Color.BLACK);
 		selectBtn.setBounds(20, 120, 60, 20);
 		frame.getContentPane().add(selectBtn);
@@ -583,7 +574,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton optionsBtn = new JButton("Options");
-		optionsBtn.setBackground(Color.BLACK);
 		optionsBtn.setForeground(Color.BLACK);
 		optionsBtn.setBounds(90, 120, 60, 20);
 		frame.getContentPane().add(optionsBtn);
@@ -595,7 +585,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton rewindBtn = new JButton("Rewind");
-		rewindBtn.setBackground(Color.BLACK);
 		rewindBtn.setForeground(Color.BLACK);
 		rewindBtn.setBounds(20, 160, 80, 20);
 		frame.getContentPane().add(rewindBtn);
@@ -607,7 +596,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton playPauseBtn = new JButton("Play/Pause");
-		playPauseBtn.setBackground(Color.BLACK);
 		playPauseBtn.setForeground(Color.BLACK);
 		playPauseBtn.setBounds(110, 160, 80, 20);
 		frame.getContentPane().add(playPauseBtn);
@@ -619,7 +607,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton fastForwardBtn = new JButton("Forward");
-		fastForwardBtn.setBackground(Color.BLACK);
 		fastForwardBtn.setForeground(Color.BLACK);
 		fastForwardBtn.setBounds(200, 160, 80, 20);
 		frame.getContentPane().add(fastForwardBtn);
@@ -636,7 +623,6 @@ public class manual extends HttpServlet {
 		sendKeysField.setColumns(10);
 
 		JButton sendKeysBtn = new JButton("Send Keys");
-		sendKeysBtn.setBackground(Color.BLACK);
 		sendKeysBtn.setForeground(Color.BLACK);
 		sendKeysBtn.setBounds(200, 200, 80, 20);
 		frame.getContentPane().add(sendKeysBtn);
@@ -651,7 +637,6 @@ public class manual extends HttpServlet {
 
 	private static void addXBoxControlPanel(JFrame frame) {
 		JButton rightArrowBtn = new JButton("Right");
-		rightArrowBtn.setBackground(Color.BLACK);
 		rightArrowBtn.setForeground(Color.BLACK);
 		rightArrowBtn.setBounds(20, 40, 50, 20);
 		frame.getContentPane().add(rightArrowBtn);
@@ -663,7 +648,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton leftArrowBtn = new JButton("Left");
-		leftArrowBtn.setBackground(Color.BLACK);
 		leftArrowBtn.setForeground(Color.BLACK);
 		leftArrowBtn.setBounds(80, 40, 50, 20);
 		frame.getContentPane().add(leftArrowBtn);
@@ -675,7 +659,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton upArrowBtn = new JButton("Up");
-		upArrowBtn.setBackground(Color.BLACK);
 		upArrowBtn.setForeground(Color.BLACK);
 		upArrowBtn.setBounds(140, 40, 50, 20);
 		frame.getContentPane().add(upArrowBtn);
@@ -687,7 +670,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton downArrowBtn = new JButton("Down");
-		downArrowBtn.setBackground(Color.BLACK);
 		downArrowBtn.setForeground(Color.BLACK);
 		downArrowBtn.setBounds(200, 40, 50, 20);
 		frame.getContentPane().add(downArrowBtn);
@@ -699,7 +681,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton xBtn = new JButton("X");
-		xBtn.setBackground(Color.BLACK);
 		xBtn.setForeground(Color.BLACK);
 		xBtn.setBounds(20, 80, 50, 20);
 		frame.getContentPane().add(xBtn);
@@ -711,7 +692,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton yBtn = new JButton("Y");
-		yBtn.setBackground(Color.BLACK);
 		yBtn.setForeground(Color.BLACK);
 		yBtn.setBounds(80, 80, 50, 20);
 		frame.getContentPane().add(yBtn);
@@ -723,7 +703,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton bBtn = new JButton("B");
-		bBtn.setBackground(Color.BLACK);
 		bBtn.setForeground(Color.BLACK);
 		bBtn.setBounds(140, 80, 50, 20);
 		frame.getContentPane().add(bBtn);
@@ -735,7 +714,6 @@ public class manual extends HttpServlet {
 		});
 
 		JButton aBtn = new JButton("A");
-		aBtn.setBackground(Color.BLACK);
 		aBtn.setForeground(Color.BLACK);
 		aBtn.setBounds(200, 80, 50, 20);
 		frame.getContentPane().add(aBtn);
