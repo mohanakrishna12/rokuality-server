@@ -139,7 +139,7 @@ public class manual extends HttpServlet {
 		deviceField.setVisible(false);
 
 		JButton btnSubmit = new JButton("Connect");
-		btnSubmit.setBackground(Color.BLACK);
+		//btnSubmit.setBackground(Color.BLACK);
 		btnSubmit.setForeground(Color.BLACK);
 		btnSubmit.setBounds(20, 328, 100, 20);
 		frame.getContentPane().add(btnSubmit);
