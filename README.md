@@ -1,6 +1,6 @@
 # Rokuality Server - End to End Automation for Roku, XBox, Playstation, Cable SetTop Boxes, and More!
 
-The Rokuality Server allows you to distribute Roku, XBox, PS4, and Cable SetTop Box end to end tests across multiple devices on your network. The server acts a lightweight web proxy, capturing your device test traffic and distributing the tests to the devices provided in your capabilities. The project goal is to provide a no cost/low cost open source solution for various video streaming platforms that otherwise don't offer an easily automatable solution! Once you have the server setup with all requirements, [pick a language](#next-steps-choose-a-test-language) to write tests in.
+The Rokuality Server allows you to distribute Roku, XBox, PS4, and Cable SetTop Box end to end tests across multiple devices on your network. The server acts a lightweight web proxy, capturing your device test traffic and distributing the tests to the devices provided in your capabilities. The project goal is to provide a no cost/low cost open source solution for various video streaming platforms that otherwise don't offer an easily automatable solution! Once you have the server setup with all requirements, [pick a language](#next-steps-choose-a-test-language) to write tests in. Additionally, it's possible to manually start a [live session test](#live-session-testing) for Roku and XBox devices, and maintain a remote device library from a consolidated location.
 
 ### Getting started: Server Requirements
 The Rokuality Server is a Java Jetty servlet container application that requires at least Java 8 to run, and that you have Java available on your PATH. Typically the easiest way to do that is to use the relevant package manager for the Operating System you are running. For example, for MAC users it's easy using [brew](https://brew.sh/) via `brew cask install java` or for Windows users using [scoop](https://scoop.sh/) via 
@@ -86,7 +86,17 @@ JS (coming soon - contact us to get involved)
 
 C# (coming soon - contact us to get involved)
 
+### Live Session Testing
+For Roku and XBox devices, it's possible to manually access your remote devices and start a live session. In this fashion you can manage a remote library of machines to distribute tests across a wide variety of device platforms for multiple testers. Note that this functionality is still experimental but should be fairly reliable. 
 
+To start a live test session against an XBox or Roku device:
+
+1. Start the Rokuality server.
+2. In a browser, navigate to the /tools page url of your locally running server instance, i.e. http://localhost:7777/tools This will open up a tools menu with a link to 'Start a manual session'. Click this link.
+3. A dialog will open asking for connection details. Select the platform and enter the Server URL of the Rokuality server you wish to connect to. NOTE - this url can be a remote location but it MUST be accessible from the connecting machine.
+4. Enter in the device specific details you wish to connect to and click the 'Connect' button. Within a few seconds a new frame should appear with your remote control options and the captured image of the device screen.
+
+At this point you can manually interact with your remote device under test.
 
 ### Why Harmony
 Some of our device automation setups require a [logitech harmony](https://www.logitech.com/en-us/product/harmony-hub?crid=60) to drive the user input. The hub is a low cost (60$) device that gives us both IR and Bluetooth capability in an easily available, wireless solution. So we don't need to use an IR blaster or a cabled base solution. And we can scale across additional devices easily. Thanks to the awesome [harmony cli](https://github.com/sushilks/harmonyHubCLI) project, we are able to incorporate a simple cli solution inside of the Rokuality server to remotely drive the harmony and control the devices. Other similar solutions on the market ship you a "magic box" device that requires you to plug in your device under test - which is proprietary and limits the ability to scale with more devices and across multiple developers. Using the harmony approach is cheap, effective, and scalable.
