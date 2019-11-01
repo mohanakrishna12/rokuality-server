@@ -21,6 +21,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
 import java.awt.*;
@@ -72,6 +73,7 @@ public class manual extends HttpServlet {
 
 		JLabel mainLabel = new JLabel("CONNECT TO DEVICE");
 		mainLabel.setBounds(20, 10, 150, 20);
+		mainLabel.setFont(new Font("Helvetica", Font.BOLD, 12));
 		frame.getContentPane().add(mainLabel);
 
 		JLabel platformLabel = new JLabel("Platform:");
@@ -334,7 +336,7 @@ public class manual extends HttpServlet {
 		
 		JButton newSessionBtn = new JButton("New Session");
 		newSessionBtn.setForeground(Color.BLACK);
-		newSessionBtn.setBounds(20, 280, 100, 20);
+		newSessionBtn.setBounds(20, 400, 100, 20);
 		frame.getContentPane().add(newSessionBtn);
 
 		newSessionBtn.addActionListener(new ActionListener() {
@@ -507,7 +509,7 @@ public class manual extends HttpServlet {
 	}
 
 	private static void addRokuControlPanel(JFrame frame) {
-		JButton backBtn = new JButton("Back");
+		JButton backBtn = new JButton("←");
 		backBtn.setForeground(Color.BLACK);
 		backBtn.setBounds(20, 40, 50, 20);
 		frame.getContentPane().add(backBtn);
@@ -518,31 +520,10 @@ public class manual extends HttpServlet {
 			}
 		});
 
-		JButton rightArrowBtn = new JButton("Right");
-		rightArrowBtn.setForeground(Color.BLACK);
-		rightArrowBtn.setBounds(20, 80, 50, 20);
-		frame.getContentPane().add(rightArrowBtn);
-
-		rightArrowBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.RIGHT_ARROW.value());
-			}
-		});
-
-		JButton leftArrowBtn = new JButton("Left");
-		leftArrowBtn.setForeground(Color.BLACK);
-		leftArrowBtn.setBounds(80, 80, 50, 20);
-		frame.getContentPane().add(leftArrowBtn);
-
-		leftArrowBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.LEFT_ARROW.value());
-			}
-		});
-
-		JButton upArrowBtn = new JButton("Up");
+		//280 max panel width
+		JButton upArrowBtn = new JButton("^");
 		upArrowBtn.setForeground(Color.BLACK);
-		upArrowBtn.setBounds(140, 80, 50, 20);
+		upArrowBtn.setBounds(80, 80, 50, 20);
 		frame.getContentPane().add(upArrowBtn);
 
 		upArrowBtn.addActionListener(new ActionListener() {
@@ -551,20 +532,20 @@ public class manual extends HttpServlet {
 			}
 		});
 
-		JButton downArrowBtn = new JButton("Down");
-		downArrowBtn.setForeground(Color.BLACK);
-		downArrowBtn.setBounds(200, 80, 50, 20);
-		frame.getContentPane().add(downArrowBtn);
+		JButton leftArrowBtn = new JButton("<");
+		leftArrowBtn.setForeground(Color.BLACK);
+		leftArrowBtn.setBounds(20, 120, 50, 20);
+		frame.getContentPane().add(leftArrowBtn);
 
-		downArrowBtn.addActionListener(new ActionListener() {
+		leftArrowBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				pressButton(RokuButton.DOWN_ARROW.value());
+				pressButton(RokuButton.LEFT_ARROW.value());
 			}
 		});
 
-		JButton selectBtn = new JButton("Select");
+		JButton selectBtn = new JButton("OK");
 		selectBtn.setForeground(Color.BLACK);
-		selectBtn.setBounds(20, 120, 60, 20);
+		selectBtn.setBounds(80, 120, 50, 20);
 		frame.getContentPane().add(selectBtn);
 
 		selectBtn.addActionListener(new ActionListener() {
@@ -573,9 +554,31 @@ public class manual extends HttpServlet {
 			}
 		});
 
-		JButton optionsBtn = new JButton("Options");
+		JButton rightArrowBtn = new JButton(">");
+		rightArrowBtn.setForeground(Color.BLACK);
+		rightArrowBtn.setBounds(140, 120, 50, 20);
+		frame.getContentPane().add(rightArrowBtn);
+
+		rightArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.RIGHT_ARROW.value());
+			}
+		});
+
+		JButton downArrowBtn = new JButton("∨");
+		downArrowBtn.setForeground(Color.BLACK);
+		downArrowBtn.setBounds(80, 160, 50, 20);
+		frame.getContentPane().add(downArrowBtn);
+
+		downArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(RokuButton.DOWN_ARROW.value());
+			}
+		});
+
+		JButton optionsBtn = new JButton("*");
 		optionsBtn.setForeground(Color.BLACK);
-		optionsBtn.setBounds(90, 120, 60, 20);
+		optionsBtn.setBounds(120, 200, 50, 20);
 		frame.getContentPane().add(optionsBtn);
 
 		optionsBtn.addActionListener(new ActionListener() {
@@ -584,9 +587,9 @@ public class manual extends HttpServlet {
 			}
 		});
 
-		JButton rewindBtn = new JButton("Rewind");
+		JButton rewindBtn = new JButton("<<");
 		rewindBtn.setForeground(Color.BLACK);
-		rewindBtn.setBounds(20, 160, 80, 20);
+		rewindBtn.setBounds(20, 240, 50, 20);
 		frame.getContentPane().add(rewindBtn);
 
 		rewindBtn.addActionListener(new ActionListener() {
@@ -595,9 +598,9 @@ public class manual extends HttpServlet {
 			}
 		});
 
-		JButton playPauseBtn = new JButton("Play/Pause");
+		JButton playPauseBtn = new JButton("▷||");
 		playPauseBtn.setForeground(Color.BLACK);
-		playPauseBtn.setBounds(110, 160, 80, 20);
+		playPauseBtn.setBounds(80, 240, 50, 20);
 		frame.getContentPane().add(playPauseBtn);
 
 		playPauseBtn.addActionListener(new ActionListener() {
@@ -606,9 +609,9 @@ public class manual extends HttpServlet {
 			}
 		});
 
-		JButton fastForwardBtn = new JButton("Forward");
+		JButton fastForwardBtn = new JButton(">>");
 		fastForwardBtn.setForeground(Color.BLACK);
-		fastForwardBtn.setBounds(200, 160, 80, 20);
+		fastForwardBtn.setBounds(140, 240, 50, 20);
 		frame.getContentPane().add(fastForwardBtn);
 
 		fastForwardBtn.addActionListener(new ActionListener() {
@@ -618,13 +621,13 @@ public class manual extends HttpServlet {
 		});
 
 		JTextField sendKeysField = new JTextField();
-		sendKeysField.setBounds(20, 200, 165, 20);
+		sendKeysField.setBounds(20, 280, 125, 20);
 		frame.getContentPane().add(sendKeysField);
 		sendKeysField.setColumns(10);
 
-		JButton sendKeysBtn = new JButton("Send Keys");
+		JButton sendKeysBtn = new JButton("Type");
 		sendKeysBtn.setForeground(Color.BLACK);
-		sendKeysBtn.setBounds(200, 200, 80, 20);
+		sendKeysBtn.setBounds(150, 280, 75, 20);
 		frame.getContentPane().add(sendKeysBtn);
 
 		sendKeysBtn.addActionListener(new ActionListener() {
