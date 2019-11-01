@@ -336,7 +336,7 @@ public class manual extends HttpServlet {
 		
 		JButton newSessionBtn = new JButton("New Session");
 		newSessionBtn.setForeground(Color.BLACK);
-		newSessionBtn.setBounds(20, 400, 100, 20);
+		newSessionBtn.setBounds(20, 400, 150, 20);
 		frame.getContentPane().add(newSessionBtn);
 
 		newSessionBtn.addActionListener(new ActionListener() {
@@ -520,7 +520,6 @@ public class manual extends HttpServlet {
 			}
 		});
 
-		//280 max panel width
 		JButton upArrowBtn = new JButton("^");
 		upArrowBtn.setForeground(Color.BLACK);
 		upArrowBtn.setBounds(80, 80, 50, 20);
@@ -639,31 +638,9 @@ public class manual extends HttpServlet {
 	}
 
 	private static void addXBoxControlPanel(JFrame frame) {
-		JButton rightArrowBtn = new JButton("Right");
-		rightArrowBtn.setForeground(Color.BLACK);
-		rightArrowBtn.setBounds(20, 40, 50, 20);
-		frame.getContentPane().add(rightArrowBtn);
-
-		rightArrowBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(XBoxButton.RIGHT_ARROW.value());
-			}
-		});
-
-		JButton leftArrowBtn = new JButton("Left");
-		leftArrowBtn.setForeground(Color.BLACK);
-		leftArrowBtn.setBounds(80, 40, 50, 20);
-		frame.getContentPane().add(leftArrowBtn);
-
-		leftArrowBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(XBoxButton.LEFT_ARROW.value());
-			}
-		});
-
-		JButton upArrowBtn = new JButton("Up");
+		JButton upArrowBtn = new JButton("^");
 		upArrowBtn.setForeground(Color.BLACK);
-		upArrowBtn.setBounds(140, 40, 50, 20);
+		upArrowBtn.setBounds(70, 40, 50, 20);
 		frame.getContentPane().add(upArrowBtn);
 
 		upArrowBtn.addActionListener(new ActionListener() {
@@ -672,9 +649,31 @@ public class manual extends HttpServlet {
 			}
 		});
 
-		JButton downArrowBtn = new JButton("Down");
+		JButton leftArrowBtn = new JButton("<");
+		leftArrowBtn.setForeground(Color.BLACK);
+		leftArrowBtn.setBounds(30, 80, 50, 20);
+		frame.getContentPane().add(leftArrowBtn);
+
+		leftArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.LEFT_ARROW.value());
+			}
+		});
+
+		JButton rightArrowBtn = new JButton(">");
+		rightArrowBtn.setForeground(Color.BLACK);
+		rightArrowBtn.setBounds(110, 80, 50, 20);
+		frame.getContentPane().add(rightArrowBtn);
+
+		rightArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.RIGHT_ARROW.value());
+			}
+		});
+
+		JButton downArrowBtn = new JButton("v");
 		downArrowBtn.setForeground(Color.BLACK);
-		downArrowBtn.setBounds(200, 40, 50, 20);
+		downArrowBtn.setBounds(70, 120, 50, 20);
 		frame.getContentPane().add(downArrowBtn);
 
 		downArrowBtn.addActionListener(new ActionListener() {
@@ -683,20 +682,9 @@ public class manual extends HttpServlet {
 			}
 		});
 
-		JButton xBtn = new JButton("X");
-		xBtn.setForeground(Color.BLACK);
-		xBtn.setBounds(20, 80, 50, 20);
-		frame.getContentPane().add(xBtn);
-
-		rightArrowBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				pressButton(XBoxButton.X.value());
-			}
-		});
-
 		JButton yBtn = new JButton("Y");
 		yBtn.setForeground(Color.BLACK);
-		yBtn.setBounds(80, 80, 50, 20);
+		yBtn.setBounds(70, 200, 50, 20);
 		frame.getContentPane().add(yBtn);
 
 		yBtn.addActionListener(new ActionListener() {
@@ -705,9 +693,20 @@ public class manual extends HttpServlet {
 			}
 		});
 
+		JButton xBtn = new JButton("X");
+		xBtn.setForeground(Color.BLACK);
+		xBtn.setBounds(30, 240, 50, 20);
+		frame.getContentPane().add(xBtn);
+
+		rightArrowBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				pressButton(XBoxButton.X.value());
+			}
+		});
+
 		JButton bBtn = new JButton("B");
 		bBtn.setForeground(Color.BLACK);
-		bBtn.setBounds(140, 80, 50, 20);
+		bBtn.setBounds(110, 240, 50, 20);
 		frame.getContentPane().add(bBtn);
 
 		bBtn.addActionListener(new ActionListener() {
@@ -718,7 +717,7 @@ public class manual extends HttpServlet {
 
 		JButton aBtn = new JButton("A");
 		aBtn.setForeground(Color.BLACK);
-		aBtn.setBounds(200, 80, 50, 20);
+		aBtn.setBounds(70, 280, 50, 20);
 		frame.getContentPane().add(aBtn);
 
 		aBtn.addActionListener(new ActionListener() {
