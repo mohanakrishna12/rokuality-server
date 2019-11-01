@@ -545,7 +545,7 @@ public class manual extends HttpServlet {
 
 		JButton selectBtn = new JButton("OK");
 		selectBtn.setForeground(Color.BLACK);
-		selectBtn.setBounds(80, 120, 50, 20);
+		selectBtn.setBounds(75, 120, 60, 20);
 		frame.getContentPane().add(selectBtn);
 
 		selectBtn.addActionListener(new ActionListener() {
@@ -600,7 +600,7 @@ public class manual extends HttpServlet {
 
 		JButton playPauseBtn = new JButton("▷||");
 		playPauseBtn.setForeground(Color.BLACK);
-		playPauseBtn.setBounds(80, 240, 50, 20);
+		playPauseBtn.setBounds(75, 240, 60, 20);
 		frame.getContentPane().add(playPauseBtn);
 
 		playPauseBtn.addActionListener(new ActionListener() {
