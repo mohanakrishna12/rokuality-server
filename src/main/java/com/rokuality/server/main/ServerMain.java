@@ -30,7 +30,7 @@ import java.util.Set;
 import org.sikuli.basics.Debug;
 import org.sikuli.basics.Settings;
 
-@SuppressWarnings({ "unchecked", "rawtypes" })
+@SuppressWarnings({ "unchecked", "rawtypes", "deprecation" })
 public class ServerMain {
 
 	private static final int DEFAULT_SERVER_PORT = 7777;
@@ -158,7 +158,7 @@ public class ServerMain {
 
 	}
 
-	private static int getServerPort() {
+	public static int getServerPort() {
 		String portStr = System.getProperty("port");
 		if (portStr != null) {
 			try {

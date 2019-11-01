@@ -1,7 +1,6 @@
 package com.rokuality.server.servlets;
 
-import org.eclipse.jetty.util.log.Log;
-import org.json.simple.JSONObject;
+import java.io.IOException;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -12,7 +11,8 @@ import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.utils.ServletJsonParser;
 
-import java.io.IOException;
+import org.eclipse.jetty.util.log.Log;
+import org.json.simple.JSONObject;
 
 @SuppressWarnings({"serial", "unchecked"})
 public class settings extends HttpServlet {
@@ -22,7 +22,10 @@ public class settings extends HttpServlet {
             throws IOException {
 
         JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
-        
+        if (response.getStatus() != HttpServletResponse.SC_OK) {
+			return;
+		}
+		
         JSONObject results = null;
 
 		String action = requestObj.get(ServerConstants.SERVLET_ACTION).toString();
@@ -56,14 +59,7 @@ public class settings extends HttpServlet {
 		String sessionID = String.valueOf(sessionObj.get(SessionConstants.SESSION_ID));
 		Long timeout = Long.parseLong(String.valueOf(sessionObj.get(SessionConstants.ELEMENT_FIND_TIMEOUT)));
 		
-		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
-		
 		JSONObject resultObj = new JSONObject();
-		if (sessionInfo == null) {
-			resultObj.put(ServerConstants.SERVLET_RESULTS, "No session found during element timeout set for session "
-				+ String.valueOf(sessionID));
-			return resultObj;
-		}
 
 		SessionManager.updateSessionInfoItem(sessionID, SessionConstants.ELEMENT_FIND_TIMEOUT, timeout);
 		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
@@ -75,15 +71,7 @@ public class settings extends HttpServlet {
 		String sessionID = String.valueOf(sessionObj.get(SessionConstants.SESSION_ID));
 		String imageMatchSimilarity = sessionObj.get(SessionConstants.IMAGE_MATCH_SIMILARITY).toString();
 
-		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
-		
 		JSONObject resultObj = new JSONObject();
-		if (sessionInfo == null) {
-			resultObj.put(ServerConstants.SERVLET_RESULTS, "No session found during element image match similarity set for session "
-				+ String.valueOf(sessionID));
-			return resultObj;
-		}
-
 		Log.getRootLogger().info(String.format("Setting image match similarity to %s for session %s", Double.parseDouble(imageMatchSimilarity), sessionID));
 
 		SessionManager.updateSessionInfoItem(sessionID, SessionConstants.IMAGE_MATCH_SIMILARITY, Double.parseDouble(imageMatchSimilarity));
@@ -96,14 +84,7 @@ public class settings extends HttpServlet {
 		String sessionID = String.valueOf(sessionObj.get(SessionConstants.SESSION_ID));
 		Long pollInterval = Long.parseLong(String.valueOf(sessionObj.get(SessionConstants.ELEMENT_POLLING_INTERVAL)));
 		
-		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
-		
 		JSONObject resultObj = new JSONObject();
-		if (sessionInfo == null) {
-			resultObj.put(ServerConstants.SERVLET_RESULTS, "No session found during element polling set for session "
-				+ String.valueOf(sessionID));
-			return resultObj;
-		}
 
 		SessionManager.updateSessionInfoItem(sessionID, SessionConstants.ELEMENT_POLLING_INTERVAL, pollInterval);
 		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);

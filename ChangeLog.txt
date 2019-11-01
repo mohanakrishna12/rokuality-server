@@ -1,3 +1,6 @@
+1.2.0 - Changes from 1.1.1
+1. Adds the ability to manually remote control an XBox or Roku device for a live session test for devices in remote locations. See the readme for details.
+
 1.1.1 - Changes from 1.1.0
 1. Removes the DeviceIP as a required capability for HDMI test devices.
 

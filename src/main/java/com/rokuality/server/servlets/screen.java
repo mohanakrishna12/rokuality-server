@@ -10,11 +10,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
-import com.rokuality.server.constants.DependencyConstants;
-import com.rokuality.server.constants.FFMPEGConstants;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
-import com.rokuality.server.core.CommandExecutor;
 import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.core.ocr.ImageText;
@@ -33,6 +30,9 @@ public class screen extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
 		JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
+		if (response.getStatus() != HttpServletResponse.SC_OK) {
+			return;
+		}
 
 		JSONObject results = null;
 

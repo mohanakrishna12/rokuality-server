@@ -44,6 +44,9 @@ public class session extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
 		JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
+		if (response.getStatus() != HttpServletResponse.SC_OK) {
+			return;
+		}
 
 		JSONObject results = null;
 
@@ -95,6 +98,11 @@ public class session extends HttpServlet {
 		String videoCaptureInput = null;
 		String audioCaptureInput = null;
 		File videoCapture = null;
+
+		String machineIP = (String) requestObj.get(SessionConstants.MACHINE_IP);
+		if (machineIP != null) {
+			sessionInfo.put(SessionConstants.MACHINE_IP, machineIP);
+		}
 
 		platformType = PlatformType
 				.getEnumByString(String.valueOf(requestObj.get(SessionCapabilities.PLATFORM.value())));

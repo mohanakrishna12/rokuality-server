@@ -1,7 +1,7 @@
 package com.rokuality.server.servlets;
 
-import org.eclipse.jetty.util.log.Log;
-import org.json.simple.JSONObject;
+import java.io.File;
+import java.io.IOException;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -16,8 +16,8 @@ import com.rokuality.server.utils.ImageUtils;
 import com.rokuality.server.utils.ServletJsonParser;
 import com.rokuality.server.utils.SleepUtils;
 
-import java.io.File;
-import java.io.IOException;
+import org.eclipse.jetty.util.log.Log;
+import org.json.simple.JSONObject;
 
 @SuppressWarnings({ "serial", "unchecked" })
 public class element extends HttpServlet {
@@ -29,6 +29,10 @@ public class element extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
 		JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
+		if (response.getStatus() != HttpServletResponse.SC_OK) {
+			return;
+		}
+		
 		JSONObject results = null;
 
 		String action = requestObj.get(ServerConstants.SERVLET_ACTION).toString();
@@ -66,15 +70,7 @@ public class element extends HttpServlet {
 			subScreenHeight = (Long) requestObj.getOrDefault(SessionConstants.SUB_SCREEN_HEIGHT, null);
 		}
 
-		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
-
 		JSONObject element = new JSONObject();
-		if (sessionInfo == null) {
-			element.put(ServerConstants.SERVLET_RESULTS,
-					"No session found during element find for session " + String.valueOf(sessionID));
-			return element;
-		}
-
 		boolean locatorIsText = locator.startsWith(BY_TEXT_ID);
 		boolean locatorIsImage = !locatorIsText;
 

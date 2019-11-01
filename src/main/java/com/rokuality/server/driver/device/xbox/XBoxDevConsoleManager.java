@@ -17,6 +17,7 @@ import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.utils.SleepUtils;
 import com.rokuality.server.utils.WebDriverUtils;
 
+@SuppressWarnings("deprecation")
 public class XBoxDevConsoleManager {
 
 	private static final int DEFAULT_TIMEOUT = 30;
