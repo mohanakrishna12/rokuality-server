@@ -158,7 +158,7 @@ public class ServerMain {
 
 	}
 
-	private static int getServerPort() {
+	public static int getServerPort() {
 		String portStr = System.getProperty("port");
 		if (portStr != null) {
 			try {
