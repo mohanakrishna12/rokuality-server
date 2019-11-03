@@ -84,7 +84,7 @@ Pick a language binding to begin writing tests:
 
 JS (coming soon - contact us to get involved)
 
-C# (coming soon - contact us to get involved)
+[C#](https://github.com/rokuality/rokuality-csharp)
 
 ### Live Session Testing
 For Roku and XBox devices, it's possible to manually access your remote devices and start a live session. In this fashion you can manage a remote library of machines to distribute tests across a wide variety of device platforms for multiple testers. Note that this functionality is still experimental but should be fairly reliable. 
