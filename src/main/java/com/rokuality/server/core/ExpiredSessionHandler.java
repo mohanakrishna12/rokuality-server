@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
+import com.rokuality.server.core.drivers.ElementManager;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
 import com.rokuality.server.enums.PlatformType;
@@ -69,6 +70,7 @@ public class ExpiredSessionHandler {
 				SessionManager.removeImageCollector(entry.getKey());
 				SessionManager.removeSessionActivity(entry.getKey());
 				SessionManager.removeSessionInfo(entry.getKey());
+				ElementManager.removeElements(entry.getKey());
 			}
 		}
 	}

@@ -19,7 +19,7 @@ public class ElementManager {
 		elementMap.add(map);
 	}
 
-	public static void removeElement(String sessionID) {
+	public static void removeElements(String sessionID) {
 		for (Map<String, JSONObject> map : elementMap) {
 			if (map.containsKey(sessionID)) {
 				elementMap.remove(map);

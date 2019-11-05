@@ -15,6 +15,7 @@ import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.ImageCollector;
+import com.rokuality.server.core.drivers.ElementManager;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.hdmi.HDMIKeyPresser;
 import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
@@ -465,6 +466,7 @@ public class session extends HttpServlet {
 		SessionManager.removeGoogleCredentials(sessionID);
 		SessionManager.removeImageCollector(sessionID);
 		SessionManager.removeSessionInfo(sessionID);
+		ElementManager.removeElements(sessionID);
 
 		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 		return resultObj;
