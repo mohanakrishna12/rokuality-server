@@ -123,8 +123,8 @@ public class ImageUtils {
 		return null;
 	}
 
-	public static JSONObject getElementFromSubScreen(String sessionID, String locator, Long subScreenX, Long subScreenY,
-			Long subScreenWidth, Long subScreenHeight) {
+	public static List<JSONObject> getElementFromSubScreen(String sessionID, String locator, Long subScreenX,
+			Long subScreenY, Long subScreenWidth, Long subScreenHeight) {
 		File screenImage = getImageFromDevice(sessionID);
 		if (screenImage == null || !screenImage.exists()) {
 			return null;
@@ -135,7 +135,7 @@ public class ImageUtils {
 		return getElement(sessionID, locator, subScreenImage);
 	}
 
-	public static JSONObject getElementFromEntireScreen(String sessionID, String locator) {
+	public static List<JSONObject> getElementFromEntireScreen(String sessionID, String locator) {
 		File screenImage = getImageFromDevice(sessionID);
 		if (screenImage == null || !screenImage.exists()) {
 			return null;
@@ -143,9 +143,8 @@ public class ImageUtils {
 		return getElement(sessionID, locator, screenImage);
 	}
 
-	private static JSONObject getElement(String sessionID, String locator, File screenImage) {
-		JSONObject element = new JSONObject();
-		element.put(SessionConstants.ELEMENT_ID, UUID.randomUUID().toString());
+	private static List<JSONObject> getElement(String sessionID, String locator, File screenImage) {
+		List<JSONObject> elements = new ArrayList<>();
 
 		boolean isFile = locator != null && new File(locator).exists();
 		boolean elementFound = false;
@@ -171,7 +170,7 @@ public class ImageUtils {
 				finder.find(pattern);
 			}
 
-			if (finder != null && finder.hasNext()) {
+			while (finder != null && finder.hasNext()) {
 				Match match = finder.next();
 				int x = match.x;
 				int y = match.y;
@@ -181,12 +180,15 @@ public class ImageUtils {
 				String text = getTextFromImage(SessionManager.getOCRType(sessionID), new File(locator),
 						SessionManager.getGoogleCredentials(sessionID));
 
+				JSONObject element = new JSONObject();
+				element.put(SessionConstants.ELEMENT_ID, UUID.randomUUID().toString());
 				element.put("element_x", x);
 				element.put("element_y", y);
 				element.put("element_width", width);
 				element.put("element_height", height);
 				element.put("element_confidence", confidence);
 				element.put("element_text", text);
+				elements.add(element);
 				elementFound = true;
 			}
 		}
@@ -197,14 +199,17 @@ public class ImageUtils {
 			OCRType ocrType = SessionManager.getOCRType(sessionID);
 			List<ImageText> imageTexts = getTextsListFromImage(ocrType, screenImage,
 					SessionManager.getGoogleCredentials(sessionID));
-			ImageText imageText = getConstructedTextElement(ocrType, imageTexts, locator);
-			if (imageText != null) {
-				element.put("element_x", imageText.getLocation().x);
-				element.put("element_y", imageText.getLocation().y);
-				element.put("element_width", imageText.getLength());
-				element.put("element_height", imageText.getWidth());
-				element.put("element_confidence", imageText.getConfidence());
-				element.put("element_text", imageText.getText());
+			List<ImageText> constructedImageTexts = getConstructedTextElement(ocrType, imageTexts, locator);
+			for (ImageText constructedImageText : constructedImageTexts) {
+				JSONObject element = new JSONObject();
+				element.put(SessionConstants.ELEMENT_ID, UUID.randomUUID().toString());
+				element.put("element_x", constructedImageText.getLocation().x);
+				element.put("element_y", constructedImageText.getLocation().y);
+				element.put("element_width", constructedImageText.getLength());
+				element.put("element_height", constructedImageText.getWidth());
+				element.put("element_confidence", constructedImageText.getConfidence());
+				element.put("element_text", constructedImageText.getText());
+				elements.add(element);
 				elementFound = true;
 			}
 		}
@@ -214,10 +219,11 @@ public class ImageUtils {
 		if (!elementFound) {
 			return null;
 		}
-		return element;
+		return elements;
 	}
 
-	public static ImageText getConstructedTextElement(OCRType ocrType, List<ImageText> imageTexts, String locator) {
+	public static List<ImageText> getConstructedTextElement(OCRType ocrType, List<ImageText> imageTexts,
+			String locator) {
 		if (imageTexts == null || imageTexts.isEmpty() || locator == null || locator.isEmpty()) {
 			Log.getRootLogger().warn("ImageText/Locator are invalid during text element construction!");
 			return null;
@@ -243,51 +249,64 @@ public class ImageUtils {
 			imageTextTexts.add(imgt.getText().toLowerCase());
 		}
 
-		// check if our locator sublist is contained within
-		List<ImageText> matchedImageTexts = new ArrayList<>();
-		int matchedIndex = Collections.indexOfSubList(imageTextTexts, loc);
-		Log.getRootLogger().info(String.format("Matched index evaluator for %s is %s", loc, matchedIndex));
-		if (matchedIndex != -1) {
-			Log.getRootLogger().info(String.format("Match found for locator %s", loc));
-			matchedImageTexts = imageTexts.subList(matchedIndex, (matchedIndex + loc.size()));
+		List<ImageText> masterList = new ArrayList<>();
+		boolean complete = false;
+		while (!complete) {
+			// check if our locator sublist is contained within
+			List<ImageText> matchedImageTexts = new ArrayList<>();
+			int matchedIndex = Collections.indexOfSubList(imageTextTexts, loc);
+			Log.getRootLogger().info(String.format("Matched index evaluator for %s is %s", loc, matchedIndex));
+
+			if (matchedIndex == -1) {
+				complete = true;
+			}
+
+			if (matchedIndex != -1) {
+				Log.getRootLogger().info(String.format("Match found for locator %s", loc));
+				matchedImageTexts = imageTexts.subList(matchedIndex, (matchedIndex + loc.size()));
+
+				// remove the found index so the next iteration can check again
+				imageTextTexts.subList(matchedIndex, (matchedIndex + loc.size())).clear();
+			}
+
+			Log.getRootLogger()
+					.info(String.format("Matched components for locator text %s : %s", loc, matchedImageTexts));
+
+			String constructedWords = "";
+			for (ImageText imageText : matchedImageTexts) {
+				constructedWords += " " + imageText.getText();
+			}
+			constructedWords = constructedWords.trim();
+			Log.getRootLogger()
+					.info(String.format("Constructed word component for locator text %s : %s", loc, constructedWords));
+
+			if (matchedImageTexts.size() == 1) {
+				masterList.add(matchedImageTexts.get(0));
+			}
+
+			ImageText constructedImageText = new ImageText();
+			constructedImageText.setText(constructedWords);
+
+			int startX = matchedImageTexts.get(0).getLocation().x; // 770
+			int startY = matchedImageTexts.get(0).getLocation().y;
+			// TODO - calculate the space between all entries and add it to total width
+			int width = (int) matchedImageTexts.get(0).getLength()
+					+ (int) matchedImageTexts.get(matchedImageTexts.size() - 1).getLength(); // x-axis 'width'
+			int height = (int) matchedImageTexts.get(0).getWidth(); // y-axis 'height'
+
+			constructedImageText.setLength(Double.valueOf((width)));
+			constructedImageText.setWidth(Double.valueOf(height));
+			constructedImageText.setLocation(new Point(startX, startY));
+
+			// TODO - performan a median evaluate of all confidences and return that
+			// for multiple word matches
+			constructedImageText.setConfidence(matchedImageTexts.get(0).getConfidence());
+
+			masterList.add(constructedImageText);
+
 		}
 
-		Log.getRootLogger().info(String.format("Matched components for locator text %s : %s", loc, matchedImageTexts));
-
-		String constructedWords = "";
-		for (ImageText imageText : matchedImageTexts) {
-			constructedWords += " " + imageText.getText();
-		}
-		constructedWords = constructedWords.trim();
-		Log.getRootLogger()
-				.info(String.format("Constructed word component for locator text %s : %s", loc, constructedWords));
-
-		if (matchedImageTexts.isEmpty()) {
-			return null;
-		}
-
-		if (matchedImageTexts.size() == 1) {
-			return matchedImageTexts.get(0);
-		}
-
-		ImageText constructedImageText = new ImageText();
-		constructedImageText.setText(constructedWords);
-
-		int startX = matchedImageTexts.get(0).getLocation().x; // 770
-		int startY = matchedImageTexts.get(0).getLocation().y;
-		// TODO - calculate the space between all entries and add it to total width
-		int width = (int) matchedImageTexts.get(0).getLength() + (int) matchedImageTexts.get(matchedImageTexts.size() - 1).getLength(); // x-axis 'width'
-		int height = (int) matchedImageTexts.get(0).getWidth(); // y-axis 'height'
-
-		constructedImageText.setLength(Double.valueOf((width)));
-		constructedImageText.setWidth(Double.valueOf(height));
-		constructedImageText.setLocation(new Point(startX, startY));
-
-		// TODO - performan a median evaluate of all confidences and return that
-		// for multiple word matches
-		constructedImageText.setConfidence(matchedImageTexts.get(0).getConfidence());
-
-		return constructedImageText;
+		return masterList;
 	}
 
 	public static String imageHandler(String locatorSource) {
