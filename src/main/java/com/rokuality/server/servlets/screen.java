@@ -178,7 +178,8 @@ public class screen extends HttpServlet {
 		}
 
 		if (!results.containsValue(ServerConstants.SERVLET_SUCCESS)) {
-			results.put(ServerConstants.SERVLET_RESULTS, "Failed to generate/retrieve video recording! See logs for details.");
+			results.put(ServerConstants.SERVLET_RESULTS,
+					"Failed to generate/retrieve video recording! See logs for details.");
 		}
 		return results;
 	}
@@ -186,18 +187,19 @@ public class screen extends HttpServlet {
 	private static JSONObject getHDMIScreenRecording(String sessionID) {
 		JSONObject results = new JSONObject();
 		String videoContent = null;
-		File capturedVideo = new File(String.valueOf(SessionManager.getSessionInfo(sessionID).get(SessionConstants.VIDEO_CAPTURE_FILE)));
+		File capturedVideo = new File(
+				String.valueOf(SessionManager.getSessionInfo(sessionID).get(SessionConstants.VIDEO_CAPTURE_FILE)));
 
 		if (capturedVideo.exists() && capturedVideo.isFile()) {
 			videoContent = new FileToStringUtils().convertToString(capturedVideo);
 		}
-		
+
 		if (videoContent != null) {
 			results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 			results.put("screen_video", videoContent);
 			results.put("screen_video_extension", ".mkv");
 		}
-		
+
 		return results;
 	}
 
@@ -239,6 +241,7 @@ public class screen extends HttpServlet {
 
 			while (System.currentTimeMillis() <= pollMax) {
 				image = imageCollector.getCurrentImage(false);
+
 				Log.getRootLogger().info("Collecting screen image from entire screen.");
 				if (image != null && image.exists() && subScreenX != null && subScreenY != null
 						&& subScreenWidth != null && subScreenHeight != null) {

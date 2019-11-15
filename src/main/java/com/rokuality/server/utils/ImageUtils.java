@@ -191,6 +191,10 @@ public class ImageUtils {
 			OCRType ocrType = SessionManager.getOCRType(sessionID);
 			List<ImageText> imageTexts = getTextsListFromImage(ocrType, screenImage,
 					SessionManager.getGoogleCredentials(sessionID));
+			if (imageTexts == null || imageTexts.isEmpty()) {
+				return elements;
+			}
+			
 			List<ImageText> constructedImageTexts = getConstructedTextElement(ocrType, imageTexts, locator);
 			for (ImageText constructedImageText : constructedImageTexts) {
 				JSONObject element = new JSONObject();
@@ -238,6 +242,12 @@ public class ImageUtils {
 		}
 
 		List<ImageText> masterList = new ArrayList<>();
+
+		// if there's no image text to check - return the empty list
+		if (imageTextTexts.isEmpty()) {
+			return masterList;
+		}
+
 		boolean complete = false;
 		while (!complete) {
 			// check if our locator sublist is contained within
@@ -246,16 +256,22 @@ public class ImageUtils {
 			Log.getRootLogger().info(String.format("Matched index evaluator for %s is %s", loc, matchedIndex));
 
 			if (matchedIndex == -1) {
-				complete = true;
+				return masterList;
 			}
 
-			if (matchedIndex != -1) {
-				Log.getRootLogger().info(String.format("Match found for locator %s", loc));
-				matchedImageTexts = imageTexts.subList(matchedIndex, (matchedIndex + loc.size()));
+			Log.getRootLogger().info(String.format("Match found for locator %s", loc));
+			matchedImageTexts = imageTexts.subList(matchedIndex, (matchedIndex + loc.size()));
 
-				// remove the found index so the next iteration can check again
-				imageTextTexts.subList(matchedIndex, (matchedIndex + loc.size())).clear();
-			}
+			// get a new sub list that excludes the entries we've already found
+			List<String> imageTextTextsWithoutFoundItems = new ArrayList<>();
+			imageTextTextsWithoutFoundItems.addAll(imageTextTexts.subList(0, matchedIndex));
+			imageTextTextsWithoutFoundItems.addAll(imageTextTexts.subList(matchedIndex + loc.size(), imageTextTexts.size()));
+			imageTextTexts = imageTextTextsWithoutFoundItems;
+
+			List<ImageText> imageTextsWithoutFoundItems = new ArrayList<>();
+			imageTextsWithoutFoundItems.addAll(imageTexts.subList(0, matchedIndex));
+			imageTextsWithoutFoundItems.addAll(imageTexts.subList(matchedIndex + loc.size(), imageTexts.size()));
+			imageTexts = imageTextsWithoutFoundItems;
 
 			Log.getRootLogger()
 					.info(String.format("Matched components for locator text %s : %s", loc, matchedImageTexts));
@@ -268,30 +284,30 @@ public class ImageUtils {
 			Log.getRootLogger()
 					.info(String.format("Constructed word component for locator text %s : %s", loc, constructedWords));
 
+			// if the matched image text is only one word add it, otherwise construct the image text from multiple words
 			if (matchedImageTexts.size() == 1) {
 				masterList.add(matchedImageTexts.get(0));
+			} else {
+				ImageText constructedImageText = new ImageText();
+				constructedImageText.setText(constructedWords);
+	
+				int startX = matchedImageTexts.get(0).getLocation().x; // 770
+				int startY = matchedImageTexts.get(0).getLocation().y;
+				// TODO - calculate the space between all entries and add it to total width
+				int width = (int) matchedImageTexts.get(0).getLength()
+						+ (int) matchedImageTexts.get(matchedImageTexts.size() - 1).getLength(); // x-axis 'width'
+				int height = (int) matchedImageTexts.get(0).getWidth(); // y-axis 'height'
+	
+				constructedImageText.setLength(Double.valueOf((width)));
+				constructedImageText.setWidth(Double.valueOf(height));
+				constructedImageText.setLocation(new Point(startX, startY));
+	
+				// TODO - performan a median evaluate of all confidences and return that
+				// for multiple word matches
+				constructedImageText.setConfidence(matchedImageTexts.get(0).getConfidence());
+	
+				masterList.add(constructedImageText);
 			}
-
-			ImageText constructedImageText = new ImageText();
-			constructedImageText.setText(constructedWords);
-
-			int startX = matchedImageTexts.get(0).getLocation().x; // 770
-			int startY = matchedImageTexts.get(0).getLocation().y;
-			// TODO - calculate the space between all entries and add it to total width
-			int width = (int) matchedImageTexts.get(0).getLength()
-					+ (int) matchedImageTexts.get(matchedImageTexts.size() - 1).getLength(); // x-axis 'width'
-			int height = (int) matchedImageTexts.get(0).getWidth(); // y-axis 'height'
-
-			constructedImageText.setLength(Double.valueOf((width)));
-			constructedImageText.setWidth(Double.valueOf(height));
-			constructedImageText.setLocation(new Point(startX, startY));
-
-			// TODO - performan a median evaluate of all confidences and return that
-			// for multiple word matches
-			constructedImageText.setConfidence(matchedImageTexts.get(0).getConfidence());
-
-			masterList.add(constructedImageText);
-
 		}
 
 		return masterList;

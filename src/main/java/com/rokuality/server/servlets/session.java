@@ -408,7 +408,7 @@ public class session extends HttpServlet {
 			SessionManager.addGoogleCredentials(sessionID, credentials);
 		}
 
-		String mirrorScreenCap = (String) requestObj.get(SessionCapabilities.MIRROR_SCREEN);
+		String mirrorScreenCap = (String) requestObj.get(SessionCapabilities.MIRROR_SCREEN.value());
 		if (mirrorScreenCap != null) {
 			DeviceDesktopMirror.initMirror(sessionID, mirrorScreenCap);
 		}

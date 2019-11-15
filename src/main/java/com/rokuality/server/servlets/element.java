@@ -175,8 +175,6 @@ public class element extends HttpServlet {
 		element.put(SessionConstants.SESSION_ID, sessionID);
 		ElementManager.addElement(sessionID, element);
 
-		Log.getRootLogger().info("DEBUG - ELEMENT JSON: " + element.toJSONString());
-
 		return element;
 	}
 

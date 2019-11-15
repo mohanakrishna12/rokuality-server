@@ -1,17 +1,20 @@
 package com.rokuality.server.driver.host;
 
 import java.io.File;
+import java.io.IOException;
+
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.WindowConstants;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.enums.SessionCapabilities;
-import com.rokuality.server.utils.FileUtils;
+import com.rokuality.server.utils.ImageUtils;
 import com.rokuality.server.utils.SleepUtils;
 
 import org.eclipse.jetty.util.log.Log;
@@ -42,7 +45,7 @@ public class DeviceDesktopMirror {
 		JFrame frame = new JFrame();
 		frame.setBounds(1, 1, width, height);
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		frame.setAlwaysOnTop(true);
+		//frame.setAlwaysOnTop(true);
 		frame.getContentPane().setLayout(null);
 
 		JLabel imageLabel = new JLabel("Preparing screen image...");
@@ -54,12 +57,20 @@ public class DeviceDesktopMirror {
 			public void run() {
 				ImageCollector imageCollector = SessionManager.getImageCollector(sessionID);
 				while (sessionStarted) {
-					File capturedImage = imageCollector.getCurrentImage(true);
+					File capturedImage = imageCollector.viewCurrentImage(true);
 					if (capturedImage != null && capturedImage.exists()) {
-						ImageIcon icn = new ImageIcon(new ImageIcon(capturedImage.getAbsolutePath()).getImage()
-								.getScaledInstance(width, height, Image.SCALE_DEFAULT));
-						imageLabel.setIcon(icn);
-						FileUtils.deleteFile(capturedImage);
+						BufferedImage bufferedImage = null;
+						try {
+							bufferedImage = ImageUtils.getBufferedImage(capturedImage);
+						} catch (IOException e) {
+							Log.getRootLogger().warn(e);
+						}
+
+						if (bufferedImage != null) {
+							ImageIcon icn = new ImageIcon(
+									bufferedImage.getScaledInstance(width, height, Image.SCALE_DEFAULT));
+							imageLabel.setIcon(icn);
+						}
 					}
 				}
 			};
