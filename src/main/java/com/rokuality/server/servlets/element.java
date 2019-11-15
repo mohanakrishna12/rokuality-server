@@ -2,6 +2,8 @@ package com.rokuality.server.servlets;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -17,6 +19,7 @@ import com.rokuality.server.utils.ServletJsonParser;
 import com.rokuality.server.utils.SleepUtils;
 
 import org.eclipse.jetty.util.log.Log;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 @SuppressWarnings({ "serial", "unchecked" })
@@ -38,7 +41,10 @@ public class element extends HttpServlet {
 		String action = requestObj.get(ServerConstants.SERVLET_ACTION).toString();
 		switch (action) {
 		case "find":
-			results = findElement(requestObj);
+			results = findElement(requestObj, false);
+			break;
+		case "find_all":
+			results = findElement(requestObj, true);
 			break;
 		default:
 
@@ -55,7 +61,7 @@ public class element extends HttpServlet {
 		response.getWriter().println(results.toJSONString());
 	}
 
-	public JSONObject findElement(JSONObject requestObj) {
+	public JSONObject findElement(JSONObject requestObj, boolean allowMultiple) {
 		String sessionID = requestObj.get(SessionConstants.SESSION_ID).toString();
 		String locator = requestObj.get(SessionConstants.ELEMENT_LOCATOR).toString();
 
@@ -71,6 +77,8 @@ public class element extends HttpServlet {
 		}
 
 		JSONObject element = new JSONObject();
+		List<JSONObject> elements = new ArrayList<>();
+
 		boolean locatorIsText = locator.startsWith(BY_TEXT_ID);
 		boolean locatorIsImage = !locatorIsText;
 
@@ -118,14 +126,14 @@ public class element extends HttpServlet {
 
 		while (System.currentTimeMillis() <= pollMax) {
 			if (subScreenX != null && subScreenY != null && subScreenWidth != null && subScreenHeight != null) {
-				element = ImageUtils.getElementFromSubScreen(sessionID, loc, (long) subScreenX, (long) subScreenY,
+				elements = ImageUtils.getElementFromSubScreen(sessionID, loc, (long) subScreenX, (long) subScreenY,
 						(long) subScreenWidth, (long) subScreenHeight);
 			} else {
-				element = ImageUtils.getElementFromEntireScreen(sessionID, loc);
+				elements = ImageUtils.getElementFromEntireScreen(sessionID, loc);
 			}
 
-			if (element != null) {
-				Log.getRootLogger().info("Element found: " + element.toJSONString());
+			if (!elements.isEmpty()) {
+				Log.getRootLogger().info("Element found: " + elements.toString());
 				break;
 			}
 
@@ -136,8 +144,22 @@ public class element extends HttpServlet {
 			FileUtils.deleteFile(new File(loc));
 		}
 
-		if (element == null) {
-			element = new JSONObject();
+		// found multiple matches
+		if (allowMultiple && !elements.isEmpty()) {
+			JSONArray allElementArr = new JSONArray();
+			for (JSONObject ele : elements) {
+				allElementArr.add(ele);
+			}
+			element.put("all_elements", allElementArr);
+		}
+		
+		// found singular match
+		if (!allowMultiple && !elements.isEmpty()) {
+			element = elements.get(0);
+		}
+		
+		// if not allow multiple return an error object to throw exception
+		if (!allowMultiple && element.isEmpty()) {
 			// TODO - better custom error message based on what ocr engine or element type
 			// is being provided
 			String eleTypeStr = locatorIsText ? "text" : "image";
@@ -152,6 +174,8 @@ public class element extends HttpServlet {
 		element.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 		element.put(SessionConstants.SESSION_ID, sessionID);
 		ElementManager.addElement(sessionID, element);
+
+		Log.getRootLogger().info("DEBUG - ELEMENT JSON: " + element.toJSONString());
 
 		return element;
 	}

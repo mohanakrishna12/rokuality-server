@@ -126,9 +126,6 @@ public class ImageUtils {
 	public static List<JSONObject> getElementFromSubScreen(String sessionID, String locator, Long subScreenX,
 			Long subScreenY, Long subScreenWidth, Long subScreenHeight) {
 		File screenImage = getImageFromDevice(sessionID);
-		if (screenImage == null || !screenImage.exists()) {
-			return null;
-		}
 		File subScreenImage = getSubImageFromImage(screenImage, subScreenX.intValue(), subScreenY.intValue(),
 				subScreenWidth.intValue(), subScreenHeight.intValue());
 		com.rokuality.server.utils.FileUtils.deleteFile(screenImage);
@@ -137,9 +134,6 @@ public class ImageUtils {
 
 	public static List<JSONObject> getElementFromEntireScreen(String sessionID, String locator) {
 		File screenImage = getImageFromDevice(sessionID);
-		if (screenImage == null || !screenImage.exists()) {
-			return null;
-		}
 		return getElement(sessionID, locator, screenImage);
 	}
 
@@ -147,10 +141,9 @@ public class ImageUtils {
 		List<JSONObject> elements = new ArrayList<>();
 
 		boolean isFile = locator != null && new File(locator).exists();
-		boolean elementFound = false;
 
-		if (!screenImage.exists()) {
-			return null;
+		if (screenImage == null || !screenImage.exists()) {
+			return elements;
 		}
 
 		if (isFile) {
@@ -189,7 +182,6 @@ public class ImageUtils {
 				element.put("element_confidence", confidence);
 				element.put("element_text", text);
 				elements.add(element);
-				elementFound = true;
 			}
 		}
 
@@ -210,15 +202,11 @@ public class ImageUtils {
 				element.put("element_confidence", constructedImageText.getConfidence());
 				element.put("element_text", constructedImageText.getText());
 				elements.add(element);
-				elementFound = true;
 			}
 		}
 
 		com.rokuality.server.utils.FileUtils.deleteFile(screenImage);
 
-		if (!elementFound) {
-			return null;
-		}
 		return elements;
 	}
 
@@ -602,6 +590,10 @@ public class ImageUtils {
 	}
 
 	public static File getSubImageFromImage(File image, int subX, int subY, int width, int height) {
+		if (image == null || !image.exists()) {
+			return null;
+		}
+		
 		File subImage = new File(Image.create(image.getAbsolutePath()).getSub(subX, subY, width, height).asFile());
 		return subImage;
 	}
