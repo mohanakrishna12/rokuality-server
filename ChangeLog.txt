@@ -1,3 +1,9 @@
+1.2.1 - Changes from 1.2.0
+1. Adds support for element multi match.
+2. Adds a prettier server start message.
+3. Adds support for the 'MirrorScreen' capability, allowing users to watch their tests in flight on their desktops.
+4. Fixes a bug with ScreenText collection where the screen text location/position wouldn't match the resized coordinates from the same element in a finder search.
+
 1.2.0 - Changes from 1.1.1
 1. Adds the ability to manually remote control an XBox or Roku device for a live session test for devices in remote locations. See the readme for details.
 

@@ -15,6 +15,7 @@ import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.core.ocr.ImageText;
+import com.rokuality.server.enums.SessionCapabilities;
 import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.FileUtils;
 import com.rokuality.server.utils.ImageUtils;
@@ -96,6 +97,32 @@ public class screen extends HttpServlet {
 		String sessionID = sessionObj.get(SessionConstants.SESSION_ID).toString();
 
 		File image = collectImage(sessionID, sessionObj);
+		File resizedImageFile = null;
+
+		Object resizeObj = SessionManager.getSessionInfo(sessionID).get(SessionConstants.SCREEN_SIZE_OVERRIDE);
+		String defaultResize = String.valueOf(resizeObj);
+		if (!defaultResize.equals("null")) {
+			Log.getRootLogger().info(
+					"Resizing screen text image '" + image.getAbsolutePath() + "' to size '" + defaultResize + "'.");
+
+			String[] size = null;
+			try {
+				size = defaultResize.toLowerCase().replace(" ", "").split("x");
+			} catch (Exception e) {
+				results.put(ServerConstants.SERVLET_RESULTS,
+						String.format(
+								"The provided %s capability with value %s is "
+										+ "not in the format 'widthxheight'. A working example would be '2400x1800'.",
+								SessionCapabilities.SCREEN_SIZE_OVERRIDE.value(), defaultResize));
+				return results;
+			}
+
+			resizedImageFile = ImageUtils.resizeImage(image, Integer.parseInt(size[0]), Integer.parseInt(size[1]));
+			if (resizedImageFile != null && resizedImageFile.exists()) {
+				com.rokuality.server.utils.FileUtils.deleteFile(image);
+				image = resizedImageFile;
+			}
+		}
 
 		List<ImageText> imageTexts = null;
 		if (image != null && image.exists()) {

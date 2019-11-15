@@ -99,7 +99,7 @@ public class ImageUtils {
 						// TODO - custom exception
 						throw new RuntimeException("The default image sizing is not in the proper 'width,height' "
 								+ "format. You provided '" + defaultResize
-								+ "'. A working example would be '2400,1800'");
+								+ "'. A working example would be '2400x1800'");
 					}
 
 					// TODO - number format exception handling!
