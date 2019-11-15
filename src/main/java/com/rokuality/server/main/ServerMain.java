@@ -96,7 +96,7 @@ public class ServerMain {
 
 		if (!ffmpegInstalled || !tesseractTrainedDataInstalled || !harmonyInstalled) {
 			try {
-				OSUtils.displaySystemMessage("Preparing first time setup. This will take a minute...");
+				OSUtils.displaySystemMessage("Performing some setup. Will let you know when we're ready...");
 			} catch (Exception e) {
 				Log.getRootLogger().warn(e);
 			}
@@ -148,7 +148,7 @@ public class ServerMain {
 		}
 
 		try {
-			OSUtils.displaySystemMessage("Server is ready at http://localhost:" + getServerPort());
+			OSUtils.displaySystemMessage("Server is listening at http://localhost:" + getServerPort());
 		} catch (Exception e) {
 			Log.getRootLogger().warn(e);
 		}

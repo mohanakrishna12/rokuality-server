@@ -15,6 +15,7 @@ import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.ImageCollector;
+import com.rokuality.server.core.drivers.ElementManager;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.hdmi.HDMIKeyPresser;
 import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
@@ -23,6 +24,7 @@ import com.rokuality.server.driver.device.roku.RokuKeyPresser;
 import com.rokuality.server.driver.device.roku.RokuPackageHandler;
 import com.rokuality.server.driver.device.xbox.XBoxDevConsoleManager;
 import com.rokuality.server.driver.device.xbox.XBoxPackageHandler;
+import com.rokuality.server.driver.host.DeviceDesktopMirror;
 import com.rokuality.server.driver.host.GlobalDependencyInstaller;
 import com.rokuality.server.enums.OCRType;
 import com.rokuality.server.enums.PlatformType;
@@ -406,6 +408,11 @@ public class session extends HttpServlet {
 			SessionManager.addGoogleCredentials(sessionID, credentials);
 		}
 
+		String mirrorScreenCap = (String) requestObj.get(SessionCapabilities.MIRROR_SCREEN.value());
+		if (mirrorScreenCap != null) {
+			DeviceDesktopMirror.initMirror(sessionID, mirrorScreenCap);
+		}
+		
 		SessionManager.addSessionActivity(sessionID, System.currentTimeMillis());
 
 		sessionInfo.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
@@ -465,6 +472,7 @@ public class session extends HttpServlet {
 		SessionManager.removeGoogleCredentials(sessionID);
 		SessionManager.removeImageCollector(sessionID);
 		SessionManager.removeSessionInfo(sessionID);
+		ElementManager.removeElements(sessionID);
 
 		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 		return resultObj;

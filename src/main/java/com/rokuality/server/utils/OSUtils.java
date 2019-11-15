@@ -1,6 +1,8 @@
 package com.rokuality.server.utils;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 import com.rokuality.server.enums.OSType;
 
@@ -12,9 +14,11 @@ import com.rokuality.server.utils.OSUtils;
 
 import org.eclipse.jetty.util.log.Log;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.awt.geom.*;
+import java.awt.image.*;
 
 public class OSUtils {
 
@@ -96,8 +100,22 @@ public class OSUtils {
 
 		boolean fileCreated = FileUtils.writeStringToFile(binaryScriptPath, commandInput, true);
 		if (fileCreated) {
-			binPath = commandExecutor.execCommand(String.join(" ", command), null).replace(System.lineSeparator(), "")
-					.trim();
+			binPath = commandExecutor.execCommand(String.join(" ", command), null);
+		}
+
+		if (binPath == null) {
+			Log.getRootLogger().warn("Failed to query for binary '" + binaryName + "' in user's path.");
+			return "";
+		}
+		binPath = binPath.trim();
+
+		if (binPath.contains(System.lineSeparator())) {
+			Log.getRootLogger()
+					.info(String.format(
+							"Multiple binary %s matches found in path with results '%s'. The first match will be used!",
+							binaryName, binPath));
+			String[] binPathComps = binPath.split(System.lineSeparator());
+			binPath = binPathComps[0];
 		}
 
 		File resultFile = new File(binPath);
@@ -136,8 +154,9 @@ public class OSUtils {
 		}
 
 		JFrame frame = new JFrame();
-		frame.setSize(350, 80);
 		frame.setUndecorated(true);
+		frame.setShape(new RoundRectangle2D.Double(1, 1, 345, 95, 50, 50));
+		frame.setSize(345, 95);
 		frame.getContentPane().setBackground(Color.WHITE);
 		frame.setBackground(Color.WHITE);
 		frame.setLayout(new GridBagLayout());
@@ -146,13 +165,20 @@ public class OSUtils {
 		constraints.gridy = 0;
 		constraints.weightx = 1.0f;
 		constraints.weighty = 1.0f;
-		constraints.insets = new Insets(5, 5, 5, 5);
+		constraints.insets = new Insets(15, 15, 5, 5);
 		constraints.fill = GridBagConstraints.BOTH;
 
-		JLabel headingLabel = new JLabel("  " + "Rokuality Server");
+		JLabel headingLabel = new JLabel(" " + "Rokuality Server");
 		headingLabel.setFont(new Font("Helvetica", Font.BOLD, 17));
-		ImageIcon imageIcon = new ImageIcon(new ImageIcon(OSUtils.class.getResource("/serverimg.jpg").getPath()).getImage()
-				.getScaledInstance(30, 30, Image.SCALE_DEFAULT));
+
+		BufferedImage image = null;
+		try (InputStream inputStream = OSUtils.class.getResourceAsStream("/serverimg.jpg")) {
+			image = ImageIO.read(inputStream);
+		} catch (IOException e) {
+			Log.getRootLogger().warn(e);
+		}
+		ImageIcon imageIcon = new ImageIcon(image.getScaledInstance(30, 30, Image.SCALE_DEFAULT));
+
 		headingLabel.setIcon(imageIcon);
 		headingLabel.setOpaque(false);
 		headingLabel.setForeground(Color.BLACK);
@@ -162,22 +188,11 @@ public class OSUtils {
 		constraints.weighty = 0f;
 		constraints.fill = GridBagConstraints.NONE;
 		constraints.anchor = GridBagConstraints.NORTH;
-		JButton closeButton = new JButton(new AbstractAction("x") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				frame.dispose();
-			}
-		});
-		closeButton.setMargin(new Insets(1, 4, 1, 4));
-		closeButton.setFocusable(false);
-		frame.add(closeButton, constraints);
 		constraints.gridx = 0;
 		constraints.gridy++;
 		constraints.weightx = 1.0f;
 		constraints.weighty = 1.0f;
-		constraints.insets = new Insets(5, 5, 5, 5);
+		constraints.insets = new Insets(5, 15, 15, 15);
 		constraints.fill = GridBagConstraints.BOTH;
 		JLabel messageLabel = new JLabel("<HtMl>" + "  " + message);
 		messageLabel.setFont(new Font("Helvetica", Font.PLAIN, 14));
@@ -187,12 +202,14 @@ public class OSUtils {
 		frame.setVisible(true);
 		Dimension scrSize = Toolkit.getDefaultToolkit().getScreenSize();
 		Insets toolHeight = Toolkit.getDefaultToolkit().getScreenInsets(frame.getGraphicsConfiguration());
-		frame.setLocation(scrSize.width - frame.getWidth(), scrSize.height - toolHeight.bottom - frame.getHeight());
+		int frameX = ((scrSize.width - frame.getWidth()) - 10);
+		int frameY = (scrSize.height - toolHeight.bottom - frame.getHeight()) - 10;
+		frame.setLocation(frameX, frameY);
 		frame.setAlwaysOnTop(true);
 		new Thread() {
 			@Override
 			public void run() {
-				SleepUtils.sleep(4000);
+				SleepUtils.sleep(5000);
 				frame.dispose();
 			};
 		}.start();

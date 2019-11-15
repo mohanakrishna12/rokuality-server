@@ -125,6 +125,37 @@ public class ImageCollector {
 	}
 
 	public File getCurrentImage(boolean allowCache) {
+		File currentImageFile = viewCurrentImage(allowCache);
+		if (currentImageFile == null || !currentImageFile.exists() || !currentImageFile.isFile()) {
+			return null;
+		}
+
+		String pngLocation = imageCaptureDir.getAbsolutePath() + File.separator + currentImageFile.getName().replace(".jpg", ".png");
+		File pngFile = new File(pngLocation);
+		try {
+			if (PlatformType.ROKU.equals(platform) && currentCaptureFile.exists() && currentCaptureFile.isFile()) {
+				BufferedImage bufferedImage = ImageIO.read(currentCaptureFile);
+				ImageIO.write(bufferedImage, "png", pngFile);
+				if (pngFile.exists()) {
+					return pngFile;
+				}
+			}
+
+			if (!PlatformType.ROKU.equals(platform) && currentCaptureFile.exists() && currentCaptureFile.isFile()) {
+				File copiedImage = new File(imageCaptureDir.getAbsolutePath() + File.separator + "copied_" + pngFile.getName());
+				FileUtils.copyFile(pngFile, copiedImage);
+				if (copiedImage.exists()) {
+					return copiedImage;
+				}
+			}
+		} catch (Exception e) {
+			Log.getRootLogger().warn("Failed to prepare current image for evaluation!", e);
+		}
+
+		return null;
+	}
+
+	public File viewCurrentImage(boolean allowCache) {
 		// check if the captured file exists
 		if (currentCaptureFile == null || !currentCaptureFile.exists() || !currentCaptureFile.isFile()) {
 			return null;
@@ -153,29 +184,8 @@ public class ImageCollector {
 			}
 		}
 
-		String pngLocation = imageCaptureDir.getAbsolutePath() + File.separator + imageName.replace(".jpg", ".png");
-		File pngFile = new File(pngLocation);
-		try {
-			if (PlatformType.ROKU.equals(platform) && currentCaptureFile.exists() && currentCaptureFile.isFile()) {
-				BufferedImage bufferedImage = ImageIO.read(currentCaptureFile);
-				ImageIO.write(bufferedImage, "png", pngFile);
-				if (pngFile.exists()) {
-					return pngFile;
-				}
-			}
-
-			if (!PlatformType.ROKU.equals(platform) && currentCaptureFile.exists() && currentCaptureFile.isFile()) {
-				File copiedImage = new File(imageCaptureDir.getAbsolutePath() + File.separator + "copied_" + pngFile.getName());
-				FileUtils.copyFile(pngFile, copiedImage);
-				if (copiedImage.exists()) {
-					return copiedImage;
-				}
-			}
-		} catch (Exception e) {
-			Log.getRootLogger().warn("Failed to prepare current image for evaluation!", e);
-		}
-
-		return null;
+		File currentFile = new File(imageCaptureDir.getAbsolutePath() + File.separator + imageName);
+		return currentFile;
 	}
 
 	public boolean waitForImageCollectionStart() {

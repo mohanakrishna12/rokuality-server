@@ -5,6 +5,7 @@ import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.properties.EncryptableProperties;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 public class PropertyReader {
@@ -25,9 +26,8 @@ public class PropertyReader {
 			}
 
 			properties = new EncryptableProperties(encryptor);
-			try {
-				ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-				properties.load(classLoader.getResourceAsStream("server.properties"));
+			try (InputStream inputStream = PropertyReader.class.getResourceAsStream("server.properties")) {
+				properties.load(inputStream);
 			} catch (IOException e) {
 				Log.getRootLogger().warn("Failed to find configuration property file!", e);
 			}
