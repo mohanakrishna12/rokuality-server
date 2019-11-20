@@ -88,6 +88,7 @@ public class ServerMain {
 		FileUtils.createDirectory(DependencyConstants.DEPENDENCY_DIR);
 		FileUtils.createDirectory(DependencyConstants.TEMP_DIR);
 		FileUtils.cleanDirectory(DependencyConstants.TEMP_DIR);
+		Log.getRootLogger().info(String.format("Temp directory set to '%s'.", DependencyConstants.TEMP_DIR.getAbsolutePath()));
 
 		boolean ffmpegInstalled = GlobalDependencyInstaller.isFFMPEGInstalled();
 		boolean tesseractInstalled = GlobalDependencyInstaller.isTesseractInstalled();
