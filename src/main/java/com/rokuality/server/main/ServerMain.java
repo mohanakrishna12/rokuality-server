@@ -4,7 +4,7 @@ import com.google.common.reflect.ClassPath;
 import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.constants.LogConstants;
 import com.rokuality.server.constants.ServerConstants;
-import com.rokuality.server.core.ExpiredSessionHandler;
+import com.rokuality.server.core.scheduledtasks.ExpiredSessionTask;
 import com.rokuality.server.driver.host.GlobalDependencyInstaller;
 import com.rokuality.server.utils.CacheUtils;
 import com.rokuality.server.utils.FileUtils;
@@ -23,9 +23,8 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import javax.servlet.http.HttpServlet;
 import java.io.File;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
+import java.util.Timer;
 
 import org.sikuli.basics.Debug;
 import org.sikuli.basics.Settings;
@@ -134,16 +133,9 @@ public class ServerMain {
 		}
 
 		try {
-			List<Thread> threads = new ArrayList<Thread>();
-			threads.add(new Thread() {
-				public void run() {
-					ExpiredSessionHandler.initMonitoringThread();
-				}
-			});
-
-			for (Thread thread : threads) {
-				thread.start();
-			}
+			Timer timer = new Timer();
+			ExpiredSessionTask expiredSessionTask = new ExpiredSessionTask();
+			timer.schedule(expiredSessionTask, 1000, ServerConstants.EXPIRED_SESSION_INTERVAL_MS);
 		} catch (Exception e) {
 			Log.getRootLogger().warn(e);
 		}
