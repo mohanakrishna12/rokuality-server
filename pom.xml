@@ -66,27 +66,6 @@
 			<artifactId>json-simple</artifactId>
 			<version>1.1.1</version>
 		</dependency>
-	<!--
-		<dependency>
-			<groupId>com.sikulix</groupId>
-			<artifactId>sikulixapi</artifactId>
-			<version>1.1.2</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-nop</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.github.vidstige</groupId>
-					<artifactId>jadb</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.sikulix</groupId>
-  					<artifactId>sikulix2tigervnc</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		-->
 
 		<dependency>
   			<groupId>com.sikulix</groupId>
