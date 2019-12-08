@@ -610,8 +610,20 @@ public class ImageUtils {
 			return null;
 		}
 		
-		File subImage = new File(Image.create(image.getAbsolutePath()).getSub(subX, subY, width, height).asFile());
-		return subImage;
+		BufferedImage bufferedImage = Image.create(image.getAbsolutePath()).getSub(subX, subY, width, height).get();
+		File subImage = new File(DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + UUID.randomUUID().toString() + ".png");
+		boolean created = com.rokuality.server.utils.FileUtils.createFile(subImage);
+		if (!created) {
+			return null;
+		}
+
+		try {
+			ImageIO.write(bufferedImage, "png", subImage);
+			return subImage;
+		} catch (IOException e) {
+			Log.getRootLogger().warn(e);
+			return null;
+		}
 	}
 
 	public static BufferedImage getBufferedImage(File file) throws IOException {
