@@ -45,7 +45,6 @@ public class DeviceDesktopMirror {
 		JFrame frame = new JFrame();
 		frame.setBounds(1, 1, width, height);
 		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		//frame.setAlwaysOnTop(true);
 		frame.getContentPane().setLayout(null);
 
 		JLabel imageLabel = new JLabel("Preparing screen image...");

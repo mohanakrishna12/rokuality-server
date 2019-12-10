@@ -1,38 +1,26 @@
-package com.rokuality.server.core;
+package com.rokuality.server.core.scheduledtasks;
 
 import java.io.File;
 import java.util.Map;
+import java.util.TimerTask;
 
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
+import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.ElementManager;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
 import com.rokuality.server.enums.PlatformType;
 import com.rokuality.server.utils.FileUtils;
-import com.rokuality.server.utils.SleepUtils;
 
 import org.eclipse.jetty.util.log.Log;
 import org.json.simple.JSONObject;
 
-public class ExpiredSessionHandler {
+public class ExpiredSessionTask extends TimerTask {
 
-	public static void initMonitoringThread() {
-		Log.getRootLogger().info("Starting expired session monitoring timer.");
-		Integer timer = 0;
-		while (true) {
-			timer++;
-			if (timer > ServerConstants.EXPIRED_SESSION_INTERVAL_S) {
-				try {
-					handleExpiredSessions();
-				} catch (Exception e) {
-					Log.getRootLogger().warn(e);
-				}
-
-				timer = 0;
-			}
-			SleepUtils.sleep(1000);
-		}
+	@Override
+	public void run() {
+		handleExpiredSessions();
 	}
 
 	public static void handleExpiredSessions() {

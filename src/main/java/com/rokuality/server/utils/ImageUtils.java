@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.awt.Dimension;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -48,6 +49,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jetty.util.log.Log;
 import org.imgscalr.Scalr;
 import org.json.simple.JSONObject;
+
 import org.sikuli.script.Finder;
 import org.sikuli.script.Image;
 import org.sikuli.script.Match;
@@ -147,6 +149,18 @@ public class ImageUtils {
 		}
 
 		if (isFile) {
+			// check that the locator isn't larger than the screen image
+			Dimension locatorSize = getImageSize(new File(locator));
+			Dimension screenImageSize = getImageSize(screenImage);
+			if (locatorSize.width > screenImageSize.width || locatorSize.height > screenImageSize.width) {
+				Log.getRootLogger()
+						.warn(String.format(
+								"Locator size width/height %s/%s is greater than the screen image width/height %s/%s",
+								locatorSize.width, locatorSize.height, screenImageSize.width, screenImageSize.height));
+				com.rokuality.server.utils.FileUtils.deleteFile(screenImage);
+				return elements;
+			}
+
 			Finder finder = null;
 			float similarity = Float.valueOf(
 					SessionManager.getSessionInfo(sessionID).get(SessionConstants.IMAGE_MATCH_SIMILARITY).toString());
@@ -194,7 +208,7 @@ public class ImageUtils {
 			if (imageTexts == null || imageTexts.isEmpty()) {
 				return elements;
 			}
-			
+
 			List<ImageText> constructedImageTexts = getConstructedTextElement(ocrType, imageTexts, locator);
 			for (ImageText constructedImageText : constructedImageTexts) {
 				JSONObject element = new JSONObject();
@@ -265,7 +279,8 @@ public class ImageUtils {
 			// get a new sub list that excludes the entries we've already found
 			List<String> imageTextTextsWithoutFoundItems = new ArrayList<>();
 			imageTextTextsWithoutFoundItems.addAll(imageTextTexts.subList(0, matchedIndex));
-			imageTextTextsWithoutFoundItems.addAll(imageTextTexts.subList(matchedIndex + loc.size(), imageTextTexts.size()));
+			imageTextTextsWithoutFoundItems
+					.addAll(imageTextTexts.subList(matchedIndex + loc.size(), imageTextTexts.size()));
 			imageTextTexts = imageTextTextsWithoutFoundItems;
 
 			List<ImageText> imageTextsWithoutFoundItems = new ArrayList<>();
@@ -284,28 +299,29 @@ public class ImageUtils {
 			Log.getRootLogger()
 					.info(String.format("Constructed word component for locator text %s : %s", loc, constructedWords));
 
-			// if the matched image text is only one word add it, otherwise construct the image text from multiple words
+			// if the matched image text is only one word add it, otherwise construct the
+			// image text from multiple words
 			if (matchedImageTexts.size() == 1) {
 				masterList.add(matchedImageTexts.get(0));
 			} else {
 				ImageText constructedImageText = new ImageText();
 				constructedImageText.setText(constructedWords);
-	
+
 				int startX = matchedImageTexts.get(0).getLocation().x; // 770
 				int startY = matchedImageTexts.get(0).getLocation().y;
 				// TODO - calculate the space between all entries and add it to total width
 				int width = (int) matchedImageTexts.get(0).getLength()
 						+ (int) matchedImageTexts.get(matchedImageTexts.size() - 1).getLength(); // x-axis 'width'
 				int height = (int) matchedImageTexts.get(0).getWidth(); // y-axis 'height'
-	
+
 				constructedImageText.setLength(Double.valueOf((width)));
 				constructedImageText.setWidth(Double.valueOf(height));
 				constructedImageText.setLocation(new Point(startX, startY));
-	
+
 				// TODO - performan a median evaluate of all confidences and return that
 				// for multiple word matches
 				constructedImageText.setConfidence(matchedImageTexts.get(0).getConfidence());
-	
+
 				masterList.add(constructedImageText);
 			}
 		}
@@ -609,9 +625,22 @@ public class ImageUtils {
 		if (image == null || !image.exists()) {
 			return null;
 		}
-		
-		File subImage = new File(Image.create(image.getAbsolutePath()).getSub(subX, subY, width, height).asFile());
-		return subImage;
+
+		BufferedImage bufferedImage = Image.create(image.getAbsolutePath()).getSub(subX, subY, width, height).get();
+		File subImage = new File(DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator
+				+ UUID.randomUUID().toString() + ".png");
+		boolean created = com.rokuality.server.utils.FileUtils.createFile(subImage);
+		if (!created) {
+			return null;
+		}
+
+		try {
+			ImageIO.write(bufferedImage, "png", subImage);
+			return subImage;
+		} catch (IOException e) {
+			Log.getRootLogger().warn(e);
+			return null;
+		}
 	}
 
 	public static BufferedImage getBufferedImage(File file) throws IOException {
@@ -630,6 +659,18 @@ public class ImageUtils {
 		default:
 			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot(fileToSaveAs);
 		}
+	}
+
+	public static Dimension getImageSize(File image) {
+		BufferedImage bufferedImage = null;
+		try {
+			bufferedImage = getBufferedImage(image);
+		} catch (Exception exception) {
+			Log.getRootLogger().warn(exception);
+			return null;
+		}
+
+		return new Dimension(bufferedImage.getWidth(), bufferedImage.getHeight());
 	}
 
 	private static Tesseract getTesseract() {

@@ -58,6 +58,7 @@ public class RokuPackageHandler {
 						String.format("Failed to decode app package file at %s. The %s capability must be either a "
 								+ "valid url to a sideloadable .zip package OR a valid file path to a sideloadable .zip package!",
 								String.valueOf(appPackageCap), SessionCapabilities.APP_PACKAGE.value()));
+				FileUtils.deleteFile(appPackage);
 				return results;
 			}
 		}
@@ -96,6 +97,7 @@ public class RokuPackageHandler {
 					String.format("The provided app package is not valid! The %s capability must be either a "
 							+ "valid url to a sideloadable .zip package OR a valid file path to a sideloadable .zip package!",
 							SessionCapabilities.APP_PACKAGE.value()));
+			FileUtils.deleteFile(appPackage);
 			return results;
 		}
 

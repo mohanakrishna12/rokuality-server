@@ -1,3 +1,11 @@
+1.2.2 - Changes from 1.2.1
+1. Adds additional logging for the temporary directory locations.
+2. Moves the expired session cleanup to a scheduled task instead of a thread poller.
+3. Fixes an issue with image element detection on a headless system.
+4. Fixes an issue with image element detection in java 13.
+5. Cleans up the failed packages during a failed application install for Roku.
+6. Fixes a ServerFailureError during sub element location if the passed locator is larger than the sub image screen size.
+
 1.2.1 - Changes from 1.2.0
 1. Adds support for element multi match.
 2. Adds a prettier server start message.

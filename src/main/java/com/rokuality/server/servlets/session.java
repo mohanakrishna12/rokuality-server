@@ -101,6 +101,8 @@ public class session extends HttpServlet {
 		String audioCaptureInput = null;
 		File videoCapture = null;
 
+		System.setProperty("java.awt.headless", "false");
+
 		String machineIP = (String) requestObj.get(SessionConstants.MACHINE_IP);
 		if (machineIP != null) {
 			sessionInfo.put(SessionConstants.MACHINE_IP, machineIP);
