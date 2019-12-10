@@ -1,9 +1,9 @@
 package com.rokuality.server.servlets;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.awt.Dimension;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -168,22 +168,12 @@ public class screen extends HttpServlet {
 			return results;
 		}
 
-		BufferedImage bufferedImage = null;
-		if (image.exists()) {
-			bufferedImage = null;
-			try {
-				bufferedImage = ImageUtils.getBufferedImage(image);
-			} catch (IOException e) {
-				Log.getRootLogger().warn(e);
-			}
-			FileUtils.deleteFile(image);
-		}
-
+		Dimension screenSize = ImageUtils.getImageSize(image);
 		int width = 0;
 		int height = 0;
-		if (bufferedImage != null) {
-			width = bufferedImage.getWidth();
-			height = bufferedImage.getHeight();
+		if (screenSize != null) {
+			width = screenSize.width;
+			height = screenSize.height;
 		}
 
 		if (width != 0 && height != 0) {
@@ -191,6 +181,8 @@ public class screen extends HttpServlet {
 			results.put("screen_width", width);
 			results.put("screen_height", height);
 		}
+
+		FileUtils.deleteFile(image);
 		return results;
 	}
 
