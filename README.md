@@ -52,6 +52,8 @@ Upon a successful server launch you should see a pop indicating that the server 
 ### Getting started: Roku
 Roku testing requires that you have developer mode enabled on your device. [Enabling developer mode](https://blog.roku.com/developer/developer-setup-guide) on your Roku device is very straight forward. Keep track of your device username and password as created during the basic walkthrough as you'll need them to pass to your DeviceCapabilities at driver startup. Once you've enabled developer mode on your device you should be able to hit the device console page at http://yourrokudeviceip - Once that's done you are all set for automation!
 
+Note - If you wish to test a production channel then you must have an HDMI to USB capture card attached to the device and the machine running the Rokuality Server. Once connected the server can capture the device input stream and then perform evaluations against the captured frames. See [why capture cards](#why-hdmi-to-usb-capture-cards) for details.
+
 ### Getting started: XBox
 Automated testing on XBox requires the following:
 1. Google Chrome browser installed on the machine running the Rokuality server. The server uses headless chrome to handle various tasks like installing/launching/uninstalling the XBox appxbundles. You won't physically see chrome launch as it will run in headless mode.
@@ -64,9 +66,7 @@ Automated testing on XBox requires the following:
 The Rokuality platform allows you run automated tests on just about any device that has an HDMI out and accepts either Bluetooth or IR commands. This includes Playstations, AppleTV's, AndroidTV's, Cable SetTop Box's, etc. It requires the following software/hardware:
 1. You must have nodejs installed on the machine running the server. Easily done on MAC via `brew install node` or on Windows via `scoop install nodejs`.
 2. You must have a [Logitech Harmony Hub](https://www.logitech.com/en-us/product/harmony-hub?crid=60) with your device setup as a device and XMPP enabled on the hub. See the sections [why harmony](#why-harmony) and [configuring your harmony](#configuring-your-harmony) for details.
-3. You must have an HDMI to USB capture card attached to the device and the machine running the Rokuality Server. Once connected the server can capture the device input stream and then perform evaluations against the captured frames. See [why capture cards](#why-hdmi-to-usb-capture-cards) for details. There are several capture card options available and most 'should' work but we've tested the following:
-	* [Magewell USB 3.0](https://www.magewell.com/products/usb-capture-hdmi-gen-2) A 300$ premium capture card recommended for high quality video capture and evaluations.
-	* [USB 2.0/3.0](https://www.amazon.com/Capture-Broadcast-Streaming-Grabber-Converter/dp/B0779ZJZX3/ref=sr_1_3?keywords=hdmi+usb+capture+cards&qid=1571405168&sr=8-3) A lower cost, $90 alternative to the magewell. Video quality is not as good as the Magewell but under test has worked perfectly well.
+3. You must have an HDMI to USB capture card attached to the device and the machine running the Rokuality Server. Once connected the server can capture the device input stream and then perform evaluations against the captured frames. See [why capture cards](#why-hdmi-to-usb-capture-cards) for details.
 
 ### Server command options:
 | Command  | Description | Notes |
@@ -108,4 +108,6 @@ To setup your Harmony hub and prepare it for automating your devices under test:
 3. Enable XMPP on the hub. In the harmony app go to Settings>>Harmony Setup>>Add/Edit Devices & Activities>>Hub>>Enable XMPP
 
 ### Why HDMI to USB Capture Cards
-Some of our devices require you to have an HDMI to USB capture card connected to the device and machine running the Rokuality server. This is necessary for devices like the PS4 or cable set top boxes that don't offer an available means of remotely capturing the screen output. Other vendors ship you a proprietary capture card for these scenarios that operates in the same fashion - and their hardware can be expensive! We allow you to bring your own capture card and provide the same functionality as a lower cost alternative.
+Some of our devices require you to have an HDMI to USB capture card connected to the device and machine running the Rokuality server. This is necessary for devices like the PS4 or cable set top boxes that don't offer an available means of remotely capturing the screen output. Other vendors ship you a proprietary capture card for these scenarios that operates in the same fashion - and their hardware can be expensive! We allow you to bring your own capture card and provide the same functionality as a lower cost alternative. There are several capture card options available and most 'should' work but we've tested the following:
+	* [Magewell USB 3.0](https://www.magewell.com/products/usb-capture-hdmi-gen-2) A 300$ premium capture card recommended for high quality video capture and evaluations.
+	* [USB 2.0/3.0](https://www.amazon.com/Capture-Broadcast-Streaming-Grabber-Converter/dp/B0779ZJZX3/ref=sr_1_3?keywords=hdmi+usb+capture+cards&qid=1571405168&sr=8-3) A lower cost, $90 alternative to the magewell. Video quality is not as good as the Magewell but under test has worked perfectly well.
