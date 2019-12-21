@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
+import com.rokuality.server.enums.SessionStatus;
 import com.rokuality.server.utils.ServletJsonParser;
 
 import org.eclipse.jetty.util.log.Log;
@@ -36,7 +37,12 @@ public class settings extends HttpServlet {
 			case SessionConstants.IMAGE_MATCH_SIMILARITY:
 			results = setImageMatchSimilarity(requestObj);
 			break;
-
+			case "set_session_status":
+			results = setSessionStatus(requestObj);
+			break;
+			case "get_session_status":
+			results = getSessionStatus(requestObj);
+			break;
 			case SessionConstants.ELEMENT_POLLING_INTERVAL:
 			results = setElementPollInterval(requestObj);
 			break;
@@ -77,6 +83,33 @@ public class settings extends HttpServlet {
 		SessionManager.updateSessionInfoItem(sessionID, SessionConstants.IMAGE_MATCH_SIMILARITY, Double.parseDouble(imageMatchSimilarity));
 		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 		resultObj.put(SessionConstants.IMAGE_MATCH_SIMILARITY, String.valueOf(imageMatchSimilarity));
+		return resultObj;
+	}
+
+	public static JSONObject setSessionStatus(JSONObject sessionObj) {
+		String sessionID = String.valueOf(sessionObj.get(SessionConstants.SESSION_ID));
+		SessionStatus status = SessionStatus.getEnumByString((String) sessionObj.get(SessionConstants.SESSION_STATUS));
+
+		JSONObject resultObj = new JSONObject();
+		Log.getRootLogger().info(String.format("Setting session status to %s for session %s", status.value(), sessionID));
+
+		SessionManager.updateSessionInfoItem(sessionID, SessionConstants.SESSION_STATUS, status.value());
+		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+		resultObj.put(SessionConstants.SESSION_STATUS, status.value());
+		return resultObj;
+	}
+
+	public static JSONObject getSessionStatus(JSONObject sessionObj) {
+		String sessionID = String.valueOf(sessionObj.get(SessionConstants.SESSION_ID));
+		
+		JSONObject resultObj = new JSONObject();
+
+		String status = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.SESSION_STATUS);
+		if (status == null) {
+			status = SessionStatus.IN_PROGRESS.value();
+		}
+		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+		resultObj.put(SessionConstants.SESSION_STATUS, status);
 		return resultObj;
 	}
 	

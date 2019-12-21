@@ -162,7 +162,7 @@ public class ImageCollector {
 		}
 
 		// check if the device is hittable and the app is launched, allowing capturing
-		if (PlatformType.ROKU.equals(platform) && !RokuPackageHandler.isAppLaunched(deviceIP, "dev")) {
+		if (PlatformType.ROKU.equals(platform) && RokuPackageHandler.isAppLaunched(deviceIP, "Roku")) {
 			return null;
 		}
 
@@ -268,6 +268,10 @@ public class ImageCollector {
 	}
 
 	private String getImageCaptureFormat() {
+		if (videoCapture != null) {
+			return ".png";
+		}
+
 		return PlatformType.ROKU.equals(platform) ? ".jpg" : ".png";
 	}
 

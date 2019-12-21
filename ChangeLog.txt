@@ -1,3 +1,8 @@
+1.2.3 - Changes from 1.2.2
+1. Adds the ability to set/get session status.
+2. Upgrades Jetty to latest version 9.4.24.v20191120
+3. Allows capture cards to be used for any platform. See the README for details but the primary advantage is that this allows for testing against live Roku/XBox production channels in addition to dev packages.
+
 1.2.2 - Changes from 1.2.1
 1. Adds additional logging for the temporary directory locations.
 2. Moves the expired session cleanup to a scheduled task instead of a thread poller.

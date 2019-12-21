@@ -649,6 +649,10 @@ public class ImageUtils {
 
 	public static File getScreenImage(File fileToSaveAs, PlatformType platform, String username, String password,
 			String deviceip, File videoCapture) {
+		if (videoCapture != null && videoCapture.exists()) {
+			return HDMIScreenManager.getScreenShotFromVideo(videoCapture, fileToSaveAs);
+		}
+
 		switch (platform) {
 		case ROKU:
 			return new RokuDevConsoleManager(deviceip, username, password).getScreenshot(fileToSaveAs);
