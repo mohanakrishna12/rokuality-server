@@ -292,26 +292,26 @@ public class session extends HttpServlet {
 			}
 		}
 
+		videoCaptureInput = (String) requestObj.get(SessionCapabilities.VIDEO_CAPTURE_INPUT.value());
+		audioCaptureInput = (String) requestObj.get(SessionCapabilities.AUDIO_CAPTURE_INPUT.value());
+
 		if (isHDMI(platformType)) {
-			videoCaptureInput = (String) requestObj.get(SessionCapabilities.VIDEO_CAPTURE_INPUT.value());
 			if (videoCaptureInput == null || videoCaptureInput.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
 						"The %s capability cannot be null or empty!", SessionCapabilities.VIDEO_CAPTURE_INPUT.value()));
 				return sessionInfo;
 			}
-			sessionInfo.put(SessionConstants.VIDEO_CAPTURE_INPUT, videoCaptureInput);
 
-			audioCaptureInput = (String) requestObj.get(SessionCapabilities.AUDIO_CAPTURE_INPUT.value());
 			if (audioCaptureInput == null || audioCaptureInput.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
 						"The %s capability cannot be null or empty!", SessionCapabilities.AUDIO_CAPTURE_INPUT.value()));
 				return sessionInfo;
 			}
-			sessionInfo.put(SessionConstants.AUDIO_CAPTURE_INPUT, audioCaptureInput);
+		}
 
+		if (videoCaptureInput != null && audioCaptureInput != null) {
 			videoCapture = new File(DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + "videocapture_"
 					+ sessionID + ".mkv");
-
 			boolean captureStarted = HDMIScreenManager.startVideoCapture(sessionID, videoCapture, videoCaptureInput,
 					audioCaptureInput);
 			if (!captureStarted) {
@@ -324,6 +324,8 @@ public class session extends HttpServlet {
 				stopHDMICapture(videoCapture);
 				return sessionInfo;
 			}
+			sessionInfo.put(SessionConstants.VIDEO_CAPTURE_INPUT, videoCaptureInput);
+			sessionInfo.put(SessionConstants.AUDIO_CAPTURE_INPUT, audioCaptureInput);
 			sessionInfo.put(SessionConstants.VIDEO_CAPTURE_FILE, videoCapture.getAbsolutePath());
 		}
 
@@ -362,8 +364,8 @@ public class session extends HttpServlet {
 			sessionInfo.remove(SessionConstants.APP_PACKAGE);
 		}
 
-		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP,
-				imageCollectionDir, deviceUsername, devicePassword, videoCapture);
+		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP, imageCollectionDir,
+				deviceUsername, devicePassword, videoCapture);
 		boolean recordingStarted = imageCollector.startRecording();
 		boolean imageCollectionStarted = false;
 		if (recordingStarted) {
@@ -414,7 +416,7 @@ public class session extends HttpServlet {
 		if (mirrorScreenCap != null) {
 			DeviceDesktopMirror.initMirror(sessionID, mirrorScreenCap);
 		}
-		
+
 		SessionManager.addSessionActivity(sessionID, System.currentTimeMillis());
 
 		sessionInfo.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
@@ -445,7 +447,8 @@ public class session extends HttpServlet {
 
 		PlatformType platformType = PlatformType
 				.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM)));
-		if (PlatformType.HDMI.equals(platformType)) {
+		
+		if (sessionInfo.get(SessionConstants.VIDEO_CAPTURE_INPUT) != null) {
 			File videoCapture = new File(String.valueOf(sessionInfo.get(SessionConstants.VIDEO_CAPTURE_FILE)));
 			stopHDMICapture(videoCapture);
 		}

@@ -10,7 +10,6 @@ import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.ElementManager;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
-import com.rokuality.server.enums.PlatformType;
 import com.rokuality.server.utils.FileUtils;
 
 import org.eclipse.jetty.util.log.Log;
@@ -40,9 +39,9 @@ public class ExpiredSessionTask extends TimerTask {
 				if (sessionInfoObj != null) {
 					JSONObject sessionInfo = (JSONObject) sessionInfoObj;
 
-					PlatformType platformType = PlatformType.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM)));
-					if (PlatformType.HDMI.equals(platformType)) {
-						File videoCapture = new File(String.valueOf(sessionInfo.get(SessionConstants.VIDEO_CAPTURE_FILE)));
+					String videoCaptureStr = (String) sessionInfo.get(SessionConstants.VIDEO_CAPTURE_FILE);
+					if (videoCaptureStr != null) {
+						File videoCapture = new File(videoCaptureStr);
 						HDMIScreenManager.stopVideoCapture(videoCapture);
 						FileUtils.deleteFile(videoCapture);
 					}

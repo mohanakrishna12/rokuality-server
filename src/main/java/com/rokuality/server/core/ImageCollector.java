@@ -268,6 +268,10 @@ public class ImageCollector {
 	}
 
 	private String getImageCaptureFormat() {
+		if (videoCapture != null) {
+			return ".png";
+		}
+
 		return PlatformType.ROKU.equals(platform) ? ".jpg" : ".png";
 	}
 
