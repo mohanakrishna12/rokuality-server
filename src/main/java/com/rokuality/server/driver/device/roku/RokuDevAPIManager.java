@@ -51,8 +51,6 @@ public class RokuDevAPIManager {
 			con.setRequestMethod(method.toUpperCase());
 
 			if (requestPayload != null) {
-				Log.getRootLogger().info("DEBUG - URL: " + urlLoc);
-				Log.getRootLogger().info("DEBUG - REQUEST: " + requestPayload.toJSONString());
 				con.setDoOutput(true);
 				con.setRequestProperty("Content-Type", "application/json; utf-8");
 				try (OutputStream outputStream = con.getOutputStream()) {

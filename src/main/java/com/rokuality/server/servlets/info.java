@@ -10,6 +10,7 @@ import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
+import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
 import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
 import com.rokuality.server.enums.RokuAPIType;
 import com.rokuality.server.utils.ServletJsonParser;
@@ -22,29 +23,32 @@ import org.json.simple.parser.JSONParser;
 @SuppressWarnings({ "serial", "unchecked" })
 public class info extends HttpServlet {
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
 		JSONObject requestObj = new ServletJsonParser().getRequestJSON(request, response);
 		if (response.getStatus() != HttpServletResponse.SC_OK) {
 			return;
 		}
-		
-        String sessionID = requestObj.get(SessionConstants.SESSION_ID).toString();
-		
+
+		String sessionID = requestObj.get(SessionConstants.SESSION_ID).toString();
+
 		JSONObject results = null;
 
 		String action = requestObj.get(ServerConstants.SERVLET_ACTION).toString();
 		switch (action) {
-			case "device_info":
+		case "device_info":
 			results = getDeviceInfo(sessionID);
 			break;
-			default:
+		case "media_player_info":
+			results = getRokuMediaPlayerInfo(sessionID);
+			break;
+		default:
 
 			break;
 		}
 
-        if (results != null && results.containsValue(ServerConstants.SERVLET_SUCCESS)) {
+		if (results != null && results.containsValue(ServerConstants.SERVLET_SUCCESS)) {
 			response.setStatus(HttpServletResponse.SC_OK);
 		} else {
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -52,14 +56,14 @@ public class info extends HttpServlet {
 
 		response.setContentType("application/json");
 		response.getWriter().println(results.toJSONString());
-        
-    }
 
-    public static JSONObject getDeviceInfo(String sessionID) {
-        String deviceIp = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.DEVICE_IP);
-		
+	}
+
+	public static JSONObject getDeviceInfo(String sessionID) {
+		String deviceIp = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.DEVICE_IP);
+
 		JSONObject deviceInfoObj = new JSONObject();
-		
+
 		if (SessionManager.isRoku(sessionID)) {
 			deviceInfoObj = getRokuDeviceInfo(deviceIp);
 		}
@@ -68,13 +72,14 @@ public class info extends HttpServlet {
 			deviceInfoObj = getXBoxDeviceInfo(deviceIp);
 		}
 
-        return deviceInfoObj;
-    }
+		return deviceInfoObj;
+	}
 
-    public static JSONObject getRokuDeviceInfo(String ipAddress) {
+	public static JSONObject getRokuDeviceInfo(String ipAddress) {
 		JSONObject results = new JSONObject();
 
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, ipAddress, "/query/device-info", "GET");
+		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, ipAddress,
+				"/query/device-info", "GET");
 		boolean success = rokuDevAPIManager.sendDevAPICommand();
 		String output = rokuDevAPIManager.getResponseContent();
 
@@ -90,10 +95,11 @@ public class info extends HttpServlet {
 			results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 		} catch (Exception e) {
 			Log.getRootLogger().warn(e);
-			results.put(ServerConstants.SERVLET_RESULTS, String.format("Failed to parse device-info with output %s", output));
+			results.put(ServerConstants.SERVLET_RESULTS,
+					String.format("Failed to parse device-info with output %s", output));
 			return results;
 		}
-		
+
 		return results;
 	}
 
@@ -101,7 +107,7 @@ public class info extends HttpServlet {
 		JSONObject results = new JSONObject();
 
 		String output = new XBoxDevAPIManager(ipAddress).getDeviceInfo();
-		
+
 		if (output == null || output.isEmpty()) {
 			results.put(ServerConstants.SERVLET_RESULTS, "Failed to retrieve device info!");
 			return results;
@@ -112,10 +118,28 @@ public class info extends HttpServlet {
 			results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 		} catch (Exception e) {
 			Log.getRootLogger().warn(e);
-			results.put(ServerConstants.SERVLET_RESULTS, String.format("Failed to parse device info with output %s", output));
+			results.put(ServerConstants.SERVLET_RESULTS,
+					String.format("Failed to parse device info with output %s", output));
 			return results;
 		}
-		
+
+		return results;
+	}
+
+	public static JSONObject getRokuMediaPlayerInfo(String sessionID) {
+		JSONObject results = new JSONObject();
+
+		String deviceIP = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.DEVICE_IP);
+		RokuWebDriverAPIManager rokuWebDriverAPIManager = new RokuWebDriverAPIManager(deviceIP);
+		rokuWebDriverAPIManager.getMediaPlayerInfo();
+		if (rokuWebDriverAPIManager.getWebDriverResponseCode() != 0) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Failed to retrieve media player info! Is the media player open?");
+			return results;
+		}
+
+		results = rokuWebDriverAPIManager.getResponseObj();
+		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+
 		return results;
 	}
 

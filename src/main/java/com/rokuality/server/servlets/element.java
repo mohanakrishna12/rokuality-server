@@ -30,11 +30,11 @@ import org.json.simple.JSONObject;
 public class element extends HttpServlet {
 
 	private static final String BY_IMAGE_ID = "By.Image: ";
-	private static final String BY_TEXT_ID = "By.Text: ";
-	private static final String BY_OCR_ID = "By.OCR: ";
-	private static final String BY_TAG_ID = "By.Tag: ";
-	private static final String BY_ATTRIBUTE_ID = "By.Attribute: ";
-	private static final  String ATTRIBUTE_VALUE_SPLITTER = "::::::::";
+	private static final String BY_OCR_ID = "By.Text: ";
+	private static final String BY_TEXT_ID = "RokuBy.Text: ";
+	private static final String BY_TAG_ID = "RokuBy.Tag: ";
+	private static final String BY_ATTRIBUTE_ID = "RokuBy.Attribute: ";
+	private static final String ATTRIBUTE_VALUE_SPLITTER = "::::::::";
 
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -101,7 +101,6 @@ public class element extends HttpServlet {
 
 		List<String> locatorComponents = getLocator(locator);
 		String locatorSplitter = locatorComponents.get(0);
-		Log.getRootLogger().info("DEBUG - LOCATOR SPLITTER: " + locatorSplitter);
 		String locatorIdentifier = locatorComponents.get(1);
 
 		String loc = null;
@@ -140,8 +139,7 @@ public class element extends HttpServlet {
 					String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
 					RokuWebDriverAPIManager rokuWebDriverAPIManager = new RokuWebDriverAPIManager(deviceIP);
 					String attribute = locatorComponents.size() == 3 ? locatorComponents.get(2) : null;
-					rokuWebDriverAPIManager.findElement(getRokuLocatorType(locatorSplitter), attribute, loc);
-					Log.getRootLogger().info("DEBUG - ELEMENT: " + rokuWebDriverAPIManager.getResponseObj());
+					rokuWebDriverAPIManager.findElements(getRokuLocatorType(locatorSplitter), attribute, loc);
 					if (rokuWebDriverAPIManager.getWebDriverResponseCode() == 0) {
 						elements = constructRokuNativeElements(rokuWebDriverAPIManager.getResponseObj());
 					}
@@ -218,7 +216,7 @@ public class element extends HttpServlet {
 		List<String> locatorComponents = new ArrayList<>();
 		String[] LOCATOR_SPLITTERS = { BY_IMAGE_ID, BY_TEXT_ID, BY_OCR_ID, BY_TAG_ID, BY_ATTRIBUTE_ID };
 		List<String> splitters = Arrays.asList(LOCATOR_SPLITTERS);
-		
+
 		if (locator.startsWith(BY_ATTRIBUTE_ID) && locator.contains(ATTRIBUTE_VALUE_SPLITTER)) {
 			locatorComponents.add(BY_ATTRIBUTE_ID);
 			locatorComponents.add(locator.split(ATTRIBUTE_VALUE_SPLITTER)[1]);
@@ -232,7 +230,7 @@ public class element extends HttpServlet {
 				}
 			}
 		}
-		
+
 		return locatorComponents;
 	}
 
@@ -251,18 +249,21 @@ public class element extends HttpServlet {
 
 	public static List<JSONObject> constructRokuNativeElements(JSONObject elementObj) {
 		List<JSONObject> elements = new ArrayList<>();
-		String[] boundsComponents = {"0", "0", "0", "0"};
-		String text = "";
 
-		JSONObject valueObj = (JSONObject) elementObj.get("value");
-		if (valueObj == null) {
+		JSONArray valueArr = (JSONArray) elementObj.get("value");
+		if (valueArr == null) {
 			return elements;
 		}
-		
-		JSONArray attrArr = (JSONArray) valueObj.get("Attrs");
-		if (attrArr != null) {
-			for (int i = 0; i < attrArr.size(); i++) {
-				JSONObject attrObj = (JSONObject) attrArr.get(i);
+
+		for (int i = 0; i < valueArr.size(); i++) {
+			String[] boundsComponents = { "0", "0", "0", "0" };
+			String text = "";
+
+			JSONObject valueObj = (JSONObject) valueArr.get(i);
+			JSONArray attrArr = (JSONArray) valueObj.get("Attrs");
+
+			for (int i2 = 0; i2 < attrArr.size(); i2++) {
+				JSONObject attrObj = (JSONObject) attrArr.get(i2);
 				JSONObject nameObj = (JSONObject) attrObj.get("Name");
 				if (nameObj.containsValue("bounds")) {
 					String boundsStr = (String) attrObj.get("Value");
@@ -274,20 +275,28 @@ public class element extends HttpServlet {
 					text = (String) attrObj.get("Value");
 				}
 			}
+
+			JSONObject element = new JSONObject();
+			element.put(SessionConstants.ELEMENT_ID, UUID.randomUUID().toString());
+			element.put("element_x", getParsedBound(boundsComponents[0]));
+			element.put("element_y", getParsedBound(boundsComponents[1]));
+			element.put("element_width", getParsedBound(boundsComponents[2]));
+			element.put("element_height", getParsedBound(boundsComponents[3]));
+			element.put("element_confidence", 100);
+			element.put("element_text", text);
+			element.put("element_json", elementObj.toJSONString());
+			elements.add(element);
 		}
 
-		JSONObject element = new JSONObject();
-		element.put(SessionConstants.ELEMENT_ID, UUID.randomUUID().toString());
-		element.put("element_x", Integer.parseInt(boundsComponents[0]));
-		element.put("element_y", Integer.parseInt(boundsComponents[1]));
-		element.put("element_width", Integer.parseInt(boundsComponents[2]));
-		element.put("element_height", Integer.parseInt(boundsComponents[3]));
-		element.put("element_confidence", 100);
-		element.put("element_text", text);
-		element.put("element_json", elementObj.toJSONString());
-		elements.add(element);
-
 		return elements;
+	}
+
+	private static int getParsedBound(String boundComponent) {
+		try {
+			return Integer.parseInt(boundComponent);
+		} catch (Exception e) {
+			return 0;
+		}
 	}
 
 }

@@ -36,7 +36,7 @@ public class RokuWebDriverAPIManager {
 		sendCommand("DELETE", "/v1/session/" + sessionID, null);
 	}
 
-	public void findElement(RokuWebDriverLocatorType by, String attribute, String value) {
+	public void findElements(RokuWebDriverLocatorType by, String attribute, String value) {
 		JSONObject requestObj = new JSONObject();
 		requestObj.put("using", by.value());
 		if (by.equals(RokuWebDriverLocatorType.ATTR)) {
@@ -51,7 +51,7 @@ public class RokuWebDriverAPIManager {
 		elementDataObj.put("elementData", requestArr);
 		
 		// TODO - parent data
-		sendCommand("POST", "/v1/session/" + sessionID + "/element", elementDataObj);
+		sendCommand("POST", "/v1/session/" + sessionID + "/elements", elementDataObj);
 	}
 
 	public String getSource() {
@@ -65,6 +65,10 @@ public class RokuWebDriverAPIManager {
 
 	public void getActiveElement() {
 		sendCommand("POST", "/v1/session/" + sessionID + "/element/active", null);
+	}
+
+	public void getMediaPlayerInfo() {
+		sendCommand("GET", "/v1/session/" + sessionID + "/player", null);
 	}
 
 	private void sendCommand(String method, String path, JSONObject payload) {
