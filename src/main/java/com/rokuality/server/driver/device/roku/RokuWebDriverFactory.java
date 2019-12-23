@@ -38,15 +38,32 @@ public class RokuWebDriverFactory {
 		File logFile = LogFileUtils.getLogFile("startrokuwebdriver.log");
 		logFile = LogFileUtils.cleanLogFile(logFile);
 
-		String userPath = OSUtils.getPathVar();
-		String buildContent = "# !/bin/bash" + System.lineSeparator() + "export PATH=" + userPath
-				+ System.lineSeparator() + "export GOPATH="
-				+ RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR.getAbsolutePath() + System.lineSeparator() + "nohup "
-				+ RokuWebDriverConstants.MAIN.getAbsolutePath() + " &>" + logFile.getAbsolutePath() + " &";
+		CommandExecutor commandExecutor = new CommandExecutor();
+		String[] command = null;
 		File startFile = new File(
 				DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + "StartRokuWebDriver.sh");
-		FileUtils.writeStringToFile(startFile, buildContent);
-		new CommandExecutor().execCommand("bash " + startFile.getAbsolutePath(), null);
+		String startContent = "";
+
+		if (OSUtils.isWindows()) {
+			commandExecutor.setWaitToComplete(false);
+			startFile = new File(startFile.getAbsolutePath().replace(".sh", ".bat"));
+			startContent = RokuWebDriverConstants.MAIN.getAbsolutePath() + ".exe";
+
+			File logStartFile = LogFileUtils.getLogFile("startrokuwebdriver.log");
+			logStartFile = LogFileUtils.cleanLogFile(logStartFile);
+			FileUtils.createFile(logStartFile);
+			command = new String[] { "cmd", "/c", "start", "/b", "\"\"", ">" + logStartFile.getAbsolutePath(),
+					startFile.getAbsolutePath() };
+		} else {
+			String userPath = OSUtils.getPathVar();
+			startContent = "# !/bin/bash" + System.lineSeparator() + "export PATH=" + userPath + System.lineSeparator()
+					+ "export GOPATH=" + RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR.getAbsolutePath()
+					+ System.lineSeparator() + "nohup " + RokuWebDriverConstants.MAIN.getAbsolutePath() + " &>"
+					+ logFile.getAbsolutePath() + " &";
+			command = new String[] { "bash", startFile.getAbsolutePath() };
+		}
+		FileUtils.writeStringToFile(startFile, startContent);
+		new CommandExecutor().execCommand(String.join(" ", command), null);
 
 		long pollStart = System.currentTimeMillis();
 		long pollMax = pollStart + 10 * 1000;

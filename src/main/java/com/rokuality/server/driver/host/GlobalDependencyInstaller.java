@@ -9,6 +9,7 @@ import com.rokuality.server.constants.TesseractConstants;
 import com.rokuality.server.core.CommandExecutor;
 import com.rokuality.server.core.DependencyManager;
 import com.rokuality.server.utils.FileUtils;
+import com.rokuality.server.utils.LogFileUtils;
 import com.rokuality.server.utils.OSUtils;
 
 import java.io.File;
@@ -117,20 +118,39 @@ public class GlobalDependencyInstaller {
 		dependencyManager.unzipDependency(RokuWebDriverConstants.ROKU_WEBDRIVER_ZIP);
 		if (dependencyDownloaded) {
 			String goPath = OSUtils.getBinaryPath("go");
-			String userPath = OSUtils.getPathVar();
-			String buildContent = "# !/bin/bash" + System.lineSeparator()
-					+ "export PATH=" + userPath + System.lineSeparator()
-					+ "cd " + RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR + File.separator + "src" + System.lineSeparator()
-					+ "export GOPATH=" + RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR.getAbsolutePath() + System.lineSeparator()
-					+ goPath + " get github.com/gorilla/mux" + System.lineSeparator()
-					+ goPath + " get github.com/sirupsen/logrus" + System.lineSeparator()
-					+ goPath + " build main.go";
-			File buildFile = new File(DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + "BuildRokuWebDriver.sh");
+			String[] command = null;
+			File buildFile = new File(
+					DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + "BuildRokuWebDriver.sh");
+			String buildContent = "";
+			if (OSUtils.isWindows()) {
+				buildFile = new File(buildFile.getAbsolutePath().replace(".sh", ".bat"));
+				buildContent = "cd " + RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR + File.separator + "src"
+						+ System.lineSeparator() + goPath + " env -w GOPATH="
+						+ RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR.getAbsolutePath() + System.lineSeparator()
+						+ goPath + " get github.com/gorilla/mux" + System.lineSeparator() + goPath
+						+ " get github.com/sirupsen/logrus" + System.lineSeparator() + goPath + " build main.go";
+
+				File logStartFile = LogFileUtils.getLogFile("buildrokuwebdriver.log");
+				logStartFile = LogFileUtils.cleanLogFile(logStartFile);
+				FileUtils.createFile(logStartFile);
+				command = new String[] { "cmd", "/c", "start", "/b", "\"\"", ">" + logStartFile.getAbsolutePath(),
+						buildFile.getAbsolutePath() };
+			} else {
+				String userPath = OSUtils.getPathVar();
+				buildContent = "# !/bin/bash" + System.lineSeparator() + "export PATH=" + userPath
+						+ System.lineSeparator() + "cd " + RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR
+						+ File.separator + "src" + System.lineSeparator() + "export GOPATH="
+						+ RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR.getAbsolutePath() + System.lineSeparator()
+						+ goPath + " get github.com/gorilla/mux" + System.lineSeparator() + goPath
+						+ " get github.com/sirupsen/logrus" + System.lineSeparator() + goPath + " build main.go";
+
+				command = new String[] { "bash", buildFile.getAbsolutePath() };
+			}
+
 			FileUtils.writeStringToFile(buildFile, buildContent);
-			new CommandExecutor().execCommand("bash " + buildFile.getAbsolutePath(), null);
+			new CommandExecutor().execCommand(String.join(" ", command), null);
 		}
 
-		// TODO - windows implementation
 	}
 
 }
