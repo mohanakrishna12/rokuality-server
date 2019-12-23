@@ -15,6 +15,7 @@ import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.core.ocr.ImageText;
+import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
 import com.rokuality.server.enums.SessionCapabilities;
 import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.FileUtils;
@@ -50,6 +51,12 @@ public class screen extends HttpServlet {
 			break;
 		case "get_screen_recording":
 			results = getScreenRecording(requestObj);
+			break;
+		case "get_screen_source":
+			results = getScreenSource(requestObj);
+			break;
+		case "get_active_element":
+			results = getActiveElement(requestObj);
 			break;
 		default:
 
@@ -200,6 +207,50 @@ public class screen extends HttpServlet {
 			results.put(ServerConstants.SERVLET_RESULTS,
 					"Failed to generate/retrieve video recording! See logs for details.");
 		}
+		return results;
+	}
+
+	public static JSONObject getScreenSource(JSONObject sessionObj) {
+		JSONObject results = new JSONObject();
+		String sessionID = sessionObj.get(SessionConstants.SESSION_ID).toString();
+		
+		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
+		String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
+
+		RokuWebDriverAPIManager rokuWebDriverAPIManager = new RokuWebDriverAPIManager(deviceIP);
+		String xmlSource = rokuWebDriverAPIManager.getSource();
+
+		if (xmlSource == null) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Failed to capture screen source!");
+			return results;
+		}
+
+		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+		results.put("source", xmlSource);
+
+		return results;
+	}
+
+	public static JSONObject getActiveElement(JSONObject sessionObj) {
+		JSONObject results = new JSONObject();
+		String sessionID = sessionObj.get(SessionConstants.SESSION_ID).toString();
+		
+		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
+		String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
+
+		RokuWebDriverAPIManager rokuWebDriverAPIManager = new RokuWebDriverAPIManager(deviceIP);
+		rokuWebDriverAPIManager.getActiveElement();
+		JSONObject elementObj = rokuWebDriverAPIManager.getResponseObj();
+		List<JSONObject> elements = element.constructRokuNativeElements(elementObj);
+
+		if (elements.isEmpty()) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Failed to determine active screen element!");
+			return results;
+		}
+
+		results = elements.get(0);
+		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+
 		return results;
 	}
 

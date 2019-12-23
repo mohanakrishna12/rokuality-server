@@ -3,7 +3,9 @@ package com.rokuality.server.servlets;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -13,6 +15,8 @@ import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.ElementManager;
 import com.rokuality.server.core.drivers.SessionManager;
+import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
+import com.rokuality.server.enums.RokuWebDriverLocatorType;
 import com.rokuality.server.utils.FileUtils;
 import com.rokuality.server.utils.ImageUtils;
 import com.rokuality.server.utils.ServletJsonParser;
@@ -27,6 +31,10 @@ public class element extends HttpServlet {
 
 	private static final String BY_IMAGE_ID = "By.Image: ";
 	private static final String BY_TEXT_ID = "By.Text: ";
+	private static final String BY_OCR_ID = "By.OCR: ";
+	private static final String BY_TAG_ID = "By.Tag: ";
+	private static final String BY_ATTRIBUTE_ID = "By.Attribute: ";
+	private static final  String ATTRIBUTE_VALUE_SPLITTER = "::::::::";
 
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -35,7 +43,7 @@ public class element extends HttpServlet {
 		if (response.getStatus() != HttpServletResponse.SC_OK) {
 			return;
 		}
-		
+
 		JSONObject results = null;
 
 		String action = requestObj.get(ServerConstants.SERVLET_ACTION).toString();
@@ -65,38 +73,36 @@ public class element extends HttpServlet {
 		String sessionID = requestObj.get(SessionConstants.SESSION_ID).toString();
 		String locator = requestObj.get(SessionConstants.ELEMENT_LOCATOR).toString();
 
+		JSONObject element = new JSONObject();
+
+		// check if the locator type is valid for the session type
+		boolean locatorValidForSession = isLocatorValidForSession(sessionID, locator);
+		if (!locatorValidForSession) {
+			element.put(ServerConstants.SERVLET_RESULTS,
+					"Your locator type is not valid! Only OCR or Image locators are supported for your session type.");
+			return element;
+		}
+
 		Long subScreenX = null;
 		Long subScreenY = null;
 		Long subScreenWidth = null;
 		Long subScreenHeight = null;
-		if (requestObj.containsKey(SessionConstants.SUB_SCREEN_X)) {
+		if (!isRokuNativeLocator(locator) && requestObj.containsKey(SessionConstants.SUB_SCREEN_X)) {
 			subScreenX = (Long) requestObj.getOrDefault(SessionConstants.SUB_SCREEN_X, null);
 			subScreenY = (Long) requestObj.getOrDefault(SessionConstants.SUB_SCREEN_Y, null);
 			subScreenWidth = (Long) requestObj.getOrDefault(SessionConstants.SUB_SCREEN_WIDTH, null);
 			subScreenHeight = (Long) requestObj.getOrDefault(SessionConstants.SUB_SCREEN_HEIGHT, null);
 		}
 
-		JSONObject element = new JSONObject();
 		List<JSONObject> elements = new ArrayList<>();
 
-		boolean locatorIsText = locator.startsWith(BY_TEXT_ID);
-		boolean locatorIsImage = !locatorIsText;
+		boolean locatorIsImage = locator.startsWith(BY_IMAGE_ID);
+		boolean locatorIsText = !locatorIsImage;
 
-		String locatorSplitter = locatorIsText ? BY_TEXT_ID : BY_IMAGE_ID;
-		String locatorIdentifier = null;
-		try {
-			locatorIdentifier = locator.split(locatorSplitter)[1];
-		} catch (Exception e) {
-			Log.getRootLogger().warn(e);
-		}
-
-		if (locatorIdentifier == null || locatorIdentifier.isEmpty()) {
-			element.put(ServerConstants.SERVLET_RESULTS,
-					"Your locator is not valid! If text it should be a valid word or "
-							+ "string of words to search for on the device screen. If an image, it should be a valid path "
-							+ "to an image OR a valid URL to an image.");
-			return element;
-		}
+		List<String> locatorComponents = getLocator(locator);
+		String locatorSplitter = locatorComponents.get(0);
+		Log.getRootLogger().info("DEBUG - LOCATOR SPLITTER: " + locatorSplitter);
+		String locatorIdentifier = locatorComponents.get(1);
 
 		String loc = null;
 		if (locatorIsImage) {
@@ -129,7 +135,19 @@ public class element extends HttpServlet {
 				elements = ImageUtils.getElementFromSubScreen(sessionID, loc, (long) subScreenX, (long) subScreenY,
 						(long) subScreenWidth, (long) subScreenHeight);
 			} else {
-				elements = ImageUtils.getElementFromEntireScreen(sessionID, loc);
+				if (isRokuNativeLocator(locator)) {
+					JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
+					String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
+					RokuWebDriverAPIManager rokuWebDriverAPIManager = new RokuWebDriverAPIManager(deviceIP);
+					String attribute = locatorComponents.size() == 3 ? locatorComponents.get(2) : null;
+					rokuWebDriverAPIManager.findElement(getRokuLocatorType(locatorSplitter), attribute, loc);
+					Log.getRootLogger().info("DEBUG - ELEMENT: " + rokuWebDriverAPIManager.getResponseObj());
+					if (rokuWebDriverAPIManager.getWebDriverResponseCode() == 0) {
+						elements = constructRokuNativeElements(rokuWebDriverAPIManager.getResponseObj());
+					}
+				} else {
+					elements = ImageUtils.getElementFromEntireScreen(sessionID, loc);
+				}
 			}
 
 			if (!elements.isEmpty()) {
@@ -152,21 +170,17 @@ public class element extends HttpServlet {
 			}
 			element.put("all_elements", allElementArr);
 		}
-		
+
 		// found singular match
 		if (!allowMultiple && !elements.isEmpty()) {
 			element = elements.get(0);
 		}
-		
+
 		// if not allow multiple return an error object to throw exception
 		if (!allowMultiple && element.isEmpty()) {
-			// TODO - better custom error message based on what ocr engine or element type
-			// is being provided
-			String eleTypeStr = locatorIsText ? "text" : "image";
-			String errorMsg = "Failed to find " + eleTypeStr
-					+ " element on the device screen! If you believe the element to be present "
-					+ "try increasing the element timeout, reducing the image match similarity, "
-					+ "or using the Google Vision OCR module instead of Tesseract.";
+			String errorMsg = String.format(
+					"Failed to find element with locator type %s and identifier %s on the device screen.",
+					locatorSplitter, locatorIdentifier);
 			element.put(ServerConstants.SERVLET_RESULTS, errorMsg);
 			return element;
 		}
@@ -186,6 +200,94 @@ public class element extends HttpServlet {
 
 		Long interval = (long) pollObj;
 		return interval.intValue();
+	}
+
+	private boolean isLocatorValidForSession(String sessionID, String locator) {
+		if (!SessionManager.isRoku(sessionID)) {
+			return locator.startsWith(BY_IMAGE_ID) || locator.startsWith(BY_OCR_ID);
+		}
+
+		return true;
+	}
+
+	private boolean isRokuNativeLocator(String locator) {
+		return locator.startsWith(BY_TEXT_ID) || locator.startsWith(BY_TAG_ID) || locator.startsWith(BY_ATTRIBUTE_ID);
+	}
+
+	private List<String> getLocator(String locator) {
+		List<String> locatorComponents = new ArrayList<>();
+		String[] LOCATOR_SPLITTERS = { BY_IMAGE_ID, BY_TEXT_ID, BY_OCR_ID, BY_TAG_ID, BY_ATTRIBUTE_ID };
+		List<String> splitters = Arrays.asList(LOCATOR_SPLITTERS);
+		
+		if (locator.startsWith(BY_ATTRIBUTE_ID) && locator.contains(ATTRIBUTE_VALUE_SPLITTER)) {
+			locatorComponents.add(BY_ATTRIBUTE_ID);
+			locatorComponents.add(locator.split(ATTRIBUTE_VALUE_SPLITTER)[1]);
+			locatorComponents.add(locator.split(BY_ATTRIBUTE_ID)[1].split(ATTRIBUTE_VALUE_SPLITTER)[0]);
+		} else {
+			for (String splitter : splitters) {
+				if (locator.startsWith(splitter)) {
+					locatorComponents.add(splitter);
+					locatorComponents.add(locator.split(splitter)[1]);
+					break;
+				}
+			}
+		}
+		
+		return locatorComponents;
+	}
+
+	private RokuWebDriverLocatorType getRokuLocatorType(String locatorSplitter) {
+		switch (locatorSplitter) {
+		case BY_TEXT_ID:
+			return RokuWebDriverLocatorType.TEXT;
+		case BY_TAG_ID:
+			return RokuWebDriverLocatorType.TAG;
+		case BY_ATTRIBUTE_ID:
+			return RokuWebDriverLocatorType.ATTR;
+		default:
+			return RokuWebDriverLocatorType.TEXT;
+		}
+	}
+
+	public static List<JSONObject> constructRokuNativeElements(JSONObject elementObj) {
+		List<JSONObject> elements = new ArrayList<>();
+		String[] boundsComponents = {"0", "0", "0", "0"};
+		String text = "";
+
+		JSONObject valueObj = (JSONObject) elementObj.get("value");
+		if (valueObj == null) {
+			return elements;
+		}
+		
+		JSONArray attrArr = (JSONArray) valueObj.get("Attrs");
+		if (attrArr != null) {
+			for (int i = 0; i < attrArr.size(); i++) {
+				JSONObject attrObj = (JSONObject) attrArr.get(i);
+				JSONObject nameObj = (JSONObject) attrObj.get("Name");
+				if (nameObj.containsValue("bounds")) {
+					String boundsStr = (String) attrObj.get("Value");
+					boundsStr = boundsStr.replace("{", "").replace("}", "");
+					boundsComponents = boundsStr.split(", ");
+				}
+
+				if (nameObj.containsValue("text")) {
+					text = (String) attrObj.get("Value");
+				}
+			}
+		}
+
+		JSONObject element = new JSONObject();
+		element.put(SessionConstants.ELEMENT_ID, UUID.randomUUID().toString());
+		element.put("element_x", Integer.parseInt(boundsComponents[0]));
+		element.put("element_y", Integer.parseInt(boundsComponents[1]));
+		element.put("element_width", Integer.parseInt(boundsComponents[2]));
+		element.put("element_height", Integer.parseInt(boundsComponents[3]));
+		element.put("element_confidence", 100);
+		element.put("element_text", text);
+		element.put("element_json", elementObj.toJSONString());
+		elements.add(element);
+
+		return elements;
 	}
 
 }

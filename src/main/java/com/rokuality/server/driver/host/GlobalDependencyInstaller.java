@@ -6,7 +6,9 @@ import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.constants.FFMPEGConstants;
 import com.rokuality.server.constants.RokuWebDriverConstants;
 import com.rokuality.server.constants.TesseractConstants;
+import com.rokuality.server.core.CommandExecutor;
 import com.rokuality.server.core.DependencyManager;
+import com.rokuality.server.utils.FileUtils;
 import com.rokuality.server.utils.OSUtils;
 
 import java.io.File;
@@ -103,7 +105,9 @@ public class GlobalDependencyInstaller {
 	}
 
 	public static boolean isRokuWebDriverInstalled() {
-		return RokuWebDriverConstants.MAIN.exists();
+		boolean installed = RokuWebDriverConstants.MAIN.exists();
+		Log.getRootLogger().info("Roku WebDriver installed: " + installed);
+		return installed;
 	}
 
 	public static void installRokuWebDriver() {
@@ -117,10 +121,13 @@ public class GlobalDependencyInstaller {
 			String buildContent = "# !/bin/bash" + System.lineSeparator()
 					+ "export PATH=" + userPath + System.lineSeparator()
 					+ "cd " + RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR + File.separator + "src" + System.lineSeparator()
+					+ "export GOPATH=" + RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR.getAbsolutePath() + System.lineSeparator()
 					+ goPath + " get github.com/gorilla/mux" + System.lineSeparator()
 					+ goPath + " get github.com/sirupsen/logrus" + System.lineSeparator()
 					+ goPath + " build main.go";
-			
+			File buildFile = new File(DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + "BuildRokuWebDriver.sh");
+			FileUtils.writeStringToFile(buildFile, buildContent);
+			new CommandExecutor().execCommand("bash " + buildFile.getAbsolutePath(), null);
 		}
 
 		// TODO - windows implementation

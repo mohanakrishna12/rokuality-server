@@ -32,7 +32,7 @@ public class RokuDevAPIManager {
 	}
 
 	public void addRequestPayload(JSONObject payload) {
-		requestPayload = payload;
+		this.requestPayload = payload;
 	}
 
 	public boolean sendDevAPICommand() {
@@ -43,7 +43,7 @@ public class RokuDevAPIManager {
 		}
 
 		try {
-			String urlLoc = "http://" + deviceip + ":" + getAPIPort() + path;
+			String urlLoc = "http://" + getHost() + ":" + getAPIPort() + path;
 			URL url = new URL(urlLoc);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
 			con.setConnectTimeout(DEFAULT_API_TIMEOUT_MS);
@@ -51,6 +51,9 @@ public class RokuDevAPIManager {
 			con.setRequestMethod(method.toUpperCase());
 
 			if (requestPayload != null) {
+				Log.getRootLogger().info("DEBUG - URL: " + urlLoc);
+				Log.getRootLogger().info("DEBUG - REQUEST: " + requestPayload.toJSONString());
+				con.setDoOutput(true);
 				con.setRequestProperty("Content-Type", "application/json; utf-8");
 				try (OutputStream outputStream = con.getOutputStream()) {
 					byte[] input = requestPayload.toJSONString().getBytes("utf-8");
@@ -69,7 +72,7 @@ public class RokuDevAPIManager {
 				}
 			} else if (responseCode >= HttpStatus.SC_BAD_REQUEST) {
 				try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(con.getErrorStream()))) {
-					Log.getRootLogger().warn(IOUtils.toString(bufferedReader));
+					responseContent = IOUtils.toString(bufferedReader);
 				} catch (IOException e) {
 					Log.getRootLogger().warn(e);
 				}
@@ -94,6 +97,10 @@ public class RokuDevAPIManager {
 
 	private int getAPIPort() {
 		return this.apiType.equals(RokuAPIType.WEBDRIVER) ? 9000 : 8060;
+	}
+
+	private String getHost() {
+		return this.apiType.equals(RokuAPIType.WEBDRIVER) ? "localhost" : deviceip;
 	}
 
 }
