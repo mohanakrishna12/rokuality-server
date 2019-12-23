@@ -28,6 +28,7 @@ import com.rokuality.server.driver.host.DeviceDesktopMirror;
 import com.rokuality.server.driver.host.GlobalDependencyInstaller;
 import com.rokuality.server.enums.OCRType;
 import com.rokuality.server.enums.PlatformType;
+import com.rokuality.server.enums.RokuAPIType;
 import com.rokuality.server.enums.RokuButton;
 import com.rokuality.server.enums.SessionCapabilities;
 import com.rokuality.server.utils.FileToStringUtils;
@@ -126,6 +127,17 @@ public class session extends HttpServlet {
 					SessionCapabilities.PLATFORM.value()));
 			return sessionInfo;
 		}
+
+		boolean goInstalled = GlobalDependencyInstaller.isGoInstalled();
+		if (!goInstalled) {
+			sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+					"Unable to find go on your path! Is it installed and available? See the Rokuality Server"
+							+ " README for details but it can easily be installed via 'brew install go' "
+							+ "on MAC and via 'scoop install go' for windows.",
+					SessionCapabilities.PLATFORM.value()));
+			return sessionInfo;
+		}
+		
 
 		if (isXBox(platformType) || isHDMI(platformType)) {
 			boolean nodeInstalled = GlobalDependencyInstaller.isNodeInstalled();
@@ -403,6 +415,11 @@ public class session extends HttpServlet {
 			FileUtils.deleteFile(imageFile);
 		}
 
+		// TODO if roku start the webdriver server and verify online
+		// TODO if roku initate a session and verify session id returned
+		// and store the roku_webdriver_session_id to the session info for later
+		
+
 		sessionInfo.put(SessionConstants.ELEMENT_FIND_TIMEOUT, 0L);
 
 		sessionInfo.put(SessionConstants.SESSION_ID, sessionID);
@@ -518,7 +535,7 @@ public class session extends HttpServlet {
 	}
 
 	private static boolean isRokuHomeScreenLoaded(String deviceIP) {
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(deviceIP, "/query/active-app", "GET");
+		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/query/active-app", "GET");
 		rokuDevAPIManager.sendDevAPICommand();
 		String output = rokuDevAPIManager.getResponseContent();
 		return (output != null && output.contains("<app>Roku</app>"));

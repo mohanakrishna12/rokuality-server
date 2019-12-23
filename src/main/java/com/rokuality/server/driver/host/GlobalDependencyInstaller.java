@@ -4,6 +4,7 @@ import org.eclipse.jetty.util.log.Log;
 
 import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.constants.FFMPEGConstants;
+import com.rokuality.server.constants.RokuWebDriverConstants;
 import com.rokuality.server.constants.TesseractConstants;
 import com.rokuality.server.core.DependencyManager;
 import com.rokuality.server.utils.OSUtils;
@@ -15,7 +16,7 @@ public class GlobalDependencyInstaller {
 	public static boolean isTesseractInstalled() {
 		File tesseract = new File(OSUtils.getBinaryPath("tesseract"));
 
-        boolean installed = (tesseract != null && tesseract.exists() && tesseract.isFile());
+		boolean installed = (tesseract != null && tesseract.exists() && tesseract.isFile());
 		Log.getRootLogger().info("Tesseract installed " + installed, new Object[] {});
 		return installed;
 	}
@@ -23,8 +24,16 @@ public class GlobalDependencyInstaller {
 	public static boolean isNodeInstalled() {
 		File node = new File(OSUtils.getBinaryPath("node"));
 
-        boolean installed = (node != null && node.exists() && node.isFile());
+		boolean installed = (node != null && node.exists() && node.isFile());
 		Log.getRootLogger().info("Node installed " + installed, new Object[] {});
+		return installed;
+	}
+
+	public static boolean isGoInstalled() {
+		File go = new File(OSUtils.getBinaryPath("go"));
+
+		boolean installed = (go != null && go.exists() && go.isFile());
+		Log.getRootLogger().info("Go installed " + installed, new Object[] {});
 		return installed;
 	}
 
@@ -38,21 +47,22 @@ public class GlobalDependencyInstaller {
 	public static void installFFMPEG() {
 		Log.getRootLogger().info("Installing FFMPEG", new Object[] {});
 		DependencyManager dependencyManager = new DependencyManager();
-        if (!OSUtils.isWindows()) {
-            Boolean dependencyDownloaded = dependencyManager.downloadDependency(FFMPEGConstants.FFMPEG);
-            if (dependencyDownloaded) {
-                FFMPEGConstants.FFMPEG.setExecutable(true);
-            }
-        }
+		if (!OSUtils.isWindows()) {
+			Boolean dependencyDownloaded = dependencyManager.downloadDependency(FFMPEGConstants.FFMPEG);
+			if (dependencyDownloaded) {
+				FFMPEGConstants.FFMPEG.setExecutable(true);
+			}
+		}
 
-        if (OSUtils.isWindows()) {
-            String ffmpegZipName = FFMPEGConstants.FFMPEG_WIN_ZIP.getName();
-            File ffmpegZipFile = new File(DependencyConstants.DEPENDENCY_DIR.getAbsolutePath() + File.separator + ffmpegZipName);
-            Boolean dependencyDownloaded = dependencyManager.downloadDependency(ffmpegZipFile);
-            if (dependencyDownloaded) {
-                dependencyManager.unzipDependency(ffmpegZipFile);
-            }
-        }
+		if (OSUtils.isWindows()) {
+			String ffmpegZipName = FFMPEGConstants.FFMPEG_WIN_ZIP.getName();
+			File ffmpegZipFile = new File(
+					DependencyConstants.DEPENDENCY_DIR.getAbsolutePath() + File.separator + ffmpegZipName);
+			Boolean dependencyDownloaded = dependencyManager.downloadDependency(ffmpegZipFile);
+			if (dependencyDownloaded) {
+				dependencyManager.unzipDependency(ffmpegZipFile);
+			}
+		}
 	}
 
 	public static boolean isTesseractTrainedDataInstalled() {
@@ -65,12 +75,13 @@ public class GlobalDependencyInstaller {
 	public static void installTesseractTrainedData() {
 		Log.getRootLogger().info("Installing Tesseract trained data", new Object[] {});
 		DependencyManager dependencyManager = new DependencyManager();
-        String zipName = TesseractConstants.TESS_DATA_ZIP_NAME;
-        File tesseractZipFile = new File(DependencyConstants.DEPENDENCY_DIR.getAbsolutePath() + File.separator + zipName);
-        Boolean dependencyDownloaded = dependencyManager.downloadDependency(tesseractZipFile);
-        if (dependencyDownloaded) {
-            dependencyManager.unzipDependency(tesseractZipFile);
-        }
+		String zipName = TesseractConstants.TESS_DATA_ZIP_NAME;
+		File tesseractZipFile = new File(
+				DependencyConstants.DEPENDENCY_DIR.getAbsolutePath() + File.separator + zipName);
+		Boolean dependencyDownloaded = dependencyManager.downloadDependency(tesseractZipFile);
+		if (dependencyDownloaded) {
+			dependencyManager.unzipDependency(tesseractZipFile);
+		}
 	}
 
 	public static boolean isHarmonyInstalled() {
@@ -83,12 +94,36 @@ public class GlobalDependencyInstaller {
 	public static void installHarmony() {
 		Log.getRootLogger().info("Installing Harmony CLI", new Object[] {});
 		DependencyManager dependencyManager = new DependencyManager();
-        String zipName = DependencyConstants.HARMONY_ZIP_NAME;
-        File harmonyZipFile = new File(DependencyConstants.DEPENDENCY_DIR.getAbsolutePath() + File.separator + zipName);
-        Boolean dependencyDownloaded = dependencyManager.downloadDependency(harmonyZipFile);
-        if (dependencyDownloaded) {
-            dependencyManager.unzipDependency(harmonyZipFile);
-        }
+		String zipName = DependencyConstants.HARMONY_ZIP_NAME;
+		File harmonyZipFile = new File(DependencyConstants.DEPENDENCY_DIR.getAbsolutePath() + File.separator + zipName);
+		Boolean dependencyDownloaded = dependencyManager.downloadDependency(harmonyZipFile);
+		if (dependencyDownloaded) {
+			dependencyManager.unzipDependency(harmonyZipFile);
+		}
+	}
+
+	public static boolean isRokuWebDriverInstalled() {
+		return RokuWebDriverConstants.MAIN.exists();
+	}
+
+	public static void installRokuWebDriver() {
+		Log.getRootLogger().info("Installing Roku WebDriver", new Object[] {});
+		DependencyManager dependencyManager = new DependencyManager();
+		boolean dependencyDownloaded = dependencyManager.downloadDependency(RokuWebDriverConstants.ROKU_WEBDRIVER_ZIP);
+		dependencyManager.unzipDependency(RokuWebDriverConstants.ROKU_WEBDRIVER_ZIP);
+		if (dependencyDownloaded) {
+			String goPath = OSUtils.getBinaryPath("go");
+			String userPath = OSUtils.getPathVar();
+			String buildContent = "# !/bin/bash" + System.lineSeparator()
+					+ "export PATH=" + userPath + System.lineSeparator()
+					+ "cd " + RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR + File.separator + "src" + System.lineSeparator()
+					+ goPath + " get github.com/gorilla/mux" + System.lineSeparator()
+					+ goPath + " get github.com/sirupsen/logrus" + System.lineSeparator()
+					+ goPath + " build main.go";
+			
+		}
+
+		// TODO - windows implementation
 	}
 
 }

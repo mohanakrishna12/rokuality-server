@@ -11,6 +11,7 @@ import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
 import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
+import com.rokuality.server.enums.RokuAPIType;
 import com.rokuality.server.utils.ServletJsonParser;
 
 import org.eclipse.jetty.util.log.Log;
@@ -73,7 +74,7 @@ public class info extends HttpServlet {
     public static JSONObject getRokuDeviceInfo(String ipAddress) {
 		JSONObject results = new JSONObject();
 
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(ipAddress, "/query/device-info", "GET");
+		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, ipAddress, "/query/device-info", "GET");
 		boolean success = rokuDevAPIManager.sendDevAPICommand();
 		String output = rokuDevAPIManager.getResponseContent();
 

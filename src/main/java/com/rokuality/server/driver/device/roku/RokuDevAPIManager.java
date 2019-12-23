@@ -4,25 +4,35 @@ import org.apache.commons.io.IOUtils;
 
 import org.apache.http.HttpStatus;
 import org.eclipse.jetty.util.log.Log;
+import org.json.simple.JSONObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import com.rokuality.server.enums.RokuAPIType;
+
 public class RokuDevAPIManager {
 
 	private static final int DEFAULT_API_TIMEOUT_MS = 10000;
 
+	private RokuAPIType apiType = null;
+	private JSONObject requestPayload = null;
 	private String deviceip = null;
 	private String path = null;
 	private String method = null;
 	private int responseCode = 400;
 	private String responseContent = null;
 
-	public RokuDevAPIManager(String deviceip, String path, String method) {
+	public RokuDevAPIManager(RokuAPIType apiType, String deviceip, String path, String method) {
+		this.apiType = apiType;
 		this.deviceip = deviceip;
 		this.path = path;
 		this.method = method;
+	}
+
+	public void addRequestPayload(JSONObject payload) {
+		requestPayload = payload;
 	}
 
 	public boolean sendDevAPICommand() {
@@ -33,12 +43,22 @@ public class RokuDevAPIManager {
 		}
 
 		try {
-			String urlLoc = "http://" + deviceip + ":8060" + path;
+			String urlLoc = "http://" + deviceip + ":" + getAPIPort() + path;
 			URL url = new URL(urlLoc);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
 			con.setConnectTimeout(DEFAULT_API_TIMEOUT_MS);
 			con.setReadTimeout(DEFAULT_API_TIMEOUT_MS);
 			con.setRequestMethod(method.toUpperCase());
+
+			if (requestPayload != null) {
+				con.setRequestProperty("Content-Type", "application/json; utf-8");
+				try (OutputStream outputStream = con.getOutputStream()) {
+					byte[] input = requestPayload.toJSONString().getBytes("utf-8");
+					outputStream.write(input, 0, input.length);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 
 			responseCode = con.getResponseCode();
 			if (responseCode == HttpStatus.SC_OK) {
@@ -72,4 +92,10 @@ public class RokuDevAPIManager {
 		return responseContent;
 	}
 
+	private int getAPIPort() {
+		return this.apiType.equals(RokuAPIType.WEBDRIVER) ? 9000 : 8060;
+	}
+
 }
+
+

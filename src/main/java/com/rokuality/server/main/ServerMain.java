@@ -93,8 +93,9 @@ public class ServerMain {
 		boolean tesseractInstalled = GlobalDependencyInstaller.isTesseractInstalled();
 		boolean tesseractTrainedDataInstalled = GlobalDependencyInstaller.isTesseractTrainedDataInstalled();
 		boolean harmonyInstalled = GlobalDependencyInstaller.isHarmonyInstalled();
+		boolean rokuWebDriverInstalled = GlobalDependencyInstaller.isRokuWebDriverInstalled();
 
-		if (!ffmpegInstalled || !tesseractTrainedDataInstalled || !harmonyInstalled) {
+		if (!ffmpegInstalled || !tesseractTrainedDataInstalled || !harmonyInstalled || !rokuWebDriverInstalled) {
 			try {
 				OSUtils.displaySystemMessage("Performing some setup. Will let you know when we're ready...");
 			} catch (Exception e) {
@@ -108,6 +109,10 @@ public class ServerMain {
 
 		if (!harmonyInstalled) {
 			GlobalDependencyInstaller.installHarmony();
+		}
+
+		if (!rokuWebDriverInstalled) {
+			GlobalDependencyInstaller.installRokuWebDriver();
 		}
 
 		if (!tesseractInstalled) {
