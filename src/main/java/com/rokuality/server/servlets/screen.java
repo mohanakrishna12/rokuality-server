@@ -213,7 +213,7 @@ public class screen extends HttpServlet {
 	public static JSONObject getScreenSource(JSONObject sessionObj) {
 		JSONObject results = new JSONObject();
 		String sessionID = sessionObj.get(SessionConstants.SESSION_ID).toString();
-		
+
 		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
 		String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
 
@@ -234,21 +234,16 @@ public class screen extends HttpServlet {
 	public static JSONObject getActiveElement(JSONObject sessionObj) {
 		JSONObject results = new JSONObject();
 		String sessionID = sessionObj.get(SessionConstants.SESSION_ID).toString();
-		
+
 		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
 		String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
 
 		RokuWebDriverAPIManager rokuWebDriverAPIManager = new RokuWebDriverAPIManager(deviceIP);
 		rokuWebDriverAPIManager.getActiveElement();
 		JSONObject elementObj = rokuWebDriverAPIManager.getResponseObj();
-		List<JSONObject> elements = element.constructRokuNativeElements(elementObj);
+		elementObj = element.constructRokuNativeElement(elementObj);
 
-		if (elements.isEmpty()) {
-			results.put(ServerConstants.SERVLET_RESULTS, "Failed to determine active screen element!");
-			return results;
-		}
-
-		results = elements.get(0);
+		results = elementObj;
 		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 
 		return results;
