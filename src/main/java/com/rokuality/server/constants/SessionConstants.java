@@ -3,6 +3,7 @@ package com.rokuality.server.constants;
 public class SessionConstants {
 
 	public static final String SESSION_ID = "session_id";
+	public static final String ROKU_WEBDRIVER_SESSION_ID = "roku_webdriver_session_id";
 	public static final String MACHINE_IP = "machine_ip";
 	public static final String SESSION_START_TIME_S = "session_start_time_seconds";
 	public static final String OCR_MODULE = "ocr_module";

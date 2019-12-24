@@ -10,6 +10,7 @@ import com.rokuality.server.core.ImageCollector;
 import com.rokuality.server.core.drivers.ElementManager;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
+import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
 import com.rokuality.server.utils.FileUtils;
 
 import org.eclipse.jetty.util.log.Log;
@@ -50,6 +51,12 @@ public class ExpiredSessionTask extends TimerTask {
 					File captureDir = new File(capturePath);
 					if (captureDir.exists()) {
 						FileUtils.deleteDirectory(captureDir);
+					}
+
+					String rokuWebDriverSessionID = (String) sessionInfo.get(SessionConstants.ROKU_WEBDRIVER_SESSION_ID);
+					if (rokuWebDriverSessionID != null) {
+						String deviceIP = String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP));
+						new RokuWebDriverAPIManager(deviceIP).stopSession();
 					}
 				}
 				

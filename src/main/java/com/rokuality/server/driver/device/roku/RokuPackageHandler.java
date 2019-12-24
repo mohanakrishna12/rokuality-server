@@ -6,6 +6,7 @@ import org.json.simple.JSONObject;
 import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
+import com.rokuality.server.enums.RokuAPIType;
 import com.rokuality.server.enums.SessionCapabilities;
 import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.FileUtils;
@@ -125,14 +126,14 @@ public class RokuPackageHandler {
 	}
 
 	public static boolean isAppLaunched(String deviceIP, String appID) {
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(deviceIP, "/query/active-app", "GET");
+		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/query/active-app", "GET");
 		rokuDevAPIManager.sendDevAPICommand();
 		String output = rokuDevAPIManager.getResponseContent();
 		return (output != null && output.contains("app id=\"" + appID + "\""));
 	}
 
 	private static boolean launchInstalledApp(String deviceIP, String appID) throws Exception {
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(deviceIP, "/launch/" + appID, "POST");
+		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/launch/" + appID, "POST");
 		return rokuDevAPIManager.sendDevAPICommand();
 	}
 

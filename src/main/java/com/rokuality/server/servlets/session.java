@@ -22,12 +22,15 @@ import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
 import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
 import com.rokuality.server.driver.device.roku.RokuKeyPresser;
 import com.rokuality.server.driver.device.roku.RokuPackageHandler;
+import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
+import com.rokuality.server.driver.device.roku.RokuWebDriverFactory;
 import com.rokuality.server.driver.device.xbox.XBoxDevConsoleManager;
 import com.rokuality.server.driver.device.xbox.XBoxPackageHandler;
 import com.rokuality.server.driver.host.DeviceDesktopMirror;
 import com.rokuality.server.driver.host.GlobalDependencyInstaller;
 import com.rokuality.server.enums.OCRType;
 import com.rokuality.server.enums.PlatformType;
+import com.rokuality.server.enums.RokuAPIType;
 import com.rokuality.server.enums.RokuButton;
 import com.rokuality.server.enums.SessionCapabilities;
 import com.rokuality.server.utils.FileToStringUtils;
@@ -124,6 +127,17 @@ public class session extends HttpServlet {
 							+ " README for details but it can easily be installed via 'brew install tesseract' "
 							+ "on MAC and via 'scoop install tesseract' for windows.",
 					SessionCapabilities.PLATFORM.value()));
+			return sessionInfo;
+		}
+
+		boolean goInstalled = GlobalDependencyInstaller.isGoInstalled();
+		if (isRoku(platformType) && !goInstalled) {
+			sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+					String.format(
+							"Unable to find go on your path! Is it installed and available? See the Rokuality Server"
+									+ " README for details but it can easily be installed via 'brew install go' "
+									+ "on MAC and via 'scoop install go' for windows.",
+							SessionCapabilities.PLATFORM.value()));
 			return sessionInfo;
 		}
 
@@ -364,6 +378,31 @@ public class session extends HttpServlet {
 			sessionInfo.remove(SessionConstants.APP_PACKAGE);
 		}
 
+		if (isRoku(platformType)) {
+			boolean isRokuWebDriverRunning = RokuWebDriverFactory.isRokuWebDriverRunning();
+			Log.getRootLogger().info("Is Roku WebDriver running: " + isRokuWebDriverRunning);
+			if (!isRokuWebDriverRunning) {
+				Log.getRootLogger().info("Starting Roku WebDriver.");
+				isRokuWebDriverRunning = RokuWebDriverFactory.startRokuWebDriver();
+				if (!isRokuWebDriverRunning) {
+					RokuWebDriverFactory.stopRokuWebDriver();
+					sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+							"Roku WebDriver was not running and could not be started. Please see the "
+									+ "README to ensure all dependencies are properly installed.");
+					return sessionInfo;
+				}
+			}
+
+			RokuWebDriverAPIManager rokuWebDriverAPIManager = new RokuWebDriverAPIManager(deviceIP);
+			rokuWebDriverAPIManager.startSession();
+			if (rokuWebDriverAPIManager.getWebDriverResponseCode() != 0) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+						String.format("Failed to start Roku WebDriver session for device %s.", deviceIP));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.ROKU_WEBDRIVER_SESSION_ID, rokuWebDriverAPIManager.getSessionID());
+		}
+
 		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP, imageCollectionDir,
 				deviceUsername, devicePassword, videoCapture);
 		boolean recordingStarted = imageCollector.startRecording();
@@ -447,14 +486,16 @@ public class session extends HttpServlet {
 
 		PlatformType platformType = PlatformType
 				.getEnumByString(String.valueOf(sessionInfo.get(SessionConstants.PLATFORM)));
-		
+
 		if (sessionInfo.get(SessionConstants.VIDEO_CAPTURE_INPUT) != null) {
 			File videoCapture = new File(String.valueOf(sessionInfo.get(SessionConstants.VIDEO_CAPTURE_FILE)));
 			stopHDMICapture(videoCapture);
 		}
 
 		if (isRoku(platformType)) {
-			returnToRokuHomeScreen(String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
+			String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
+			returnToRokuHomeScreen(deviceIP);
+			new RokuWebDriverAPIManager(deviceIP).stopSession();
 		}
 
 		if (isXBox(platformType)) {
@@ -518,7 +559,8 @@ public class session extends HttpServlet {
 	}
 
 	private static boolean isRokuHomeScreenLoaded(String deviceIP) {
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(deviceIP, "/query/active-app", "GET");
+		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/query/active-app",
+				"GET");
 		rokuDevAPIManager.sendDevAPICommand();
 		String output = rokuDevAPIManager.getResponseContent();
 		return (output != null && output.contains("<app>Roku</app>"));
