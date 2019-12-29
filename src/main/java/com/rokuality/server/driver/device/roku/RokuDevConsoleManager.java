@@ -64,6 +64,7 @@ public class RokuDevConsoleManager {
 		String[] command = { "bash", getScreenshotFile.getAbsolutePath() };
 		
 		if (OSUtils.isWindows()) {
+			getScreenshotFile = new File(getScreenshotFile.getAbsolutePath().replace(".sh", ".bat"));
 			getCommand = getCommand.replace("# !/bin/bash", "");
 			File logStartFile = LogFileUtils.getLogFile("roku_getscreenshot.log");
 				logStartFile = LogFileUtils.cleanLogFile(logStartFile);
