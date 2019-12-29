@@ -30,6 +30,7 @@ public class RokuDevConsoleManager {
 		String command = curlPath + " -u " + username + ":" + password + " -v -F mysubmit=Install -F 'archive=@" + appPackage +
 					"' http://" + deviceip + "/plugin_install --digest";
 		String output = commandExecutor.execCommand(command, null);
+		Log.getRootLogger().info("DEBUG - ROKU INSTALL COMMAND: " + commandExecutor.getCommand());
 		Log.getRootLogger().info("DEBUG - ROKU INSTALL OUTPUT: " + output);
 		return true; // TODO - just for debugging
 	}
@@ -39,6 +40,7 @@ public class RokuDevConsoleManager {
 				+ deviceip + "/plugin_install --digest";
 
 		String output = commandExecutor.execCommand(command, null);
+		Log.getRootLogger().info("DEBUG - ROKU UNINSTALL COMMAND: " + commandExecutor.getCommand());
 		Log.getRootLogger().info("DEBUG - ROKU UNINSTALL OUTPUT: " + output);
 		return true; // TODO - just for debugging purposes
 	}
@@ -48,6 +50,7 @@ public class RokuDevConsoleManager {
 						+ " -v -F mysubmit=Screenshot -F 'archive= ' -F 'passwd= '" + " http://" + deviceip
 						+ "/plugin_inspect --digest";
 		String output = commandExecutor.execCommand(takeCommand, null);
+		Log.getRootLogger().info("DEBUG - ROKU TAKE SCREENSHOT COMMAND: " + commandExecutor.getCommand());
 		Log.getRootLogger().info("DEBUG - ROKU TAKE SCREENSHOT OUTPUT: " + output);
 
 		Long currentEpoch = (System.currentTimeMillis() - 3000) / 1000;
