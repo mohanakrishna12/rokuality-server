@@ -1,8 +1,12 @@
 package com.rokuality.server.driver.device.roku;
 
 import java.io.*;
+import java.util.UUID;
 
+import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.core.CommandExecutor;
+import com.rokuality.server.utils.FileUtils;
+import com.rokuality.server.utils.LogFileUtils;
 import com.rokuality.server.utils.OSUtils;
 
 import org.eclipse.jetty.util.log.Log;
@@ -54,10 +58,26 @@ public class RokuDevConsoleManager {
 		Log.getRootLogger().info("DEBUG - ROKU TAKE SCREENSHOT OUTPUT: " + output);
 
 		Long currentEpoch = (System.currentTimeMillis() - 3000) / 1000;
-		String getCommand = curlPath + " -u " + username + ":" + password + " http://" + deviceip
+		String getCommand = "# !/bin/bash" + System.lineSeparator() + curlPath + " -u " + username + ":" + password + " http://" + deviceip
 						+ "/pkgs/dev.jpg?time=" + currentEpoch.toString() + " --digest > " + fileToSaveAs.getAbsolutePath();
-		output = commandExecutor.execCommand(getCommand, null);
+		File getScreenshotFile = new File(DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + UUID.randomUUID().toString() + ".sh");
+		String[] command = { "bash", getScreenshotFile.getAbsolutePath() };
+		
+		if (OSUtils.isWindows()) {
+			getCommand = getCommand.replace("# !/bin/bash", "");
+			File logStartFile = LogFileUtils.getLogFile("roku_getscreenshot.log");
+				logStartFile = LogFileUtils.cleanLogFile(logStartFile);
+				FileUtils.createFile(logStartFile);
+				command = new String[] { "cmd", "/c", "start", "/b", "\"\"", ">" + logStartFile.getAbsolutePath(),
+						getScreenshotFile.getAbsolutePath() };
+		}
+		
+		FileUtils.writeStringToFile(getScreenshotFile, getCommand);
+		
+		output = commandExecutor.execCommand(String.join(" ", command), null);
+		Log.getRootLogger().info("DEBUG - ROKU GET SCREENSHOT COMMAND: " + commandExecutor.getCommand());
 		Log.getRootLogger().info("DEBUG - ROKU GET SCREENSHOT OUTPUT: " + output);
+		FileUtils.deleteFile(getScreenshotFile);
 		return fileToSaveAs;
 	}
 
