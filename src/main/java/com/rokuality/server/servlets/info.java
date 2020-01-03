@@ -160,7 +160,11 @@ public class info extends HttpServlet {
 		try {
 			org.json.JSONObject xmlJSONObj = XML.toJSONObject(activeApp);
 			String xmlToJSON = xmlJSONObj.toString(4);
-			results = (JSONObject) new JSONParser().parse(xmlToJSON);
+			JSONObject jsonObj = (JSONObject) new JSONParser().parse(xmlToJSON);
+			JSONObject activeAppObj = (JSONObject) jsonObj.get("active-app");
+			JSONObject appObj = (JSONObject) activeAppObj.get("app");
+			activeApp = (String) appObj.get("id");
+			results.put("active_app", activeApp);
 		} catch (Exception e) {
 			Log.getRootLogger().warn(e);
 			results.put(ServerConstants.SERVLET_RESULTS,
