@@ -1,8 +1,6 @@
 package com.rokuality.server.driver.device.hdmi;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.StringReader;
 
 import com.rokuality.server.constants.FFMPEGConstants;
 import com.rokuality.server.core.CommandExecutor;
@@ -16,10 +14,14 @@ public class HDMIScreenManager {
 
 	private static final int MAX_VIDEO_READY_WAIT_S = 15;
 	private static final int VIDEO_READY_POLL_MS = 500;
+	private static final String AV_FOUNDATION_AUDIO_DEVICES = "AVFoundation audio devices:";
 
 	public static boolean startVideoCapture(String sessionID, File videoToCaptureTo, String videoCaptureInput,
 			String audioCaptureInput) {
 
+		Log.getRootLogger().info(String.format(
+				"Starting HDMI screen recording for session %s with video file %s and audio/video inputs: %s, %s",
+				sessionID, videoToCaptureTo, videoCaptureInput, audioCaptureInput));
 		if (sessionID == null || videoToCaptureTo == null || videoCaptureInput == null || audioCaptureInput == null) {
 			Log.getRootLogger()
 					.warn(String.format(
@@ -43,13 +45,16 @@ public class HDMIScreenManager {
 		}
 
 		if (!OSUtils.isWindows()) {
-			String videoCaptureIndex = getUSBCaptureIndex(videoCaptureInput);
-			String audioCaptureIndex = getUSBCaptureIndex(audioCaptureInput);
+			Integer videoCaptureIndex = getUSBCaptureIndex(true, videoCaptureInput);
+			Integer audioCaptureIndex = getUSBCaptureIndex(false, audioCaptureInput);
 
 			if (videoCaptureIndex == null || audioCaptureIndex == null) {
 				Log.getRootLogger().warn("Failed to capture video/audio indexes!");
 				return false;
 			}
+
+			Log.getRootLogger().info(String.format("Detected AV Inputs for input names %s/%s: %s, %s",
+					videoCaptureInput, audioCaptureInput, videoCaptureIndex, audioCaptureIndex));
 
 			content = "nohup " + ffmpegPath + " -f avfoundation -framerate 30 -i \"" + videoCaptureIndex + ":"
 					+ audioCaptureIndex + "\" " + videoToCaptureTo.getAbsolutePath();
@@ -82,8 +87,7 @@ public class HDMIScreenManager {
 
 		Log.getRootLogger()
 				.info(String.format("Failed video capture start for session %s with output: %s", sessionID, output));
-		Log.getRootLogger()
-				.warn("Failed video count output: " + String.valueOf(getFrameCountOutput(videoToCaptureTo)));
+		Log.getRootLogger().warn("Failed video count output: " + String.valueOf(getFrameCountOutput(videoToCaptureTo)));
 
 		return false;
 	}
@@ -203,22 +207,44 @@ public class HDMIScreenManager {
 		return lastFrame;
 	}
 
-	public static String getUSBCaptureIndex(String inputName) {
-		String formattedIndex = new BufferedReader(new StringReader(executeAVFoundationListDevicesCommand())).lines()
-				.filter(line -> line.contains(inputName)).map(line -> line.split("] ")[1] + "]").findFirst()
-				.orElse(null);
+	public static Integer getUSBCaptureIndex(boolean isVideo, String inputName) {
+		String avOutput = executeAVFoundationListDevicesCommand();
+		int splitterIndex = isVideo ? 0 : 1;
 
-		if (formattedIndex == null) {
+		if (avOutput.contains(AV_FOUNDATION_AUDIO_DEVICES)) {
+			avOutput = avOutput.split(AV_FOUNDATION_AUDIO_DEVICES)[splitterIndex];
+		}
+
+		if (!avOutput.contains(System.lineSeparator())) {
+			Log.getRootLogger().warn("No audio/video inputs detected during AV Foundation check.");
 			return null;
 		}
-		return formattedIndex.replace("[", "").replace("]", "");
+
+		for (String line : avOutput.split(System.lineSeparator())) {
+			if (line.toLowerCase().contains(inputName.toLowerCase())) {
+				Log.getRootLogger().info(
+						String.format("Found matching HDMI input %s with av foundation line %s", inputName, line));
+				try {
+					return Integer.parseInt(line.split("\\[")[2].split("]")[0]);
+				} catch (Exception e) {
+					Log.getRootLogger().warn(String.format(
+							"Failed to parse AV Foundation index for input %s for AV line %s", inputName, line), e);
+					return null;
+				}
+			}
+		}
+
+		Log.getRootLogger().warn(String.format("Failed to find AV Foundation index for input %s", inputName));
+		return null;
 	}
 
 	private static String executeAVFoundationListDevicesCommand() {
 		String ffmpegPath = FFMPEGConstants.FFMPEG.getAbsolutePath();
 		CommandExecutor commandExecutor = new CommandExecutor();
 		String[] command = { ffmpegPath, "-f", "avfoundation", "-list_devices", "true", "-i", "\"\"" };
-		return commandExecutor.execCommand(String.join(" ", command), null);
+		String output = commandExecutor.execCommand(String.join(" ", command), null);
+		Log.getRootLogger().info(String.format("Result of HDMI AV Foundation List: %s", output));
+		return output;
 	}
 
 	private static String getFrameCountOutput(File video) {
