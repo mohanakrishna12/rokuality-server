@@ -152,12 +152,22 @@ public class info extends HttpServlet {
 
 		String deviceIP = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.DEVICE_IP);
 		String activeApp = RokuPackageHandler.getActiveApp(deviceIP);
-		if (activeApp == null) {
+		if (activeApp == null || !activeApp.contains("app id")) {
 			results.put(ServerConstants.SERVLET_RESULTS, "Failed to retrieve active app info.");
 			return results;
 		}
 
-		results.put("active_app", activeApp);
+		try {
+			org.json.JSONObject xmlJSONObj = XML.toJSONObject(activeApp);
+			String xmlToJSON = xmlJSONObj.toString(4);
+			results = (JSONObject) new JSONParser().parse(xmlToJSON);
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+			results.put(ServerConstants.SERVLET_RESULTS,
+					String.format("Failed to parse device active app output with output %s", activeApp));
+			return results;
+		}
+
 		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 
 		return results;
