@@ -152,8 +152,7 @@ public class info extends HttpServlet {
 
 		String deviceIP = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.DEVICE_IP);
 		String activeApp = RokuPackageHandler.getActiveApp(deviceIP);
-		Log.getRootLogger().info("DEBUG - ACTIVE APP DATA: " + activeApp);
-		if (activeApp == null || !activeApp.contains("app id")) {
+		if (activeApp == null || !activeApp.contains("app")) {
 			results.put(ServerConstants.SERVLET_RESULTS, "Failed to retrieve active app info.");
 			return results;
 		}
