@@ -1,6 +1,7 @@
 1.2.5 - Changes from 1.2.4
 1. Adds the ability to get installed app and active app info for Roku.
 2. Improves the index detection for hdmi capture cards and fixes several bugs for video capture card image collector spinup.
+3. Adds the ability to set a remote control delay between commands to prevent test flake.
 
 1.2.4 - Changes from 1.2.3
 1. Adds support for Roku WebDriver including text/tag/attribute locators, media info, and more.
