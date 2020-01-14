@@ -10,6 +10,7 @@ import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
+import com.rokuality.server.driver.device.roku.RokuPackageHandler;
 import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
 import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
 import com.rokuality.server.enums.RokuAPIType;
@@ -42,6 +43,12 @@ public class info extends HttpServlet {
 			break;
 		case "media_player_info":
 			results = getRokuMediaPlayerInfo(sessionID);
+			break;
+		case "get_active_app":
+			results = getActiveApp(sessionID);
+			break;
+		case "get_installed_apps":
+			results = getInstalledApps(sessionID);
 			break;
 		default:
 
@@ -138,6 +145,58 @@ public class info extends HttpServlet {
 		}
 
 		results = rokuWebDriverAPIManager.getResponseObj();
+		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+
+		return results;
+	}
+
+	public static JSONObject getActiveApp(String sessionID) {
+		JSONObject results = new JSONObject();
+
+		String deviceIP = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.DEVICE_IP);
+		String activeApp = RokuPackageHandler.getActiveApp(deviceIP);
+		if (activeApp == null || !activeApp.contains("app")) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Failed to retrieve active app info.");
+			return results;
+		}
+
+		try {
+			org.json.JSONObject xmlJSONObj = XML.toJSONObject(activeApp);
+			String xmlToJSON = xmlJSONObj.toString(4);
+			results = (JSONObject) new JSONParser().parse(xmlToJSON);
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+			results.put(ServerConstants.SERVLET_RESULTS,
+					String.format("Failed to parse device active app output with output %s", activeApp));
+			return results;
+		}
+
+		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+
+		return results;
+	}
+
+	public static JSONObject getInstalledApps(String sessionID) {
+		JSONObject results = new JSONObject();
+
+		String deviceIP = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.DEVICE_IP);
+		String installedApps = RokuPackageHandler.getInstalledApps(deviceIP);
+		if (installedApps == null || !installedApps.contains("apps")) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Failed to retrieve installed app info.");
+			return results;
+		}
+
+		try {
+			org.json.JSONObject xmlJSONObj = XML.toJSONObject(installedApps);
+			String xmlToJSON = xmlJSONObj.toString(4);
+			results = (JSONObject) new JSONParser().parse(xmlToJSON);
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+			results.put(ServerConstants.SERVLET_RESULTS,
+					String.format("Failed to parse device installed app output with output %s", installedApps));
+			return results;
+		}
+
 		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 
 		return results;

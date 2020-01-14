@@ -326,8 +326,9 @@ public class session extends HttpServlet {
 		if (videoCaptureInput != null && audioCaptureInput != null) {
 			videoCapture = new File(DependencyConstants.TEMP_DIR.getAbsolutePath() + File.separator + "videocapture_"
 					+ sessionID + ".mkv");
+			Long frameRate = (Long) requestObj.get(SessionCapabilities.VIDEO_CAPTURE_FRAMERATE.value());
 			boolean captureStarted = HDMIScreenManager.startVideoCapture(sessionID, videoCapture, videoCaptureInput,
-					audioCaptureInput);
+					audioCaptureInput, frameRate);
 			if (!captureStarted) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
 						"Failed to initiate hdmi driver! Is the device connected via an hdmi capture card and are the %s and %s "

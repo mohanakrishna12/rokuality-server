@@ -126,10 +126,20 @@ public class RokuPackageHandler {
 	}
 
 	public static boolean isAppLaunched(String deviceIP, String appID) {
+		String output = getActiveApp(deviceIP);
+		return (output != null && output.contains("app id=\"" + appID + "\""));
+	}
+
+	public static String getActiveApp(String deviceIP) {
 		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/query/active-app", "GET");
 		rokuDevAPIManager.sendDevAPICommand();
-		String output = rokuDevAPIManager.getResponseContent();
-		return (output != null && output.contains("app id=\"" + appID + "\""));
+		return rokuDevAPIManager.getResponseContent();
+	}
+
+	public static String getInstalledApps(String deviceIP) {
+		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/query/apps", "GET");
+		rokuDevAPIManager.sendDevAPICommand();
+		return rokuDevAPIManager.getResponseContent();
 	}
 
 	private static boolean launchInstalledApp(String deviceIP, String appID) throws Exception {

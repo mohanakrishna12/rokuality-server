@@ -46,6 +46,9 @@ public class settings extends HttpServlet {
 			case SessionConstants.ELEMENT_POLLING_INTERVAL:
 			results = setElementPollInterval(requestObj);
 			break;
+			case SessionConstants.REMOTE_INTERACT_DELAY:
+			results = setRemoteInteractDelay(requestObj);
+			break;
 			default:
 
 			break;
@@ -122,6 +125,25 @@ public class settings extends HttpServlet {
 		SessionManager.updateSessionInfoItem(sessionID, SessionConstants.ELEMENT_POLLING_INTERVAL, pollInterval);
 		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 		resultObj.put(SessionConstants.ELEMENT_POLLING_INTERVAL, String.valueOf(pollInterval));
+		return resultObj;
+	}
+
+	public static JSONObject setRemoteInteractDelay(JSONObject sessionObj) {
+		String sessionID = String.valueOf(sessionObj.get(SessionConstants.SESSION_ID));
+		JSONObject resultObj = new JSONObject();
+		int delay = 0;
+		try {
+			delay = Integer.parseInt(String.valueOf(sessionObj.get(SessionConstants.REMOTE_INTERACT_DELAY)));
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+			resultObj.put(ServerConstants.SERVLET_RESULTS, "Failed to parse remote interaction delay. Must be an integer greater than zero!");
+			return resultObj;
+		}
+		
+		Log.getRootLogger().info(String.format("Setting remote control interact delay to %s milliseconds.", delay));
+		SessionManager.updateSessionInfoItem(sessionID, SessionConstants.REMOTE_INTERACT_DELAY, delay);
+		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+		resultObj.put(SessionConstants.ELEMENT_POLLING_INTERVAL, String.valueOf(delay));
 		return resultObj;
 	}
 
