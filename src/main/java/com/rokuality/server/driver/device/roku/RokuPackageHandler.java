@@ -136,6 +136,12 @@ public class RokuPackageHandler {
 		return rokuDevAPIManager.getResponseContent();
 	}
 
+	public static String getInstalledApps(String deviceIP) {
+		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/query/apps", "GET");
+		rokuDevAPIManager.sendDevAPICommand();
+		return rokuDevAPIManager.getResponseContent();
+	}
+
 	private static boolean launchInstalledApp(String deviceIP, String appID) throws Exception {
 		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/launch/" + appID, "POST");
 		return rokuDevAPIManager.sendDevAPICommand();

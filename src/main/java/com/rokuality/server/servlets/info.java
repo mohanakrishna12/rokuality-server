@@ -47,6 +47,9 @@ public class info extends HttpServlet {
 		case "get_active_app":
 			results = getActiveApp(sessionID);
 			break;
+		case "get_installed_apps":
+			results = getInstalledApps(sessionID);
+			break;
 		default:
 
 			break;
@@ -165,6 +168,32 @@ public class info extends HttpServlet {
 			Log.getRootLogger().warn(e);
 			results.put(ServerConstants.SERVLET_RESULTS,
 					String.format("Failed to parse device active app output with output %s", activeApp));
+			return results;
+		}
+
+		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+
+		return results;
+	}
+
+	public static JSONObject getInstalledApps(String sessionID) {
+		JSONObject results = new JSONObject();
+
+		String deviceIP = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.DEVICE_IP);
+		String installedApps = RokuPackageHandler.getInstalledApps(deviceIP);
+		if (installedApps == null || !installedApps.contains("apps")) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Failed to retrieve installed app info.");
+			return results;
+		}
+
+		try {
+			org.json.JSONObject xmlJSONObj = XML.toJSONObject(installedApps);
+			String xmlToJSON = xmlJSONObj.toString(4);
+			results = (JSONObject) new JSONParser().parse(xmlToJSON);
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+			results.put(ServerConstants.SERVLET_RESULTS,
+					String.format("Failed to parse device installed app output with output %s", installedApps));
 			return results;
 		}
 
