@@ -29,6 +29,7 @@ public class SessionConstants {
 	public static final String ELEMENT_LOCATOR = "element_locator";
 	public static final String ELEMENT_FIND_TIMEOUT = "element_find_timeout";
 	public static final String ELEMENT_POLLING_INTERVAL = "element_polling_interval";
+	public static final String REMOTE_INTERACT_DELAY = "remote_interact_delay";
 	public static final String SUB_SCREEN_X = "sub_screen_x";
 	public static final String SUB_SCREEN_Y = "sub_screen_y";
 	public static final String SUB_SCREEN_WIDTH = "sub_screen_width";

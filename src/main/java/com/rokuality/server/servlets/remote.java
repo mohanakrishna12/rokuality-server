@@ -16,6 +16,7 @@ import com.rokuality.server.driver.device.roku.RokuKeyPresser;
 import com.rokuality.server.enums.RokuButton;
 import com.rokuality.server.enums.SpecialCharacters;
 import com.rokuality.server.utils.ServletJsonParser;
+import com.rokuality.server.utils.SleepUtils;
 
 import org.eclipse.jetty.util.log.Log;
 import org.json.simple.JSONObject;
@@ -71,6 +72,11 @@ public class remote extends HttpServlet {
 			success = RokuKeyPresser.rokuKeyPresser(deviceIP, deviceButton);
 		} catch (Exception e) {
 			Log.getRootLogger().warn(e);
+		}
+
+		Integer remoteDelay = (Integer) sessionInfo.getOrDefault(SessionConstants.REMOTE_INTERACT_DELAY, 0);
+		if (remoteDelay != null && remoteDelay > 0) {
+			SleepUtils.sleep(remoteDelay);
 		}
 
 		if (!success) {
