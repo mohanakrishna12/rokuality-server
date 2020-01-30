@@ -2,6 +2,10 @@
 
 The Rokuality Server allows you to distribute Roku, XBox, PS4, and Cable SetTop Box end to end tests across multiple devices on your network. The server acts a lightweight web proxy, capturing your device test traffic and distributing the tests to the devices provided in your capabilities. The project goal is to provide a no cost/low cost open source solution for various video streaming platforms that otherwise don't offer an easily automatable solution! Once you have the server setup with all requirements, [pick a language](#next-steps-choose-a-test-language) to write tests in. Additionally, it's possible to manually start a [live session test](#live-session-testing) for Roku and XBox devices, and maintain a remote device library from a consolidated location.
 
+### Your Roku tests in the cloud!
+
+Access the [Rokuality Device Cloud](https://www.rokuality.com/) to run your Roku tests in a CI/CD fashion from anywhere in the world! Get access to all the popular Roku streaming devices for both automated and live device test sessions on the world's first Roku Webdriver device cloud. Your [device portal](https://www.rokuality.com/device-portal-and-site-services) will allow you to review your test history, manage your test teams, review run results, and more! Our [detailed documentation](https://www.rokuality.com/roku-automation) will get you and your team up and running quickly. Start a [free trial](https://www.rokuality.com/plans-pricing) today and get started!
+
 ### Getting started: Server Requirements
 The Rokuality Server is a Java Jetty servlet container application that requires at least Java 8 to run, and that you have Java available on your PATH. Typically the easiest way to do that is to use the relevant package manager for the Operating System you are running. For example, for MAC users it's easy using [brew](https://brew.sh/) via `brew cask install java` or for Windows users using [scoop](https://scoop.sh/) via 
 ```xml
