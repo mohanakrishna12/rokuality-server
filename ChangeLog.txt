@@ -1,3 +1,7 @@
+1.2.6 - Changes from 1.2.5
+1. Adds the ability to capture the roku images in the original jpeg format to reduce file overhead in flight
+2. Fixes a possible permission issue on Roku WebDriver dependency install.
+
 1.2.5 - Changes from 1.2.4
 1. Adds the ability to get installed app and active app info for Roku.
 2. Improves the index detection for hdmi capture cards and fixes several bugs for video capture card image collector spinup.
