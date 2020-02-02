@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
+import com.rokuality.server.driver.device.roku.RokuKeyPresser;
 import com.rokuality.server.enums.SessionStatus;
 import com.rokuality.server.utils.ServletJsonParser;
 
@@ -48,6 +49,9 @@ public class settings extends HttpServlet {
 			break;
 			case SessionConstants.REMOTE_INTERACT_DELAY:
 			results = setRemoteInteractDelay(requestObj);
+			break;
+			case "reboot_device":
+			results = rebootDevice(requestObj);
 			break;
 			default:
 
@@ -145,6 +149,29 @@ public class settings extends HttpServlet {
 		resultObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 		resultObj.put(SessionConstants.ELEMENT_POLLING_INTERVAL, String.valueOf(delay));
 		return resultObj;
+	}
+
+	public static JSONObject rebootDevice(JSONObject sessionObj) {
+		String sessionID = String.valueOf(sessionObj.get(SessionConstants.SESSION_ID));
+
+		JSONObject results = new JSONObject();
+
+		if (!SessionManager.isRoku(sessionID)) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Reboot only available for Roku.");
+			return results;
+		}
+
+		String deviceIP = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.DEVICE_IP);
+		try {
+			Log.getRootLogger().info(String.format("Rebooting device %s", deviceIP));
+			RokuKeyPresser.rebootRoku(deviceIP);
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+		}
+
+		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+
+		return results;
 	}
 
 }

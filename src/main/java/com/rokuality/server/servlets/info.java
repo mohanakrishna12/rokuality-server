@@ -219,7 +219,7 @@ public class info extends HttpServlet {
 		try {
 			logContent = RokuLogManager.getLogContent(deviceIP);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.getRootLogger().warn(e);
 		}
 		
 		if (logContent == null) {
