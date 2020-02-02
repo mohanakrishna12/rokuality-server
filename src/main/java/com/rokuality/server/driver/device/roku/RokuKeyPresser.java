@@ -15,20 +15,30 @@ public class RokuKeyPresser {
 		return success;
 	}
 
-	// TODO - replace with custom button not presses/command not sent exception
+	// NOTE - dependent on firmware version
 	public static void rebootRoku(String ipAddress) throws Exception {
-		Log.getRootLogger().info("Rebooting Roku device.", new Object[] {});
-		rokuKeyPresser(ipAddress, RokuButton.getDeviceButton(RokuButton.HOME));
-		SleepUtils.sleep(5000); // TOOD - dynamic wait for home screen
-
-		rokuKeyPresser(ipAddress, RokuButton.getDeviceButton(RokuButton.UP_ARROW));
-		rokuKeyPresser(ipAddress, RokuButton.getDeviceButton(RokuButton.RIGHT_ARROW));
-		rokuKeyPresser(ipAddress, RokuButton.getDeviceButton(RokuButton.UP_ARROW));
-		rokuKeyPresser(ipAddress, RokuButton.getDeviceButton(RokuButton.RIGHT_ARROW));
-		rokuKeyPresser(ipAddress, RokuButton.getDeviceButton(RokuButton.UP_ARROW));
-		rokuKeyPresser(ipAddress, RokuButton.getDeviceButton(RokuButton.UP_ARROW));
-		rokuKeyPresser(ipAddress, RokuButton.getDeviceButton(RokuButton.UP_ARROW));
-		rokuKeyPresser(ipAddress, RokuButton.getDeviceButton(RokuButton.RIGHT_ARROW));
-		rokuKeyPresser(ipAddress, RokuButton.getDeviceButton(RokuButton.SELECT));
+		Log.getRootLogger().info(String.format("Rebooting device %s", ipAddress));
+		
+		String[] rebootButtons = { 
+			RokuButton.getDeviceButton(RokuButton.HOME), 
+			RokuButton.getDeviceButton(RokuButton.HOME),
+			RokuButton.getDeviceButton(RokuButton.HOME), 
+			RokuButton.getDeviceButton(RokuButton.UP_ARROW),
+			RokuButton.getDeviceButton(RokuButton.RIGHT_ARROW),
+			RokuButton.getDeviceButton(RokuButton.UP_ARROW),
+			RokuButton.getDeviceButton(RokuButton.RIGHT_ARROW),
+			RokuButton.getDeviceButton(RokuButton.UP_ARROW),
+			RokuButton.getDeviceButton(RokuButton.UP_ARROW),
+			RokuButton.getDeviceButton(RokuButton.UP_ARROW),
+			RokuButton.getDeviceButton(RokuButton.UP_ARROW),
+			RokuButton.getDeviceButton(RokuButton.RIGHT_ARROW),
+			RokuButton.getDeviceButton(RokuButton.SELECT) 
+		};
+		
+		for (String button : rebootButtons) {
+			rokuKeyPresser(ipAddress, button);
+			SleepUtils.sleep(350);
+		}
+		
 	}
 }

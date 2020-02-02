@@ -21,6 +21,7 @@ import com.rokuality.server.driver.device.hdmi.HDMIKeyPresser;
 import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
 import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
 import com.rokuality.server.driver.device.roku.RokuKeyPresser;
+import com.rokuality.server.driver.device.roku.RokuLogManager;
 import com.rokuality.server.driver.device.roku.RokuPackageHandler;
 import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
 import com.rokuality.server.driver.device.roku.RokuWebDriverFactory;
@@ -358,6 +359,10 @@ public class session extends HttpServlet {
 		}
 
 		if (isRoku(platformType)) {
+			RokuLogManager.startLogCapture(deviceIP);
+		}
+
+		if (isRoku(platformType)) {
 			boolean homeScreenSuccess = returnToRokuHomeScreen(
 					String.valueOf(sessionInfo.get(SessionConstants.DEVICE_IP)));
 			if (!homeScreenSuccess) {
@@ -497,6 +502,8 @@ public class session extends HttpServlet {
 			String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
 			returnToRokuHomeScreen(deviceIP);
 			new RokuWebDriverAPIManager(deviceIP).stopSession();
+
+			RokuLogManager.stopLogCapture(deviceIP);
 		}
 
 		if (isXBox(platformType)) {

@@ -113,10 +113,12 @@ public class GlobalDependencyInstaller {
 
 	public static void installRokuWebDriver() {
 		Log.getRootLogger().info("Installing Roku WebDriver", new Object[] {});
+		CommandExecutor commandExecutor = new CommandExecutor();
+
 		DependencyManager dependencyManager = new DependencyManager();
 		boolean dependencyDownloaded = dependencyManager.downloadDependency(RokuWebDriverConstants.ROKU_WEBDRIVER_ZIP);
 		dependencyManager.unzipDependency(RokuWebDriverConstants.ROKU_WEBDRIVER_ZIP);
-		if (dependencyDownloaded) {
+		if (dependencyDownloaded && RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR.exists()) {
 			String goPath = OSUtils.getBinaryPath("go");
 			String[] command = null;
 			File buildFile = new File(
@@ -136,6 +138,9 @@ public class GlobalDependencyInstaller {
 				command = new String[] { "cmd", "/c", "start", "/b", "\"\"", ">" + logStartFile.getAbsolutePath(),
 						buildFile.getAbsolutePath() };
 			} else {
+				String[] permissionCmd = {"chmod", "-R", "777", RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR.getAbsolutePath()};
+				commandExecutor.execCommand(String.join(" ", permissionCmd), null);
+				
 				String userPath = OSUtils.getPathVar();
 				buildContent = "# !/bin/bash" + System.lineSeparator() + "export PATH=" + userPath
 						+ System.lineSeparator() + "cd " + RokuWebDriverConstants.ROKU_WEBDRIVER_BASE_DIR
@@ -148,7 +153,7 @@ public class GlobalDependencyInstaller {
 			}
 
 			FileUtils.writeStringToFile(buildFile, buildContent);
-			new CommandExecutor().execCommand(String.join(" ", command), null);
+			commandExecutor.execCommand(String.join(" ", command), null);
 		}
 
 	}

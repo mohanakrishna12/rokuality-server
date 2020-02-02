@@ -10,6 +10,7 @@ import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
+import com.rokuality.server.driver.device.roku.RokuLogManager;
 import com.rokuality.server.driver.device.roku.RokuPackageHandler;
 import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
 import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
@@ -49,6 +50,9 @@ public class info extends HttpServlet {
 			break;
 		case "get_installed_apps":
 			results = getInstalledApps(sessionID);
+			break;
+		case "get_debug_logs":
+			results = getDebugLogs(sessionID);
 			break;
 		default:
 
@@ -197,6 +201,33 @@ public class info extends HttpServlet {
 			return results;
 		}
 
+		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+
+		return results;
+	}
+
+	public static JSONObject getDebugLogs(String sessionID) {
+		JSONObject results = new JSONObject();
+
+		if (!SessionManager.isRoku(sessionID)) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Debug logs only available for Roku.");
+			return results;
+		}
+
+		String deviceIP = (String) SessionManager.getSessionInfo(sessionID).get(SessionConstants.DEVICE_IP);
+		String logContent = "";
+		try {
+			logContent = RokuLogManager.getLogContent(deviceIP);
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+		}
+		
+		if (logContent == null) {
+			results.put(ServerConstants.SERVLET_RESULTS, "Failed to retrieve Roku debug logs.");
+			return results;
+		}
+
+		results.put("log_content", logContent);
 		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 
 		return results;

@@ -77,6 +77,8 @@ public class screen extends HttpServlet {
 		String sessionID = sessionObj.get(SessionConstants.SESSION_ID).toString();
 		JSONObject results = new JSONObject();
 
+		boolean useOriginalImage = (boolean) sessionObj.getOrDefault("use_original_image", false);
+
 		File imageFile = collectImage(sessionID, sessionObj);
 
 		String imageContent = null;
@@ -94,8 +96,10 @@ public class screen extends HttpServlet {
 			results.put(ServerConstants.SERVLET_RESULTS, "Failed to get screen image/subimage!");
 		}
 
-		FileUtils.deleteFile(imageFile);
-
+		if (!useOriginalImage) {
+			FileUtils.deleteFile(imageFile);
+		}
+		
 		return results;
 	}
 
@@ -297,6 +301,8 @@ public class screen extends HttpServlet {
 		Object subScreenWidth = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_WIDTH, null);
 		Object subScreenHeight = sessionObj.getOrDefault(SessionConstants.SUB_SCREEN_HEIGHT, null);
 
+		boolean useOriginalImage = (boolean) sessionObj.getOrDefault("use_original_image", false);
+
 		ImageCollector imageCollector = SessionManager.getImageCollector(sessionID);
 		File image = null;
 		File subImageFile = null;
@@ -305,7 +311,7 @@ public class screen extends HttpServlet {
 			long pollMax = pollStart + (5 * 1000);
 
 			while (System.currentTimeMillis() <= pollMax) {
-				image = imageCollector.getCurrentImage(false);
+				image = useOriginalImage ? imageCollector.viewCurrentImage(true) : imageCollector.getCurrentImage(false);
 
 				Log.getRootLogger().info("Collecting screen image from entire screen.");
 				if (image != null && image.exists() && subScreenX != null && subScreenY != null
