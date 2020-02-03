@@ -20,7 +20,7 @@ import com.rokuality.server.utils.WebDriverUtils;
 @SuppressWarnings("deprecation")
 public class XBoxDevConsoleManager {
 
-	private static final int DEFAULT_TIMEOUT = 30;
+	public static final int DEFAULT_TIMEOUT = 30;
 	// TODO - clean up the spaghetti exception code below with concurrent exception
 	// handling
 
@@ -230,7 +230,7 @@ public class XBoxDevConsoleManager {
 		return closeSuccess;
 	}
 
-	private WebDriver getWebDriver() {
+	public WebDriver getWebDriver() {
 		DesiredCapabilities capabilities = new DesiredCapabilities();
 		io.github.bonigarcia.wdm.WebDriverManager.chromedriver().setup();
 

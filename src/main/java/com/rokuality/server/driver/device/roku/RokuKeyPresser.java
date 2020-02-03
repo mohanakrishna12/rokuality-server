@@ -2,14 +2,15 @@ package com.rokuality.server.driver.device.roku;
 
 import org.eclipse.jetty.util.log.Log;
 
-import com.rokuality.server.enums.RokuAPIType;
+import com.rokuality.server.driver.host.APIManager;
+import com.rokuality.server.enums.APIType;
 import com.rokuality.server.enums.RokuButton;
 import com.rokuality.server.utils.SleepUtils;
 
 public class RokuKeyPresser {
 
 	public static boolean rokuKeyPresser(String ipAddress, String keyName) {
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, ipAddress, "/keypress/" + keyName, "POST");
+		APIManager rokuDevAPIManager = new APIManager(APIType.ROKU_DEV_API, ipAddress, "/keypress/" + keyName, "POST");
 		boolean success = rokuDevAPIManager.sendDevAPICommand();
 
 		return success;

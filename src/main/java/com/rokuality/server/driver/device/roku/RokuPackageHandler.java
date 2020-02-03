@@ -6,7 +6,8 @@ import org.json.simple.JSONObject;
 import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.constants.ServerConstants;
 import com.rokuality.server.constants.SessionConstants;
-import com.rokuality.server.enums.RokuAPIType;
+import com.rokuality.server.driver.host.APIManager;
+import com.rokuality.server.enums.APIType;
 import com.rokuality.server.enums.SessionCapabilities;
 import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.FileUtils;
@@ -131,19 +132,19 @@ public class RokuPackageHandler {
 	}
 
 	public static String getActiveApp(String deviceIP) {
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/query/active-app", "GET");
+		APIManager rokuDevAPIManager = new APIManager(APIType.ROKU_DEV_API, deviceIP, "/query/active-app", "GET");
 		rokuDevAPIManager.sendDevAPICommand();
 		return rokuDevAPIManager.getResponseContent();
 	}
 
 	public static String getInstalledApps(String deviceIP) {
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/query/apps", "GET");
+		APIManager rokuDevAPIManager = new APIManager(APIType.ROKU_DEV_API, deviceIP, "/query/apps", "GET");
 		rokuDevAPIManager.sendDevAPICommand();
 		return rokuDevAPIManager.getResponseContent();
 	}
 
 	private static boolean launchInstalledApp(String deviceIP, String appID) throws Exception {
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/launch/" + appID, "POST");
+		APIManager rokuDevAPIManager = new APIManager(APIType.ROKU_DEV_API, deviceIP, "/launch/" + appID, "POST");
 		return rokuDevAPIManager.sendDevAPICommand();
 	}
 
