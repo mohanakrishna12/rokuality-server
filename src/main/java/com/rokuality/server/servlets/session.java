@@ -137,12 +137,21 @@ public class session extends HttpServlet {
 		boolean goInstalled = GlobalDependencyInstaller.isGoInstalled();
 		if (isRoku(platformType) && !goInstalled) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS,
-					String.format(
-							"Unable to find go on your path! Is it installed and available? See the Rokuality Server"
+					"Unable to find go on your path! Is it installed and available? See the Rokuality Server"
 									+ " README for details but it can easily be installed via 'brew install go' "
-									+ "on MAC and via 'scoop install go' for windows.",
-							SessionCapabilities.PLATFORM.value()));
+									+ "on MAC and via 'scoop install go' for windows.");
 			return sessionInfo;
+		}
+
+		if (isXBox(platformType)) {
+			boolean xboxRestServerInstalled = GlobalDependencyInstaller.isXBoxRestServerInstalled();
+			if (!xboxRestServerInstalled) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+				"Unable to find xbox-rest-server on your path! Is it installed and available? See the Rokuality Server"
+								+ " README for details but it can easily be installed via 'pip3 install xbox-smartglass-rest'. Note that this requires "
+								+ "the user has python3 installed which can easily be done on MAC via 'brew install python' or on WINDOWS via 'scoop install python'.");
+				return sessionInfo;
+			}
 		}
 
 		if (isHDMI(platformType)) {

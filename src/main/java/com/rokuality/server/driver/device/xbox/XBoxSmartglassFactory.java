@@ -37,6 +37,9 @@ public class XBoxSmartglassFactory {
 	}
 
 	public static boolean startServer() {
+		CommandExecutor commandExecutor = new CommandExecutor();
+		commandExecutor.setWaitToComplete(false);
+
 		File logFile = LogFileUtils.getLogFile("xboxsmartglassserver.log");
 		logFile = LogFileUtils.cleanLogFile(logFile);
 
@@ -46,17 +49,14 @@ public class XBoxSmartglassFactory {
 		String startContent = "";
 
 		if (OSUtils.isWindows()) {
-			/*
-			commandExecutor.setWaitToComplete(false);
 			startFile = new File(startFile.getAbsolutePath().replace(".sh", ".bat"));
-			startContent = RokuWebDriverConstants.MAIN.getAbsolutePath() + ".exe";
+			startContent = XBOX_REST_SERVER + ".exe -l " + logFile.getAbsolutePath();
 
-			File logStartFile = LogFileUtils.getLogFile("startrokuwebdriver.log");
+			File logStartFile = LogFileUtils.getLogFile("startxboxsmartglassserver.log");
 			logStartFile = LogFileUtils.cleanLogFile(logStartFile);
 			FileUtils.createFile(logStartFile);
 			command = new String[] { "cmd", "/c", "start", "/b", "\"\"", ">" + logStartFile.getAbsolutePath(),
 					startFile.getAbsolutePath() };
-			*/
 		} else {
 			String userPath = OSUtils.getPathVar();
 			startContent = "# !/bin/bash" + System.lineSeparator() + "export PATH=" + userPath + System.lineSeparator()
@@ -64,8 +64,7 @@ public class XBoxSmartglassFactory {
 			command = new String[] { "bash", startFile.getAbsolutePath() };
 		}
 		FileUtils.writeStringToFile(startFile, startContent);
-		CommandExecutor commandExecutor = new CommandExecutor();
-		commandExecutor.setWaitToComplete(false);
+		
 		commandExecutor.execCommand(String.join(" ", command), null);
 
 		long pollStart = System.currentTimeMillis();
@@ -119,3 +118,4 @@ public class XBoxSmartglassFactory {
 	}
 
 }
+

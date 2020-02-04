@@ -1,6 +1,5 @@
 package com.rokuality.server.driver.device.xbox;
 
-import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
 import com.rokuality.server.driver.host.APIManager;
@@ -12,6 +11,7 @@ import org.eclipse.jetty.util.log.Log;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 
 public class XBoxSmartglassAPIManager {
@@ -52,10 +52,9 @@ public class XBoxSmartglassAPIManager {
 			webDriver.manage().timeouts().implicitlyWait(XBoxDevConsoleManager.DEFAULT_TIMEOUT, TimeUnit.SECONDS);
 
 			new WebDriverUtils(webDriver, By.xpath("//input[@name='email']")).type(username);
-			new WebDriverUtils(webDriver, By.xpath("//input[@name='password'")).type(password);
-			new WebDriverUtils(webDriver, By.xpath("//input[@value='Login'")).click();
-			new WebDriverUtils(webDriver, By.id("xboxdeployment-showinstallationprogress-cancelordone")).click();
-			new WebDriverUtils(webDriver, By.xpath("//h3(text()='Login succeeded']"));
+			new WebDriverUtils(webDriver, By.xpath("//input[@name='password']")).type(password);
+			new WebDriverUtils(webDriver, By.xpath("//input[@value='Login']")).click();
+			new WebDriverUtils(webDriver, By.xpath("//h3[text()='Login succeeded']"));
 			authSuccess = true;
 		} catch (Exception e) {
 			Log.getRootLogger().warn(e);
@@ -80,7 +79,7 @@ public class XBoxSmartglassAPIManager {
 		}
 		
 		JSONObject conObj = this.getResponseObj();
-		return conObj != null && conObj.toJSONString().toLowerCase().contains("connected");
+		return conObj != null && conObj.toJSONString().contains("Connected");
 	}
 
 	public void sendInput(XBoxButton button) {
