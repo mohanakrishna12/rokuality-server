@@ -2,6 +2,7 @@ package com.rokuality.server.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -161,6 +162,23 @@ public class FileUtils {
 		boolean fileCopied = copyFile(fileToMove, movedFile);
 		boolean fileDeleted = deleteFile(fileToMove);
 		return fileCopied && fileDeleted;
+	}
+
+	public static boolean cleanFile(File fileToClean) {
+		if (fileToClean == null || !FileUtils.isSafeFileAction(fileToClean)) {
+			Log.getRootLogger().warn("Not cleaning unsafe file", fileToClean);
+			return false;
+		}
+
+		Log.getRootLogger().info("Cleaning file at: " + fileToClean.getAbsolutePath(), new Object[] {});
+		try (PrintWriter printWriter = new PrintWriter(fileToClean)) {
+			printWriter.print("");
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+			return false;
+		}
+
+		return true;
 	}
 
 	public static boolean cleanDirectory(File directoryToClean) {
