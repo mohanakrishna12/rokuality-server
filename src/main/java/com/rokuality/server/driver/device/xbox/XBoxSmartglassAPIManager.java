@@ -86,6 +86,11 @@ public class XBoxSmartglassAPIManager {
 		sendCommand("GET", "/device/" + deviceID + XBoxButton.getSmartglassInput(button));
 	}
 
+	public void sendText(String text) throws Exception {
+		text = text.replace(" ", "%20");
+		sendCommand("GET", "/device/" + deviceID + "/text/" + text);
+	}
+
 	private void sendCommand(String method, String path) {
 		APIManager xboxAPIManager = new APIManager(APIType.XBOX_SMARTGLASS, null, path, method);
 		xboxAPIManager.sendDevAPICommand();
