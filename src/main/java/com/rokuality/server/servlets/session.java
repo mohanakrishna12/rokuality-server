@@ -19,7 +19,7 @@ import com.rokuality.server.core.drivers.ElementManager;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.hdmi.HDMIKeyPresser;
 import com.rokuality.server.driver.device.hdmi.HDMIScreenManager;
-import com.rokuality.server.driver.device.roku.RokuDevAPIManager;
+import com.rokuality.server.driver.host.APIManager;
 import com.rokuality.server.driver.device.roku.RokuKeyPresser;
 import com.rokuality.server.driver.device.roku.RokuLogManager;
 import com.rokuality.server.driver.device.roku.RokuPackageHandler;
@@ -27,11 +27,13 @@ import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
 import com.rokuality.server.driver.device.roku.RokuWebDriverFactory;
 import com.rokuality.server.driver.device.xbox.XBoxDevConsoleManager;
 import com.rokuality.server.driver.device.xbox.XBoxPackageHandler;
+import com.rokuality.server.driver.device.xbox.XBoxSmartglassAPIManager;
+import com.rokuality.server.driver.device.xbox.XBoxSmartglassFactory;
 import com.rokuality.server.driver.host.DeviceDesktopMirror;
 import com.rokuality.server.driver.host.GlobalDependencyInstaller;
 import com.rokuality.server.enums.OCRType;
 import com.rokuality.server.enums.PlatformType;
-import com.rokuality.server.enums.RokuAPIType;
+import com.rokuality.server.enums.APIType;
 import com.rokuality.server.enums.RokuButton;
 import com.rokuality.server.enums.SessionCapabilities;
 import com.rokuality.server.utils.FileToStringUtils;
@@ -98,6 +100,7 @@ public class session extends HttpServlet {
 		String deviceUsername = null;
 		String devicePassword = null;
 
+		String deviceID = null;
 		String deviceName = null;
 		String homeHubDeviceIP = null;
 
@@ -134,15 +137,24 @@ public class session extends HttpServlet {
 		boolean goInstalled = GlobalDependencyInstaller.isGoInstalled();
 		if (isRoku(platformType) && !goInstalled) {
 			sessionInfo.put(ServerConstants.SERVLET_RESULTS,
-					String.format(
-							"Unable to find go on your path! Is it installed and available? See the Rokuality Server"
+					"Unable to find go on your path! Is it installed and available? See the Rokuality Server"
 									+ " README for details but it can easily be installed via 'brew install go' "
-									+ "on MAC and via 'scoop install go' for windows.",
-							SessionCapabilities.PLATFORM.value()));
+									+ "on MAC and via 'scoop install go' for windows.");
 			return sessionInfo;
 		}
 
-		if (isXBox(platformType) || isHDMI(platformType)) {
+		if (isXBox(platformType)) {
+			boolean xboxRestServerInstalled = GlobalDependencyInstaller.isXBoxRestServerInstalled();
+			if (!xboxRestServerInstalled) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+				"Unable to find xbox-rest-server on your path! Is it installed and available? See the Rokuality Server"
+								+ " README for details but it can easily be installed via 'pip3 install xbox-smartglass-rest'. Note that this requires "
+								+ "the user has python3 installed which can easily be done on MAC via 'brew install python' or on WINDOWS via 'scoop install python'.");
+				return sessionInfo;
+			}
+		}
+
+		if (isHDMI(platformType)) {
 			boolean nodeInstalled = GlobalDependencyInstaller.isNodeInstalled();
 			if (!nodeInstalled) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
@@ -164,7 +176,7 @@ public class session extends HttpServlet {
 			sessionInfo.put(SessionConstants.DEVICE_IP, deviceIP);
 		}
 
-		if (isXBox(platformType) || isHDMI(platformType)) {
+		if (isHDMI(platformType)) {
 			deviceName = (String) requestObj.get(SessionCapabilities.DEVICE_NAME.value());
 			if (deviceName == null || deviceName.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
@@ -232,7 +244,7 @@ public class session extends HttpServlet {
 		}
 		sessionInfo.put(SessionConstants.OCR_MODULE, ocrType.value());
 
-		if (isRoku(platformType)) {
+		if (isRoku(platformType) || isXBox(platformType)) {
 			deviceUsername = (String) requestObj.get(SessionCapabilities.DEVICE_USERNAME.value());
 			if (deviceUsername == null || deviceUsername.isEmpty()) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
@@ -248,6 +260,16 @@ public class session extends HttpServlet {
 				return sessionInfo;
 			}
 			sessionInfo.put(SessionConstants.DEVICE_PASSWORD, devicePassword);
+		}
+
+		if (isXBox(platformType)) {
+			deviceID = (String) requestObj.get(SessionCapabilities.DEVICE_ID.value());
+			if (deviceID == null || deviceID.isEmpty()) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
+						.format("The %s capability cannot be null or empty!", SessionCapabilities.DEVICE_ID.value()));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.DEVICE_ID, deviceID);
 		}
 
 		imageCollectionDir = new File(
@@ -293,7 +315,7 @@ public class session extends HttpServlet {
 			}
 		}
 
-		if (isHDMI(platformType) || isXBox(platformType)) {
+		if (isHDMI(platformType)) {
 			String output = new HDMIKeyPresser(homeHubDeviceIP, deviceName).getButtons();
 			if (output == null || !output.toLowerCase().contains("commands")) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS,
@@ -407,6 +429,48 @@ public class session extends HttpServlet {
 				return sessionInfo;
 			}
 			sessionInfo.put(SessionConstants.ROKU_WEBDRIVER_SESSION_ID, rokuWebDriverAPIManager.getSessionID());
+		}
+
+		if (isXBox(platformType)) {
+			boolean isXBoxServerRunning = XBoxSmartglassFactory.isServerRunning();
+			Log.getRootLogger().info("Is XBox server running: " + isXBoxServerRunning);
+			if (!isXBoxServerRunning) {
+				Log.getRootLogger().info("Starting XBox Smartglass server.");
+				isXBoxServerRunning = XBoxSmartglassFactory.startServer();
+				if (!isXBoxServerRunning) {
+					XBoxSmartglassFactory.stopServer();
+					sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+							"XBox Smartglass server was not running and could not be started. Please see the "
+									+ "README to ensure all dependencies are properly installed.");
+					return sessionInfo;
+				}
+			}
+			
+			XBoxSmartglassAPIManager xboxSmartglassAPIManager = new XBoxSmartglassAPIManager(deviceID, deviceUsername,
+					devicePassword);
+			boolean isConnected = xboxSmartglassAPIManager.isConnected();
+			if (!isConnected) {
+				// auth with smartglass
+				boolean authenticated = xboxSmartglassAPIManager.authenticate();
+				if (!authenticated) {
+					XBoxSmartglassFactory.stopServer();
+					sessionInfo.put(ServerConstants.SERVLET_RESULTS,
+							"Failed to authenticate with the XBox Smartglass api server. Is your XBox username/password correct?");
+					return sessionInfo;
+				}
+
+				// connect to the xbox server
+				xboxSmartglassAPIManager.connect();
+				int responseCode = xboxSmartglassAPIManager.getResponseCode();
+				if (responseCode != 200 || !xboxSmartglassAPIManager.isConnected()) {
+					XBoxSmartglassFactory.stopServer();
+					sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
+							"Failed to connect device %s with the XBox Smartglass api server with result code %s.",
+							deviceID, responseCode));
+					return sessionInfo;
+				}
+			}
+
 		}
 
 		ImageCollector imageCollector = new ImageCollector(platformType, sessionID, deviceIP, imageCollectionDir,
@@ -567,8 +631,7 @@ public class session extends HttpServlet {
 	}
 
 	private static boolean isRokuHomeScreenLoaded(String deviceIP) {
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.DEV_API, deviceIP, "/query/active-app",
-				"GET");
+		APIManager rokuDevAPIManager = new APIManager(APIType.ROKU_DEV_API, deviceIP, "/query/active-app", "GET");
 		rokuDevAPIManager.sendDevAPICommand();
 		String output = rokuDevAPIManager.getResponseContent();
 		return (output != null && output.contains("<app>Roku</app>"));

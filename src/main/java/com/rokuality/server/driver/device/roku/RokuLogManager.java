@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.rokuality.server.constants.DependencyConstants;
 import com.rokuality.server.utils.FileUtils;
-import com.rokuality.server.utils.LogFileUtils;
 
 import org.apache.commons.net.telnet.TelnetClient;
 import org.eclipse.jetty.util.log.Log;
@@ -18,10 +17,11 @@ public class RokuLogManager {
 	private static final int DEFAULT_PORT = 8085;
 
 	private static Map<String, TelnetClient> telnetMap = new ConcurrentHashMap<String, TelnetClient>();
+	private static Map<String, FileOutputStream> outputStreamMap = new ConcurrentHashMap<String, FileOutputStream>();
 
 	public static void startLogCapture(String deviceIP) {
 		File logFile = getLogFile(deviceIP);
-		LogFileUtils.cleanLogFile(logFile);
+		FileUtils.cleanFile(logFile);
 		Log.getRootLogger().info("Initiating Roku debug log capture at: " + logFile.getAbsolutePath());
 
 		TelnetClient client = new TelnetClient();
@@ -47,11 +47,14 @@ public class RokuLogManager {
 			return;
 		}
 
+		outputStreamMap.put(deviceIP, fileOutputStream);
 		telnetMap.put(deviceIP, client);
 	}
 
 	public static void stopLogCapture(String deviceIP) {
 		TelnetClient client = telnetMap.get(deviceIP);
+		FileOutputStream fileOutputStream = outputStreamMap.get(deviceIP);
+
 		if (client != null) {
 			Log.getRootLogger().warn(String.format("Stopping Roku log capture for device %s", deviceIP));
 			try {
@@ -61,9 +64,23 @@ public class RokuLogManager {
 			}
 			telnetMap.remove(deviceIP);
 		}
+
+		if (fileOutputStream != null) {
+			try {
+				fileOutputStream.close();
+			} catch (Exception e) {
+				Log.getRootLogger().warn(e);
+			}
+		}
 	}
 
 	public static String getLogContent(String deviceIP) {
+		FileOutputStream fileOutputStream = outputStreamMap.get(deviceIP);
+		try {
+			fileOutputStream.flush();
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+		}
 		return FileUtils.readStringFromFile(getLogFile(deviceIP));
 	}
 

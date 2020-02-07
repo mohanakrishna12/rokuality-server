@@ -40,6 +40,14 @@ public class GlobalDependencyInstaller {
 		return installed;
 	}
 
+	public static boolean isXBoxRestServerInstalled() {
+		File server = new File(OSUtils.getBinaryPath("xbox-rest-server"));
+
+		boolean installed = (server != null && server.exists() && server.isFile());
+		Log.getRootLogger().info("xbox-rest-server installed " + installed, new Object[] {});
+		return installed;
+	}
+
 	public static boolean isFFMPEGInstalled() {
 		File ffmpeg = FFMPEGConstants.FFMPEG;
 		boolean installed = (ffmpeg.exists() && ffmpeg.isFile());

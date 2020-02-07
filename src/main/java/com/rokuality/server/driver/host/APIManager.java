@@ -1,4 +1,4 @@
-package com.rokuality.server.driver.device.roku;
+package com.rokuality.server.driver.host;
 
 import org.apache.commons.io.IOUtils;
 
@@ -10,13 +10,14 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import com.rokuality.server.enums.RokuAPIType;
+import com.rokuality.server.driver.device.xbox.XBoxSmartglassFactory;
+import com.rokuality.server.enums.APIType;
 
-public class RokuDevAPIManager {
+public class APIManager {
 
 	private static final int DEFAULT_API_TIMEOUT_MS = 10000;
 
-	private RokuAPIType apiType = null;
+	private APIType apiType = null;
 	private JSONObject requestPayload = null;
 	private String deviceip = null;
 	private String path = null;
@@ -24,7 +25,7 @@ public class RokuDevAPIManager {
 	private int responseCode = 400;
 	private String responseContent = null;
 
-	public RokuDevAPIManager(RokuAPIType apiType, String deviceip, String path, String method) {
+	public APIManager(APIType apiType, String deviceip, String path, String method) {
 		this.apiType = apiType;
 		this.deviceip = deviceip;
 		this.path = path;
@@ -36,7 +37,7 @@ public class RokuDevAPIManager {
 	}
 
 	public boolean sendDevAPICommand() {
-		if (deviceip == null || path == null || method == null) {
+		if ((deviceip == null && !apiType.equals(APIType.XBOX_SMARTGLASS)) || path == null || method == null) {
 			Log.getRootLogger().warn(String.format("Null data %s, %s, %s. NOT sending request to dev api!",
 					String.valueOf(deviceip), String.valueOf(path), String.valueOf(method)));
 			return false;
@@ -94,11 +95,29 @@ public class RokuDevAPIManager {
 	}
 
 	private int getAPIPort() {
-		return this.apiType.equals(RokuAPIType.WEBDRIVER) ? 9000 : 8060;
+		switch (this.apiType) {
+			case ROKU_WEBDRIVER:
+				return 9000;
+			case ROKU_DEV_API:
+				return 8060;
+			case XBOX_SMARTGLASS:
+				return XBoxSmartglassFactory.PORT;
+			default:
+				return 9000;
+		}
 	}
 
 	private String getHost() {
-		return this.apiType.equals(RokuAPIType.WEBDRIVER) ? "localhost" : deviceip;
+		switch (this.apiType) {
+			case ROKU_WEBDRIVER:
+				return "localhost";
+			case ROKU_DEV_API:
+				return deviceip;
+			case XBOX_SMARTGLASS:
+				return "localhost";
+			default:
+				return "localhost";
+		}
 	}
 
 }

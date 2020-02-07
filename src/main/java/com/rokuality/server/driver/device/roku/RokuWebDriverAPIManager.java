@@ -1,6 +1,7 @@
 package com.rokuality.server.driver.device.roku;
 
-import com.rokuality.server.enums.RokuAPIType;
+import com.rokuality.server.driver.host.APIManager;
+import com.rokuality.server.enums.APIType;
 import com.rokuality.server.enums.RokuWebDriverLocatorType;
 import com.rokuality.server.servlets.info;
 import com.rokuality.server.utils.CacheUtils;
@@ -72,7 +73,7 @@ public class RokuWebDriverAPIManager {
 	}
 
 	private void sendCommand(String method, String path, JSONObject payload) {
-		RokuDevAPIManager rokuDevAPIManager = new RokuDevAPIManager(RokuAPIType.WEBDRIVER, deviceIP, path, method);
+		APIManager rokuDevAPIManager = new APIManager(APIType.ROKU_WEBDRIVER, deviceIP, path, method);
 		if (payload != null) {
 			rokuDevAPIManager.addRequestPayload(payload);
 		}

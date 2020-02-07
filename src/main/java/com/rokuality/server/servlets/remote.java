@@ -13,8 +13,10 @@ import com.rokuality.server.constants.SessionConstants;
 import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.device.hdmi.HDMIKeyPresser;
 import com.rokuality.server.driver.device.roku.RokuKeyPresser;
+import com.rokuality.server.driver.device.xbox.XBoxSmartglassAPIManager;
 import com.rokuality.server.enums.RokuButton;
 import com.rokuality.server.enums.SpecialCharacters;
+import com.rokuality.server.enums.XBoxButton;
 import com.rokuality.server.utils.ServletJsonParser;
 import com.rokuality.server.utils.SleepUtils;
 
@@ -115,6 +117,40 @@ public class remote extends HttpServlet {
 		return buttonObj;
 	}
 
+	public static JSONObject pressXBoxRemoteButton(String sessionID, XBoxButton xboxButton) {
+		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
+
+		JSONObject buttonObj = new JSONObject();
+
+		String deviceID = (String) sessionInfo.get(SessionConstants.DEVICE_ID);
+		String username = (String) sessionInfo.get(SessionConstants.DEVICE_USERNAME);
+		String password = (String) sessionInfo.get(SessionConstants.DEVICE_PASSWORD);
+			
+		boolean success = false;
+		try {
+			XBoxSmartglassAPIManager apiManager = new XBoxSmartglassAPIManager(deviceID, username, password);
+			apiManager.sendInput(xboxButton);
+			success = apiManager.getResponseCode() == 200;
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
+		}
+
+		Integer remoteDelay = (Integer) sessionInfo.getOrDefault(SessionConstants.REMOTE_INTERACT_DELAY, 0);
+		if (remoteDelay != null && remoteDelay > 0) {
+			SleepUtils.sleep(remoteDelay);
+		}
+
+		if (!success) {
+			buttonObj = new JSONObject();
+			buttonObj.put(ServerConstants.SERVLET_RESULTS,
+					"Failed to send remote command " + xboxButton.value() + " to device!");
+			return buttonObj;
+		}
+
+		buttonObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+		return buttonObj;
+	}
+
 	public static JSONObject getHarmonyButtonOptions(JSONObject requestObj) {
 		String sessionID = requestObj.get(SessionConstants.SESSION_ID).toString();
 		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
@@ -151,6 +187,26 @@ public class remote extends HttpServlet {
 
 		String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
 
+		boolean success = false;
+		if (SessionManager.isRoku(sessionID)) {
+			success = rokuSendKeys(deviceIP, text);
+		}
+
+		if (SessionManager.isXBox(sessionID)) {
+			success = xboxSendKeys(sessionID, text);
+		}
+
+		if (!success) {
+			buttonObj.put(ServerConstants.SERVLET_RESULTS,
+					String.format("Failed to send literal characters %s to device.", String.valueOf(text)));
+			return buttonObj;
+		}
+
+		buttonObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+		return buttonObj;
+	}
+
+	private static boolean rokuSendKeys(String deviceIP, String text) {
 		List<Boolean> keySendSuccess = new ArrayList<>();
 		for (int i = 0; i < text.length(); i++) {
 			boolean success = false;
@@ -162,21 +218,32 @@ public class remote extends HttpServlet {
 					success = RokuKeyPresser.rokuKeyPresser(deviceIP, "Lit_" + c);
 				}
 			} catch (Exception e) {
-				buttonObj.put(ServerConstants.SERVLET_RESULTS,
-						String.format("Failed to send literal character %s to device.", c));
-				return buttonObj;
+				Log.getRootLogger().warn(e);
+				return false;
 			}
 			keySendSuccess.add(success);
 		}
 
-		if (keySendSuccess.contains(false)) {
-			buttonObj.put(ServerConstants.SERVLET_RESULTS,
-					String.format("Failed to send literal characters %s to device.", String.valueOf(text)));
-			return buttonObj;
+		return !keySendSuccess.contains(false);
+	}
+
+	private static boolean xboxSendKeys(String sessionID, String text) {
+		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
+
+		String deviceID = (String) sessionInfo.get(SessionConstants.DEVICE_ID);
+		String username = (String) sessionInfo.get(SessionConstants.DEVICE_USERNAME);
+		String password = (String) sessionInfo.get(SessionConstants.DEVICE_PASSWORD);
+			
+		boolean success = false;
+		try {
+			XBoxSmartglassAPIManager apiManager = new XBoxSmartglassAPIManager(deviceID, username, password);
+			apiManager.sendText(text);
+			success = apiManager.getResponseCode() == 200;
+		} catch (Exception e) {
+			Log.getRootLogger().warn(e);
 		}
 
-		buttonObj.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
-		return buttonObj;
+		return success;
 	}
 
 	private JSONObject pressButton(JSONObject requestObj) {
@@ -189,7 +256,13 @@ public class remote extends HttpServlet {
 			results = pressRokuRemoteButton(sessionID, rokuButton);
 		}
 
-		if (SessionManager.isXBox(sessionID) || SessionManager.isHDMI(sessionID)) {
+		if (SessionManager.isXBox(sessionID)) {
+			XBoxButton xboxButton = XBoxButton
+					.getEnumByString(requestObj.get(SessionConstants.REMOTE_BUTTON).toString());
+			results = pressXBoxRemoteButton(sessionID, xboxButton);
+		}
+
+		if (SessionManager.isHDMI(sessionID)) {
 			String button = requestObj.get(SessionConstants.REMOTE_BUTTON).toString();
 			results = pressHarmonyRemoteButton(sessionID, button);
 		}

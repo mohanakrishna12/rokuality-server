@@ -25,4 +25,40 @@ public enum XBoxButton {
 		return null;
 	}
 
+	public static String getSmartglassInput(XBoxButton button) {
+		switch (button) {
+			case UP_ARROW:
+			return "/input/dpad_up";
+			case DOWN_ARROW:
+			return "/input/dpad_down";
+			case RIGHT_ARROW:
+			return "/input/dpad_right";
+			case LEFT_ARROW:
+			return "/input/dpad_left";
+			case A:
+			return "/input/a";
+			case B:
+			return "/input/b";
+			case X:
+			return "/input/x";
+			case Y:
+			return "/input/y";
+			case MENU:
+			return "/input/menu";
+			case VIEW:
+			return "/input/view";
+			case PLAY:
+			return "/media/play";
+			case PAUSE:
+			return "/media/pause";
+			case FAST_FORWARD:
+			return "/media/fast_forward";
+			case REWIND:
+			return "/media/rewind";
+
+			default:
+			return "";
+		}
+	}
+
 }
