@@ -462,7 +462,7 @@ public class session extends HttpServlet {
 				// connect to the xbox server
 				xboxSmartglassAPIManager.connect();
 				int responseCode = xboxSmartglassAPIManager.getResponseCode();
-				if (responseCode != 200) {
+				if (responseCode != 200 || !xboxSmartglassAPIManager.isConnected()) {
 					XBoxSmartglassFactory.stopServer();
 					sessionInfo.put(ServerConstants.SERVLET_RESULTS, String.format(
 							"Failed to connect device %s with the XBox Smartglass api server with result code %s.",

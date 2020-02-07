@@ -68,18 +68,34 @@ public class XBoxSmartglassAPIManager {
 	}
 
 	public void connect() {
+		Log.getRootLogger().warn(String.format("Connecting to smartglass server for device %s", deviceID));
 		sendCommand("GET", "/device");
 		sendCommand("GET", "/device/" + deviceID + "/connect");
+		Log.getRootLogger().info(String.format("Result of smartglass server connection for device %s: %s", deviceID, this.getResponseObj()));
 	}
 
 	public boolean isConnected() {
 		sendCommand("GET", "/device/" + deviceID);
 		if (this.getResponseCode() != 200) {
+			Log.getRootLogger().warn("Failed to reach XBox smartglass rest server at http://localhost:5557");
 			return false;
 		}
 		
 		JSONObject conObj = this.getResponseObj();
-		return conObj != null && conObj.toJSONString().contains("Connected");
+		Log.getRootLogger().info(String.format("XBox smartglass connection result: %s", conObj));
+		if (conObj == null) {
+			return false;
+		}
+
+		JSONObject deviceObj = (JSONObject) conObj.get("device"); 
+		if (deviceObj == null) {
+			return false;
+		}
+		
+		String connectionState = (String) deviceObj.get("connection_state");
+		boolean connected = connectionState != null && connectionState.equalsIgnoreCase("connected");
+		Log.getRootLogger().info(String.format("XBox device %s connected: %s", deviceID, connected));
+		return connected;
 	}
 
 	public void sendInput(XBoxButton button) {
