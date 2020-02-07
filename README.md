@@ -65,8 +65,8 @@ Automated testing on XBox requires the following:
 1. Google Chrome browser installed on the machine running the Rokuality server. The server uses headless chrome to handle various tasks like installing/launching/uninstalling the XBox appxbundles. You won't physically see chrome launch as it will run in headless mode.
 2. Your XBox must be in dev kit mode. [Enabling developer mode](https://docs.microsoft.com/en-us/windows/uwp/xbox-apps/devkit-activation) on your XBox is straight forward but it does require a 19$ Microsoft developer account which will allow you to automate 3 boxes from a single dev account.
 3. You must have the [XBox dev console](https://docs.microsoft.com/en-us/windows/uwp/xbox-apps/device-portal-xbox) available for remote access with NO username/password set. If properly setup you should be able to access your dev console remotely at `https://yourxboxip:11443`
-4. You must have nodejs installed on the machine running the server. Easily done on MAC via `brew install node` or on Windows via `scoop install nodejs`.
-5. You must have a [Logitech Harmony Hub](https://www.logitech.com/en-us/product/harmony-hub?crid=60) with your XBox setup as a device and XMPP enabled on the hub. See the sections [why harmony](#why-harmony) and [configuring your harmony](#configuring-your-harmony) for details.
+4. You must have python 3.5 > < 3.8 installed. Python version 3.8.1 has not been succesfully tested yet. 
+5. You must have the [openxbox xbox-smartglass-rest server](https://github.com/OpenXbox/xbox-smartglass-rest-python) installed and on your path. Easily done via `pip3 install xbox-smartglass-rest` The smartglass server is used to send remote control input to the XBox console. Our thanks to the team at OpenXBox for their work on this project.
 
 ### Getting started: HDMI Connected Devices (Playstation, Cable SetTopBox, AndroidTV, AppleTV, and More)
 The Rokuality platform allows you run automated tests on just about any device that has an HDMI out and accepts either Bluetooth or IR commands. This includes Playstations, AppleTV's, AndroidTV's, Cable SetTop Box's, etc. It requires the following software/hardware:
