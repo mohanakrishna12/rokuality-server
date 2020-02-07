@@ -1,4 +1,4 @@
-1.2.7 - Changes from 1.2.6 (IN PROGRESS)
+1.2.7 - Changes from 1.2.6
 1. Removes the Harmony dependency for XBox in favor of the xbox smartglass rest api. See README for XBox dependency updates.
 2. Adds sendKeys functionality for XBox for sending a literal string of text to the XBox virtual keyboard.
 
