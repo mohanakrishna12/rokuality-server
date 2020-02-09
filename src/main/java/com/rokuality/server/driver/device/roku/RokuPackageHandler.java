@@ -36,6 +36,9 @@ public class RokuPackageHandler {
 		boolean isPreInstalledApp = appCap != null;
 		boolean appIsUrl = false;
 
+		String profileCap = (String) requestObj.get(SessionCapabilities.ENABLE_PERFORMANCE_MONITORING);
+		boolean prepareAppForProfiling = profileCap != null && profileCap.toLowerCase().equals("true");
+
 		if (appCap == null && appPackageCap != null) {
 			appIsUrl = HttpUtils.isValidUrl(appPackageCap);
 		}
@@ -67,6 +70,7 @@ public class RokuPackageHandler {
 
 		// app is preinstalled and must be launched
 		if (!appIsUrl && isPreInstalledApp) {
+			prepareAppForProfiling = false;
 			Log.getRootLogger().info("App is preinstalled/sideloaded. Launching.");
 			String deviceIP = String.valueOf(requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value()));
 			boolean appPreInstalledSuccess = false;
@@ -108,10 +112,23 @@ public class RokuPackageHandler {
 			String password = (String) requestObj.get(SessionCapabilities.DEVICE_PASSWORD.value());
 			String deviceip = (String) requestObj.get(SessionCapabilities.DEVICE_IP_ADDRESS.value());
 
+			if (prepareAppForProfiling) {
+				Log.getRootLogger().info(String.format("Preparing app %s for profiling for device %s", appPackage, deviceip));
+				appPackage = RokuProfilerManager.prepareAppPackage(appPackage);
+				if (appPackage == null) {
+					results.put(ServerConstants.SERVLET_RESULTS,
+					String.format("Failed to prepare app package %s for performance profiling. Check the logs for more details.",
+							SessionCapabilities.APP_PACKAGE.value()));
+					FileUtils.deleteFile(appPackage);
+					return results;
+				}
+			}
+
 			RokuDevConsoleManager rokuDevConsoleManager = new RokuDevConsoleManager(deviceip, username, password);
 			rokuDevConsoleManager.uninstallRokuApp();
 			success = rokuDevConsoleManager.installRokuApp(appPackage.getAbsolutePath()) 
 				&& waitForAppLaunched(deviceip, SessionConstants.DEV_PACKAGE);
+
 			results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 			if (!success) {
 				results.put(ServerConstants.SERVLET_RESULTS,
@@ -143,12 +160,12 @@ public class RokuPackageHandler {
 		return rokuDevAPIManager.getResponseContent();
 	}
 
-	private static boolean launchInstalledApp(String deviceIP, String appID) throws Exception {
+	public static boolean launchInstalledApp(String deviceIP, String appID) {
 		APIManager rokuDevAPIManager = new APIManager(APIType.ROKU_DEV_API, deviceIP, "/launch/" + appID, "POST");
 		return rokuDevAPIManager.sendDevAPICommand();
 	}
 
-	private static boolean waitForAppLaunched(String deviceIP, String appID) {
+	public static boolean waitForAppLaunched(String deviceIP, String appID) {
 		long pollStart = System.currentTimeMillis();
 		long pollMax = pollStart + (SessionConstants.DEFAULT_APP_LAUNCH_TIMEOUT_S * 1000);
 		while (System.currentTimeMillis() < pollMax) {

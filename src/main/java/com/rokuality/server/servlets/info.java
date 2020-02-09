@@ -1,5 +1,6 @@
 package com.rokuality.server.servlets;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.servlet.http.HttpServlet;
@@ -12,9 +13,12 @@ import com.rokuality.server.core.drivers.SessionManager;
 import com.rokuality.server.driver.host.APIManager;
 import com.rokuality.server.driver.device.roku.RokuLogManager;
 import com.rokuality.server.driver.device.roku.RokuPackageHandler;
+import com.rokuality.server.driver.device.roku.RokuProfilerManager;
 import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
 import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
 import com.rokuality.server.enums.APIType;
+import com.rokuality.server.enums.SessionCapabilities;
+import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.ServletJsonParser;
 
 import org.eclipse.jetty.util.log.Log;
@@ -44,6 +48,9 @@ public class info extends HttpServlet {
 			break;
 		case "media_player_info":
 			results = getRokuMediaPlayerInfo(sessionID);
+			break;
+		case "performance_info":
+			results = getRokuPerformanceInfo(sessionID);
 			break;
 		case "get_active_app":
 			results = getActiveApp(sessionID);
@@ -89,8 +96,7 @@ public class info extends HttpServlet {
 	public static JSONObject getRokuDeviceInfo(String ipAddress) {
 		JSONObject results = new JSONObject();
 
-		APIManager rokuDevAPIManager = new APIManager(APIType.ROKU_DEV_API, ipAddress,
-				"/query/device-info", "GET");
+		APIManager rokuDevAPIManager = new APIManager(APIType.ROKU_DEV_API, ipAddress, "/query/device-info", "GET");
 		boolean success = rokuDevAPIManager.sendDevAPICommand();
 		String output = rokuDevAPIManager.getResponseContent();
 
@@ -144,11 +150,56 @@ public class info extends HttpServlet {
 		RokuWebDriverAPIManager rokuWebDriverAPIManager = new RokuWebDriverAPIManager(deviceIP);
 		rokuWebDriverAPIManager.getMediaPlayerInfo();
 		if (rokuWebDriverAPIManager.getWebDriverResponseCode() != 0) {
-			results.put(ServerConstants.SERVLET_RESULTS, "Failed to retrieve media player info! Is the media player open?");
+			results.put(ServerConstants.SERVLET_RESULTS,
+					"Failed to retrieve media player info! Is the media player open?");
 			return results;
 		}
 
 		results = rokuWebDriverAPIManager.getResponseObj();
+		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
+
+		return results;
+	}
+
+	public static JSONObject getRokuPerformanceInfo(String sessionID) {
+		JSONObject results = new JSONObject();
+
+		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
+		String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
+		boolean isProfileCapture = (boolean) sessionInfo.getOrDefault(SessionConstants.PROFILE_CAPTURE_STARTED, false);
+
+		if (!isProfileCapture) {
+			results.put(ServerConstants.SERVLET_RESULTS,
+					String.format(
+							"Roku performance profiling is not enabled on device %s. "
+									+ "To enable please set the %s capability to true prior to session start.",
+							deviceIP, SessionCapabilities.ENABLE_PERFORMANCE_MONITORING.value()));
+			return results;
+		}
+
+		boolean profileDataProcessed = RokuProfilerManager.processProfileData(deviceIP);
+		if (!profileDataProcessed) {
+			results.put(ServerConstants.SERVLET_RESULTS,
+					String.format("Failed to process performance profiling data on device %s", deviceIP));
+			return results;
+		}
+
+		File profileDataFile = RokuProfilerManager.getProfileFile(deviceIP);
+		if (profileDataFile == null || !profileDataFile.exists()) {
+			results.put(ServerConstants.SERVLET_RESULTS, String.format(
+					"The performance profiling file does not exist for device %s at %s", deviceIP, profileDataFile));
+			return results;
+		}
+
+		String profileData = new FileToStringUtils().convertToString(profileDataFile);
+		if (profileData == null) {
+			results.put(ServerConstants.SERVLET_RESULTS, String.format(
+					"Failed to process performance profiling data on device %s. See log for details.", deviceIP));
+			return results;
+		}
+
+		results.put("performance_profiling_data", profileData);
+		results.put("performance_profile_file_ext", ".bsprof");
 		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 
 		return results;
@@ -221,7 +272,7 @@ public class info extends HttpServlet {
 		} catch (Exception e) {
 			Log.getRootLogger().warn(e);
 		}
-		
+
 		if (logContent == null) {
 			results.put(ServerConstants.SERVLET_RESULTS, "Failed to retrieve Roku debug logs.");
 			return results;

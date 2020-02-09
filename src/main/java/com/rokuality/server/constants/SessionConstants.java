@@ -24,6 +24,7 @@ public class SessionConstants {
 	public static final String VIDEO_CAPTURE_INPUT = "video_capture_input";
 	public static final String AUDIO_CAPTURE_INPUT = "audio_capture_input";
 	public static final String VIDEO_CAPTURE_FILE = "video_capture_file";
+	public static final String PROFILE_CAPTURE_STARTED = "profile_capture_started";
 	
 	public static final String IMAGE_COLLECTION_DIRECTORY = "image_collection_directory";
 	public static final String ELEMENT_ID = "element_id";

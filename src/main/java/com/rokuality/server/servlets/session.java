@@ -23,6 +23,7 @@ import com.rokuality.server.driver.host.APIManager;
 import com.rokuality.server.driver.device.roku.RokuKeyPresser;
 import com.rokuality.server.driver.device.roku.RokuLogManager;
 import com.rokuality.server.driver.device.roku.RokuPackageHandler;
+import com.rokuality.server.driver.device.roku.RokuProfilerManager;
 import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
 import com.rokuality.server.driver.device.roku.RokuWebDriverFactory;
 import com.rokuality.server.driver.device.xbox.XBoxDevConsoleManager;
@@ -406,6 +407,17 @@ public class session extends HttpServlet {
 			sessionInfo.remove(SessionConstants.APP_PACKAGE);
 		}
 
+		boolean isProfileCapture = (boolean) requestObj.getOrDefault(SessionCapabilities.ENABLE_PERFORMANCE_MONITORING.value(), false);
+		if (isRoku(platformType) && isProfileCapture) {
+			boolean profileCaptureStarted = RokuProfilerManager.startProfileCapture(deviceIP);
+			if (!profileCaptureStarted) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
+				.format("Performance profiling failed to initiate for device %s!", deviceIP));
+				return sessionInfo;
+			}
+			sessionInfo.put(SessionConstants.PROFILE_CAPTURE_STARTED, profileCaptureStarted);
+		}
+
 		if (isRoku(platformType)) {
 			boolean isRokuWebDriverRunning = RokuWebDriverFactory.isRokuWebDriverRunning();
 			Log.getRootLogger().info("Is Roku WebDriver running: " + isRokuWebDriverRunning);
@@ -566,7 +578,12 @@ public class session extends HttpServlet {
 			String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
 			returnToRokuHomeScreen(deviceIP);
 			new RokuWebDriverAPIManager(deviceIP).stopSession();
-
+			
+			boolean isProfileCapture = (boolean) sessionInfo.getOrDefault(SessionConstants.PROFILE_CAPTURE_STARTED, false);
+			if (isProfileCapture) {
+				RokuProfilerManager.stopProfileCapture(deviceIP);
+			}
+			
 			RokuLogManager.stopLogCapture(deviceIP);
 		}
 
@@ -608,7 +625,7 @@ public class session extends HttpServlet {
 		return new XBoxDevConsoleManager(deviceIP).closeApp(appID);
 	}
 
-	private static boolean returnToRokuHomeScreen(String deviceIP) {
+	public static boolean returnToRokuHomeScreen(String deviceIP) {
 		long pollStart = System.currentTimeMillis();
 		long pollMax = pollStart + 15 * 1000; // 10 seconds from now - TODO - config/constant
 		while (System.currentTimeMillis() < pollMax) {
