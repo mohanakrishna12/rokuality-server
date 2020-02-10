@@ -40,6 +40,7 @@ import com.rokuality.server.enums.SessionCapabilities;
 import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.FileUtils;
 import com.rokuality.server.utils.ImageUtils;
+import com.rokuality.server.utils.OSUtils;
 import com.rokuality.server.utils.ServletJsonParser;
 import com.rokuality.server.utils.SleepUtils;
 
@@ -407,8 +408,16 @@ public class session extends HttpServlet {
 			sessionInfo.remove(SessionConstants.APP_PACKAGE);
 		}
 
-		boolean isProfileCapture = (boolean) requestObj.getOrDefault(SessionCapabilities.ENABLE_PERFORMANCE_MONITORING.value(), false);
+		boolean isProfileCapture = (boolean) requestObj.getOrDefault(SessionCapabilities.ENABLE_PERFORMANCE_PROFILING.value(), false);
 		if (isRoku(platformType) && isProfileCapture) {
+			// check if the user has curl installed
+			if (!new File(OSUtils.getBinaryPath("curl")).exists()) {
+				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
+				.format("When using the %s capability you must have curl installed and available on yor path. "
+					+ "Easily done on MAC via 'brew install curl' and on WINDOWS via 'scoop install curl'.", SessionCapabilities.ENABLE_PERFORMANCE_PROFILING.value()));
+				return sessionInfo;
+			}
+
 			boolean profileCaptureStarted = RokuProfilerManager.startProfileCapture(deviceIP);
 			if (!profileCaptureStarted) {
 				sessionInfo.put(ServerConstants.SERVLET_RESULTS, String
@@ -578,12 +587,6 @@ public class session extends HttpServlet {
 			String deviceIP = (String) sessionInfo.get(SessionConstants.DEVICE_IP);
 			returnToRokuHomeScreen(deviceIP);
 			new RokuWebDriverAPIManager(deviceIP).stopSession();
-			
-			boolean isProfileCapture = (boolean) sessionInfo.getOrDefault(SessionConstants.PROFILE_CAPTURE_STARTED, false);
-			if (isProfileCapture) {
-				RokuProfilerManager.stopProfileCapture(deviceIP);
-			}
-			
 			RokuLogManager.stopLogCapture(deviceIP);
 		}
 

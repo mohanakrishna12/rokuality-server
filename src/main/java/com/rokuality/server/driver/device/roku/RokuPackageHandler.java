@@ -36,8 +36,7 @@ public class RokuPackageHandler {
 		boolean isPreInstalledApp = appCap != null;
 		boolean appIsUrl = false;
 
-		String profileCap = (String) requestObj.get(SessionCapabilities.ENABLE_PERFORMANCE_MONITORING);
-		boolean prepareAppForProfiling = profileCap != null && profileCap.toLowerCase().equals("true");
+		boolean prepareAppForProfiling = (boolean) requestObj.getOrDefault(SessionCapabilities.ENABLE_PERFORMANCE_PROFILING.value(), false);
 
 		if (appCap == null && appPackageCap != null) {
 			appIsUrl = HttpUtils.isValidUrl(appPackageCap);
@@ -119,7 +118,6 @@ public class RokuPackageHandler {
 					results.put(ServerConstants.SERVLET_RESULTS,
 					String.format("Failed to prepare app package %s for performance profiling. Check the logs for more details.",
 							SessionCapabilities.APP_PACKAGE.value()));
-					FileUtils.deleteFile(appPackage);
 					return results;
 				}
 			}

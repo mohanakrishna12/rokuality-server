@@ -8,7 +8,7 @@ public enum SessionCapabilities {
 	GOOGLE_CREDENTIALS("GoogleCredentials"), DEVICE_NAME("DeviceName"), HOME_HUB_IP_ADDRESS("HomeHubIPAddress"),
 	VIDEO_CAPTURE_INPUT("VideoCaptureInput"), AUDIO_CAPTURE_INPUT("AudioCaptureInput"),
 	VIDEO_CAPTURE_FRAMERATE("VideoCaptureFrameRate"), MIRROR_SCREEN("MirrorScreen"), DEVICE_ID("DeviceID"),
-	ENABLE_PERFORMANCE_MONITORING("EnablePerformanceMonitoring");
+	ENABLE_PERFORMANCE_PROFILING("EnablePerformanceProfiling");
 
 	private final String value;
 

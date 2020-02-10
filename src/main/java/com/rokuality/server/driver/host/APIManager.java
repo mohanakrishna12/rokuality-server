@@ -83,7 +83,7 @@ public class APIManager {
 			Log.getRootLogger().warn(e);
 		}
 
-		return responseCode == HttpStatus.SC_OK;
+		return HttpStatus.SC_OK == responseCode;
 	}
 
 	public int getResponseCode() {

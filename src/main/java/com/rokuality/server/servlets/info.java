@@ -1,6 +1,5 @@
 package com.rokuality.server.servlets;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.servlet.http.HttpServlet;
@@ -18,7 +17,6 @@ import com.rokuality.server.driver.device.roku.RokuWebDriverAPIManager;
 import com.rokuality.server.driver.device.xbox.XBoxDevAPIManager;
 import com.rokuality.server.enums.APIType;
 import com.rokuality.server.enums.SessionCapabilities;
-import com.rokuality.server.utils.FileToStringUtils;
 import com.rokuality.server.utils.ServletJsonParser;
 
 import org.eclipse.jetty.util.log.Log;
@@ -49,8 +47,8 @@ public class info extends HttpServlet {
 		case "media_player_info":
 			results = getRokuMediaPlayerInfo(sessionID);
 			break;
-		case "performance_info":
-			results = getRokuPerformanceInfo(sessionID);
+		case "performance_profile":
+			results = getRokuPerformanceProfile(sessionID);
 			break;
 		case "get_active_app":
 			results = getActiveApp(sessionID);
@@ -161,7 +159,7 @@ public class info extends HttpServlet {
 		return results;
 	}
 
-	public static JSONObject getRokuPerformanceInfo(String sessionID) {
+	public static JSONObject getRokuPerformanceProfile(String sessionID) {
 		JSONObject results = new JSONObject();
 
 		JSONObject sessionInfo = SessionManager.getSessionInfo(sessionID);
@@ -173,32 +171,18 @@ public class info extends HttpServlet {
 					String.format(
 							"Roku performance profiling is not enabled on device %s. "
 									+ "To enable please set the %s capability to true prior to session start.",
-							deviceIP, SessionCapabilities.ENABLE_PERFORMANCE_MONITORING.value()));
+							deviceIP, SessionCapabilities.ENABLE_PERFORMANCE_PROFILING.value()));
 			return results;
 		}
 
-		boolean profileDataProcessed = RokuProfilerManager.processProfileData(deviceIP);
-		if (!profileDataProcessed) {
+		String processedProfileData = RokuProfilerManager.processProfileData(deviceIP);
+		if (processedProfileData == null) {
 			results.put(ServerConstants.SERVLET_RESULTS,
 					String.format("Failed to process performance profiling data on device %s", deviceIP));
 			return results;
 		}
 
-		File profileDataFile = RokuProfilerManager.getProfileFile(deviceIP);
-		if (profileDataFile == null || !profileDataFile.exists()) {
-			results.put(ServerConstants.SERVLET_RESULTS, String.format(
-					"The performance profiling file does not exist for device %s at %s", deviceIP, profileDataFile));
-			return results;
-		}
-
-		String profileData = new FileToStringUtils().convertToString(profileDataFile);
-		if (profileData == null) {
-			results.put(ServerConstants.SERVLET_RESULTS, String.format(
-					"Failed to process performance profiling data on device %s. See log for details.", deviceIP));
-			return results;
-		}
-
-		results.put("performance_profiling_data", profileData);
+		results.put("performance_profiling_data", processedProfileData);
 		results.put("performance_profile_file_ext", ".bsprof");
 		results.put(ServerConstants.SERVLET_RESULTS, ServerConstants.SERVLET_SUCCESS);
 
