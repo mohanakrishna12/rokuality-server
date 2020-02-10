@@ -8,22 +8,35 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("rawtypes")
+import org.eclipse.jetty.util.log.Log;
+
 public class ZipUtils {
 
    public static boolean createZipFile(File zipFile, List<File> filesToZip) {
 
 		Boolean success = false;
-		Exception exception = null;
+        Exception exception = null;
+        
+        ArrayList<File> filesToZipArrList = new ArrayList<File>(filesToZip);
 
         ZipFile zipMFile = null;
 		try {
 			zipMFile = new ZipFile(zipFile);
 			ZipParameters parameters = new ZipParameters();
         	parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
-        	parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-			zipMFile.addFiles((ArrayList) filesToZip, parameters);
+            parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+            
+            for (File file : filesToZipArrList) {
+                if (file.isFile()) {
+                    zipMFile.addFile(file, parameters);
+                }
+
+                if (file.isDirectory()) {
+                    zipMFile.addFolder(file, parameters);
+                }
+            }
 		} catch (Exception e) {
+            Log.getRootLogger().warn(e);
 			exception = e;
 		}
 
