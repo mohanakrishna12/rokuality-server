@@ -57,6 +57,7 @@ Upon a successful server launch you should see a pop indicating that the server 
 Automated testing on Roku requires the following:
 1. Developer mode enabled on your device. [Enabling developer mode](https://blog.roku.com/developer/developer-setup-guide) on your Roku device is very straight forward. Keep track of your device username and password as created during the basic walkthrough as you'll need them to pass to your DeviceCapabilities at driver startup. Once you've enabled developer mode on your device you should be able to hit the device console page at http://yourrokudeviceip - Once that's done you are all set for automation!
 2. Go installed and available on your path. The Rokuality project is one of the first frameworks to provide support for [Roku Webdriver](https://github.com/rokudev/automated-channel-testing). Go can be installed on Mac via `brew install go` or on Windows via `scoop install go`.
+3. (Optional) If you are collecting application performance profile data via the 'EnablePerformanceProfiling' capability, you must also have curl installed and available on your path. Easily done via 'brew install curl' on MAC and via 'scoop install curl' on WINDOWS.
 
 Optional - If you wish to test a production channel then you must have an HDMI to USB capture card attached to the device and the machine running the Rokuality Server. Once connected the server can capture the device input stream and then perform evaluations against the captured frames. See [why capture cards](#why-hdmi-to-usb-capture-cards) for details.
 

@@ -1,3 +1,6 @@
+1.2.8 - Changes from 1.2.7
+1. Adds the ability to capture Roku CPU and memory performance data during test execution.
+
 1.2.7 - Changes from 1.2.6
 1. Removes the Harmony dependency for XBox in favor of the xbox smartglass rest api. See README for XBox dependency updates.
 2. Adds sendKeys functionality for XBox for sending a literal string of text to the XBox virtual keyboard.
